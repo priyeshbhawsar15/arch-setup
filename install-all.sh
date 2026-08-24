@@ -14,6 +14,9 @@ installers=(
   install-tailscale.sh
   install-keyd.sh
   install-zsh.sh
+  install-hyprland.sh
+  install-wallpaper-controller.sh
+  install-per-monitor-bar.sh
 )
 
 for installer in "${installers[@]}"; do

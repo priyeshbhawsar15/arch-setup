@@ -13,15 +13,16 @@ This directory contains idempotent setup scripts for this Omarchy system.
 - For normal Arch packages, use `omarchy pkg add <package>`.
 - For AUR-only packages, use `omarchy pkg aur add <package>`.
 - Keep shared script helpers in `lib.sh`.
-- Keep Hyprland customizations in this directory's `override.conf`.
-- Ensure `/home/priyesh/.config/hypr/hyprland.conf` sources this directory's `override.conf` exactly once and at the end.
+- Keep Quattro Hyprland customizations in this directory's `hypr/` Lua modules.
+- Deploy the managed Hyprland configuration with `install-hyprland.sh`; add it to `install-all.sh`.
+- Keep the Quattro `~/.config/hypr/hyprland.lua` entrypoint package-managed and put personal settings only in `monitors.lua`, `input.lua`, `bindings.lua`, `looknfeel.lua`, and `autostart.lua`.
+- Store stateful Hyprland toggles as `*.lua` files in `~/.local/state/omarchy/toggles/hypr/`; Quattro does not load `*.conf` toggles.
 - For Hyprland window rules or syntax-sensitive settings, verify current Hyprland documentation before editing.
 
 ## Omarchy Reference
 
 Relevant Omarchy skill instructions are available at:
 
-`/home/priyesh/.local/share/omarchy/default/omarchy-skill/SKILL.md`
+`/usr/share/omarchy/default/agents/skills/omarchy/SKILL.md`
 
 Do not edit files under `/home/priyesh/.local/share/omarchy`; that directory is managed by Omarchy.
-

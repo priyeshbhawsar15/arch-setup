@@ -1,0 +1,64 @@
+# Project-local Hyprland overrides.
+# This file is sourced at the end of ~/.config/hypr/hyprland.conf.
+#
+# Add personal Hyprland settings here so they override Omarchy defaults.
+# Main 4K monitor
+monitorv2 {
+    output = DP-5
+    mode = 3840x2160@120
+    position = 0x0
+    scale = 1.5
+    bitdepth = 10
+    cm = hdr
+    sdrbrightness = 2
+    sdrsaturation = 1.2
+}
+
+render {
+    cm_enabled = true
+    cm_auto_hdr = 1
+}
+
+# Left 1080p side monitor
+monitor=DP-6,1920x1080@60,2560x0,1,transform,1
+
+# Right 1080p side monitor
+monitor=DP-4,1920x1080@60,3640x0,1,transform,3
+
+# Workspace monitor assignments
+workspace = 1, monitor:DP-5, default:true, persistent:true
+workspace = 4, monitor:DP-5, persistent:true
+workspace = 2, monitor:DP-6, default:true, persistent:true
+workspace = 5, monitor:DP-6, persistent:true
+workspace = 3, monitor:DP-4, default:true, persistent:true
+workspace = 6, monitor:DP-4, persistent:true
+
+# Move focus with ALT + Vim keys
+bindd = ALT, H, Focus on left window, movefocus, l
+bindd = ALT, J, Focus on below window, movefocus, d
+bindd = ALT, K, Focus on above window, movefocus, u
+bindd = ALT, L, Focus on right window, movefocus, r
+
+# Switch within grouped windows with CTRL + ALT + Vim keys
+bindd = CTRL ALT, J, Previous window in group, changegroupactive, b
+bindd = CTRL ALT, L, Next window in group, changegroupactive, f
+
+# https://wiki.hypr.land/Configuring/Basics/Variables/#general
+general {
+    # No gaps between windows or borders
+    gaps_in = 0
+    gaps_out = 0
+    border_size = 1
+
+    # Change to niri-like side-scrolling layout
+    # layout = scrolling
+}
+#https://wiki.hypr.land/Configuring/Basics/Variables/#decoration
+decoration {
+    # Use round window corners
+    rounding = 8
+
+    # Dim unfocused windows (0.0 = no dim, 1.0 = fully dimmed)
+    # dim_inactive = true
+    # dim_strength = 0.15
+}
