@@ -23,9 +23,10 @@ managed_files=(
   bindings.lua
   looknfeel.lua
   autostart.lua
-  scripts/bar-visibility-mode-toggle.sh
   scripts/monitor-mode-toggle.sh
   scripts/window-span-dp6-dp4-toggle.sh
+  scripts/bar-visibility-mode-toggle.sh
+  scripts/shell-recover.sh
 )
 
 legacy_files=(

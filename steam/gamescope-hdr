@@ -1,0 +1,26 @@
+#!/bin/bash
+
+set -euo pipefail
+
+if ! command -v gamescope >/dev/null 2>&1; then
+  printf 'gamescope-hdr: gamescope is not installed\n' >&2
+  exit 127
+fi
+
+# ENABLE_HDR_WSI covers Vulkan/Proton HDR signaling. DXVK_HDR keeps HDR enabled
+# for older DXVK titles that still use the legacy switch.
+export ENABLE_HDR_WSI=1
+export DXVK_HDR=1
+
+# Specify both the game-visible display and output; otherwise nested
+# Gamescope defaults can expose only 1280x720, regardless of monitor size.
+exec gamescope \
+  --nested-width 3840 \
+  --nested-height 2160 \
+  --output-width 3840 \
+  --output-height 2160 \
+  --force-windows-fullscreen \
+  --fullscreen \
+  --hdr-enabled \
+  --hdr-sdr-content-nits 203 \
+  -- "$@"

@@ -15,4 +15,3 @@ fi
 require_omarchy
 log "Installing Zen with Omarchy..."
 omarchy install browser zen
-

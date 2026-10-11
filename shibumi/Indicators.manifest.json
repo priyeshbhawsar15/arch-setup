@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "priyesh.indicators",
+  "name": "Indicators",
+  "version": "1.0.0",
+  "author": "priyesh",
+  "clonedFrom": "omarchy.indicators",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Indicators.qml"
+  }
+}
