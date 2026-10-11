@@ -1,0 +1,5 @@
+#!/bin/bash
+# Preserve mise setup, but reserve stdout for the Codex app-server protocol.
+export MISE_MINIMUM_RELEASE_AGE=0
+mise use -g "codex" >&2 || exit 1
+exec mise x "codex" -- "codex" "$@"

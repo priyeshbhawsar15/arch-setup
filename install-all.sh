@@ -10,6 +10,9 @@ installers=(
   install-zen.sh
   install-stow.sh
   install-hermes-desktop.sh
+  install-codex.sh
+  install-github-cli.sh
+  install-t3code.sh
   install-steam.sh
   install-lutris.sh
   install-sunshine.sh
