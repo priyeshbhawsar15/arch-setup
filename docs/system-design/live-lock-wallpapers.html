@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Live lock wallpapers — written design</title>
+<style>*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{margin:0;background:#f5f6f8;color:#1d2839;font:16px/1.65 system-ui,sans-serif}a{color:#2453a0}header{padding:24px 5vw;border-bottom:1px solid #d5dce5;background:white}header strong{font-size:20px}header span{display:block;color:#556276}main{display:grid;grid-template-columns:260px minmax(0,1fr);gap:36px;max-width:1440px;margin:auto;padding:32px}nav{position:sticky;top:24px;align-self:start;max-height:calc(100vh - 48px);overflow:auto}nav a{display:block;text-decoration:none;padding:5px 10px;line-height:1.4;font-size:14px}nav .level-3{padding-left:24px;color:#536581}article{min-width:0;max-width:1030px;background:white;border:1px solid #d5dce5;border-radius:16px;padding:32px}h1{font-size:34px;line-height:1.2;margin-top:0}h2{font-size:25px;line-height:1.3;margin-top:44px;border-top:1px solid #d5dce5;padding-top:24px}h3{font-size:21px;margin-top:32px}p{margin:18px 0}table{border-collapse:collapse;min-width:600px;width:100%;font-size:14px}th,td{border:1px solid #d5dce5;padding:12px;vertical-align:top;text-align:left}th{background:#edf2f8}.table-scroll{overflow-x:auto}code{background:#edf2f8;padding:2px 4px;border-radius:3px;font-size:.9em;overflow-wrap:anywhere}pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:16px;background:#edf2f8;border-radius:8px;font-size:13px}pre code{padding:0}details{margin:20px 0;border:1px solid #d5dce5;padding:12px;border-radius:8px}summary{cursor:pointer;font-weight:600}li{margin:10px 0}svg{width:100%;height:auto;min-width:650px}.map{overflow-x:auto}.map h2{margin-top:20px}.edges path{fill:none;stroke:#7a8da5;stroke-width:2;marker-end:url(#arrow)}marker path{fill:#7a8da5}.node rect{fill:#f1f5fb;stroke:#8fa5c1;stroke-width:1.5}.node text{text-anchor:middle;font-weight:600;font-size:17px;fill:#203452}.node .meta{font-size:12px;font-weight:400}.trusted rect{fill:#e4f2ee;stroke:#538678}.worker rect{fill:#f8eddb;stroke:#af8b49}svg a:hover rect,svg a:focus rect{stroke:#2453a0;stroke-width:3}.edge-labels text{font-size:11px;text-anchor:middle;fill:#4b607e}a:focus-visible,summary:focus-visible{outline:3px solid #2453a0;outline-offset:3px}@media(max-width:950px){main{display:block;padding:16px}nav{position:static;max-height:none;margin-bottom:24px;columns:2}article{padding:20px}h1{font-size:28px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}@media print{nav,header{display:none}main{display:block;padding:0}article{border:0;padding:0}details{display:none}}</style>
+</head>
+<body>
+<header>
+<strong>Live lock wallpapers</strong>
+<span>Written design for review · 12 October 2026 · Product implementation pending</span>
+</header>
+<main>
+<nav aria-label="Contents">
+<a class="level-2" href="#scope-and-decisions">Scope and decisions</a>
+<a class="level-2" href="#requirements-and-evidence">Requirements and evidence</a>
+<a class="level-2" href="#architecture">Architecture</a>
+<a class="level-3" href="#controller">Controller</a>
+<a class="level-3" href="#lock-host-and-native-bridge">Lock host and native bridge</a>
+<a class="level-3" href="#renderer-worker">Renderer worker</a>
+<a class="level-3" href="#setup-and-installation">Setup and installation</a>
+<a class="level-2" href="#core-flows">Core flows</a>
+<a class="level-2" href="#private-protocol-and-errors">Private protocol and errors</a>
+<a class="level-2" href="#data-and-persistence">Data and persistence</a>
+<a class="level-2" href="#lifecycles-and-consistency">Lifecycles and consistency</a>
+<a class="level-2" href="#security-and-permissions">Security and permissions</a>
+<a class="level-2" href="#failures-and-operational-recovery">Failures and operational recovery</a>
+<a class="level-2" href="#deployment-and-resource-targets">Deployment and resource targets</a>
+<a class="level-2" href="#verification-rollout-and-rollback">Verification, rollout and rollback</a>
+<a class="level-2" href="#references">References</a>
+</nav>
+<article>
+<section aria-label="Interactive architecture map" class="map">
+<h2>Architecture map</h2>
+<p>Select a component to read its responsibilities, storage and failure behavior.</p>
+<svg viewBox="0 0 1000 450" role="img" aria-labelledby="map-title map-desc">
+<title id="map-title">Isolated lock wallpaper architecture</title>
+<desc id="map-desc">The controller supplies the lock source and suspends the desktop. The sandboxed renderer reads assets and shares GPU frames with the Qt bridge. Only Lock Explorer owns authentication and lock surfaces.</desc>
+<defs>
+<marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+<path d="M0 0L8 4L0 8Z"/>
+</marker>
+</defs>
+<g class="edges">
+<path d="M240 75H375"/>
+<path d="M625 75H760"/>
+<path d="M825 205V155H550V130"/>
+<path d="M625 110L735 180L800 205"/>
+<path d="M500 205V130"/>
+<path d="M625 290H760"/>
+<path d="M375 225H290V110H240"/>
+<path d="M125 130V205"/>
+<path d="M875 385V330"/>
+</g>
+<g class="edge-labels">
+<text x="307" y="60">source / lease</text>
+<text x="692" y="60">lock surfaces</text>
+<text x="695" y="145">GPU + ready fence</text>
+<text x="695" y="199">control / release fences</text>
+<text x="560" y="186">install</text>
+<text x="692" y="280">published builds</text>
+<text x="128" y="176">suspend</text>
+</g>
+<a href="#controller" aria-label="Controller: Python, JSON state">
+<g class="node">
+<rect x="10" y="20" width="230" height="110" rx="12"/>
+<text x="125" y="50">Wallpaper controller</text>
+<text x="125" y="79" class="meta">Python · JSON state</text>
+<text x="125" y="104" class="meta">Selection + desktop lease</text>
+</g>
+</a>
+<a href="#lock-host-and-native-bridge" aria-label="Lock host and bridge: QML and C++, plugin JSON">
+<g class="node trusted">
+<rect x="375" y="20" width="250" height="110" rx="12"/>
+<text x="500" y="50">Lock Explorer + bridge</text>
+<text x="500" y="79" class="meta">QML / Qt C++ · plugin JSON</text>
+<text x="500" y="104" class="meta">Trusted auth + texture import</text>
+</g>
+</a>
+<a href="#security-and-permissions" aria-label="Quickshell and compositor: Qt and Wayland, no new storage">
+<g class="node">
+<rect x="760" y="20" width="230" height="110" rx="12"/>
+<text x="875" y="50">Quickshell / compositor</text>
+<text x="875" y="79" class="meta">Qt / Wayland · no new storage</text>
+<text x="875" y="104" class="meta">Session-lock authority</text>
+</g>
+</a>
+<a href="#controller" aria-label="Desktop engine: C++, existing controller state">
+<g class="node">
+<rect x="10" y="205" width="230" height="125" rx="12"/>
+<text x="125" y="241">Desktop renderer</text>
+<text x="125" y="270" class="meta">C++ · existing controller state</text>
+<text x="125" y="295" class="meta">Temporary lease pause</text>
+</g>
+</a>
+<a href="#setup-and-installation" aria-label="Setup installers: shell, published pins and build manifests">
+<g class="node">
+<rect x="375" y="205" width="250" height="125" rx="12"/>
+<text x="500" y="241">Setup installers</text>
+<text x="500" y="270" class="meta">Shell · pins / manifests</text>
+<text x="500" y="295" class="meta">Reproducible fresh install</text>
+</g>
+</a>
+<a href="#renderer-worker" aria-label="Sandboxed worker: C++ and EGL, temporary buffers">
+<g class="node worker">
+<rect x="760" y="205" width="230" height="125" rx="12"/>
+<text x="875" y="241">Sandboxed renderer</text>
+<text x="875" y="270" class="meta">C++ / EGL · temporary buffers</text>
+<text x="875" y="295" class="meta">No auth or session sockets</text>
+</g>
+</a>
+<a href="#data-and-persistence" aria-label="Workshop assets: files, read-only mounts">
+<g class="node">
+<rect x="760" y="385" width="230" height="55" rx="10"/>
+<text x="875" y="406">Workshop assets</text>
+<text x="875" y="428" class="meta">Files · read-only mounts</text>
+</g>
+</a>
+</svg>
+</section>
+<h1 id="live-lock-wallpapers-through-an-isolated-gpu-renderer">Live lock wallpapers through an isolated GPU renderer</h1>
+<p>Status: written design for review. Date: 2026-10-12. Product implementation has not started. The user selected an isolated renderer with GPU buffer sharing and rejected cached video loops.</p>
+<h2 id="scope-and-decisions">Scope and decisions</h2>
+<p>Lock Screen Explorer continues to own the Wayland session lock, authentication, tint, timeout, wake handling, and background composition. A separate sandboxed linux-wallpaperengine worker renders the selected Workshop project into GPU buffers. A small native Qt background item imports those buffers into the existing lock surfaces. Wallpaper code receives no authentication or input interface.</p>
+<p>The existing lock wallpaper selection stays independent of the unlocked desktop. Preserve the current wallpaper choices, 30-minute rotation, main-monitor layout, portrait-side spanning, per-group timeout/tint settings, and verified side-monitor hardware power-off at 100% tint. Existing video wallpapers keep their direct QtMultimedia path. This feature introduces live scene rendering and live local web rendering to the extent supported by the Linux renderer; it cannot add missing upstream Wallpaper Engine features by itself.</p>
+<p>Proposed release defaults requiring review: 30 FPS, offline and silent lock workers, no keyboard/mouse/audio-reactivity input, GPU transport with no CPU readback fallback, automatic pause of covered/off display groups, and temporary suspension of the desktop renderer while locked. Web wallpapers needing network access are unsupported in this release. The one downloaded web wallpaper, White Tree - Snow (1789171537), references local assets and is a suitable offline test case.</p>
+<p>Proposed repository change requiring review: create the public fork <code>priyeshbhawsar15/linux-wallpaperengine</code> from <code>Almamu/linux-wallpaperengine</code>, initially based on commit <code>b016d7d1fdcf4e5fd2f9c9fa420a8aaa07fee02d</code>. Put the native Qt adapter in the existing Lock Screen Explorer fork, not a new user-facing plugin. Publish tested changes in this renderer fork and the existing lock-explorer and wallpaper-manager repositories before updating this setup&#x27;s exact pins.</p>
+<h2 id="requirements-and-evidence">Requirements and evidence</h2>
+<div class="table-scroll">
+<table>
+<thead>
+<tr>
+<th scope="col">ID</th>
+<th scope="col">Requirement or constraint</th>
+<th scope="col">Design and acceptance evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>R1</td>
+<td>Live Workshop rendering; no cached loops</td>
+<td>Render the original project on demand; no recording or generated video files.</td>
+</tr>
+<tr>
+<td>R2</td>
+<td>Isolated renderer with GPU sharing</td>
+<td>Sandboxed worker, inherited socketpair, DMA-BUF frames and explicit fences. Verify actual cross-process import before lock integration.</td>
+</tr>
+<tr>
+<td>R3</td>
+<td>Preserve locking and authentication</td>
+<td>Existing WlSessionLock owns surfaces; optional background Loader; no password/input messages in worker protocol.</td>
+</tr>
+<tr>
+<td>R4</td>
+<td>Preserve selection, span, tint, timeouts and hardware off</td>
+<td>Typed source migration retains current selection; reuse WallpaperSpan and DisplayPower policies; rotations never reset inactivity deadlines.</td>
+</tr>
+<tr>
+<td>R5</td>
+<td>Resource efficiency</td>
+<td>Same-device GPU transport; 30 FPS; bounded buffer pools; pause invisible groups; reversible desktop suspension.</td>
+</tr>
+<tr>
+<td>R6</td>
+<td>Fresh-install reproduction</td>
+<td>Separate source repositories, published exact pins, idempotent build/install integration, PLUGINS.md and SCRIPTS.md updates.</td>
+</tr>
+<tr>
+<td>R7</td>
+<td>Unsupported sources must leave a usable lock</td>
+<td>Preserve fallback background; bounded retry; skip failed source for this lock session; authentication remains independent.</td>
+</tr>
+<tr>
+<td>R8</td>
+<td>Existing settings and unrelated setup work survive</td>
+<td>Preserve user configuration, including current side tint; use role-based monitor descriptions; isolate code changes from dirty setup files.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Observed capability: Mesa on AMD Radeon RX 6800 advertises DMA-BUF export/import, modifiers, native fences, and surfaceless EGL. Qt 6.11 exposes native OpenGL texture wrapping. This is capability evidence, not a successful transport test. The actual Quickshell scenegraph backend and render device must be measured in the prototype. Reject unsupported backends or mismatched devices rather than changing the whole desktop&#x27;s graphics backend.</p>
+<p>The existing renderer web path uses CEF OnPaint and glTexImage2D: web rasterization already includes a CPU-to-GPU upload internally. DMA-BUF removes the additional renderer-to-lock frame copy; it does not make that upstream web path entirely zero-copy. Scene transport must have no CPU frame readback. Existing engine asset/video uploads are outside that transport boundary.</p>
+<h2 id="architecture">Architecture</h2>
+<details>
+<summary>Diagram source: mermaid</summary>
+<pre>
+<code>flowchart LR
+    C[Wallpaper controller: Python and JSON] --&gt;|typed source and lease| L[Lock Explorer: QML and native Qt]
+    L --&gt;|lock surfaces and authentication| Q[Quickshell and compositor]
+    L --&gt;|private control socket| W[Sandboxed engine worker: C++ and EGL]
+    A[Read-only Workshop assets] --&gt; W
+    W --&gt;|DMA-BUF and ready fence| L
+    L --&gt;|release fences and visibility| W
+    C --&gt;|temporary suspend lease| D[Desktop engine]
+    I[Setup installers and published pins] --&gt; C
+    I --&gt; L
+    I --&gt; W</code>
+</pre>
+</details>
+<h3 id="controller">Controller</h3>
+<p>Owner: existing wallpaper-manager repository. Technology: Python controller and existing service/timer. Storage: existing state directory, migrating <code>lock-video.json</code> to a versioned typed-source state and adding a temporary desktop-suspension lease. No database or network service.</p>
+<p>Discover downloaded scene, web, and video projects plus existing local lock videos. Validate project metadata and confined source paths. Emit <code>video</code> or <code>project</code> sources with stable IDs. Keep shuffle-without-repetition and the 30-minute interval. The command that applies a source uses the existing Omarchy lock public interface extended with a typed source setter; legacy setVideo remains supported.</p>
+<p>Only the controller changes desktop-renderer state. A runtime lease keyed by the lock owner PID and process start time suppresses rendering without changing the persisted user-enabled flag. Unlock, owner death, or lease recovery resumes the currently selected desktop wallpaper only if the user still wants it enabled. User stop while locked wins. Changing desktop selection while locked updates desired state for resume. The controller must handle its own service restart without losing the lease.</p>
+<h3 id="lock-host-and-native-bridge">Lock host and native bridge</h3>
+<p>Owner: existing lock-explorer fork. Technology: existing QML lock host plus a C++ Qt 6 QQuickItem/QSGTexture bridge. Storage: existing plugin configuration; runtime frame metadata only. Existing lock/authentication code remains the sole authority for accepting credentials and releasing the session lock.</p>
+<p>Load a separate <code>LiveWallpaper.qml</code> asynchronously through an optional Loader. Only that component imports the native module. No unconditional native-module import in Service.qml or the normal wallpaper design. An absent module, Qt ABI mismatch, unsupported backend, or failed worker selects the current fallback and records a concise diagnostic. Existing video playback remains available.</p>
+<p>The native broker validates IPC on a non-GUI thread, polls ready fences, and exposes only ready frames to render threads. Each window imports its own EGLImage/GL texture on its scenegraph thread and wraps it with QSGOpenGLTexture. Resource destruction occurs on that thread. Do not wait indefinitely for a worker fence on the GUI or render thread. Frames whose ready fence does not signal within one second are discarded and the worker generation is failed.</p>
+<p>The bridge sends GPU release fences after the last draw that samples a slot. For the shared side stream, each consuming surface returns its own fence; the worker waits for all consumers before reusing that slot. Destroying a surface drains its GPU work before acknowledging release. Never assume frameSwapped alone proves GPU completion. Scenegraph invalidation terminates the generation and recreates imports after capability checks.</p>
+<h3 id="renderer-worker">Renderer worker</h3>
+<p>Owner: new linux-wallpaperengine fork. Technology: C++ engine library, a surfaceless EGL/OpenGL output driver, GBM DMA-BUF buffers and EGL native fences. Storage: none persistent; private temporary directory inside the sandbox. Assets are read-only. Use the current engine&#x27;s project parsing and compatibility/property overrides.</p>
+<p>One worker per selected project renders at most two independent output streams: main, and the bounding canvas of the side group. Reuse immutable parsed assets where the engine permits; do not assume animation state can be shared across different aspect ratios. A single side canvas is sampled by both side surfaces using the existing span geometry. An EGL worker must not require a hidden ordinary Wayland/GLFW window.</p>
+<p>The worker selects the same DRM render device as the Qt consumer. Choose a mutually supported single-plane ARGB8888/XRGB8888 format and modifier; do not assume a linear layout. Output is opaque SDR sRGB, with a fixed documented top-left image origin and matching Qt texture-coordinate conversion; test channel ordering and vertical orientation with a calibration pattern. HDR output is outside this release. Three buffers per stream cap allocations and outstanding work. No free slot means skip rendering a new frame. Retire old generations after releases; a worker restart closes the private channel and all old resources.</p>
+<p>For today&#x27;s topology, the maximum native resolutions are main 3840×2160 and side canvas 2160×1920. Three RGBA slots for each are approximately 142 MiB before alignment, engine assets and compositor allocations. Geometry is role-based, derived from logical coordinates, transforms and scales. A group with mixed scales renders at the largest scale with correctly mapped crops. Initial limits: two streams, eight consumers, 8192 pixels per dimension, 64 Mi pixels total across streams and 768 MiB transport-buffer budget. Oversized layouts use the existing fallback and report the reason.</p>
+<h3 id="setup-and-installation">Setup and installation</h3>
+<p>Owner: arch-setups. Technology: shell installers and existing shared helpers. Storage: published commit pins and build manifests. No plugin source copied into this repository and no submodule added.</p>
+<p>Add a dedicated renderer installer registered in install-all.sh; keep the current desktop renderer installation operational until its compatibility checks pass. Build the pinned renderer worker and Qt bridge into feature-owned paths under <code>~/.local/lib/omarchy/lock-live/</code>. Record renderer commit, lock commit, Qt build version/ABI, architecture, compiler/build options and successful capability checks. Treat a matching revision and manifest as already installed; rebuild after Qt changes. Runtime failure must still fall back safely before a rebuild.</p>
+<p>Install the native bridge before enabling the live component. Use staged builds and atomic replacement, preserve prior artifacts for rollback, and retain the existing installer&#x27;s unlocked-session guard. Disabling Lock Explorer ends the worker and desktop lease and disables its controls. Disabling live rendering alone returns to existing backgrounds without changing tint/timeouts. Removal deletes feature artifacts and installer registration, backs up state, and preserves built-in plugins and unrelated configuration.</p>
+<h2 id="core-flows">Core flows</h2>
+<details>
+<summary>Diagram source: mermaid</summary>
+<pre>
+<code>sequenceDiagram
+    participant C as Controller
+    participant L as Lock host and bridge
+    participant W as Sandboxed worker
+    participant S as Lock surface
+    L-&gt;&gt;C: Acquire temporary desktop suspend lease
+    C--&gt;&gt;L: Typed independently selected lock source
+    L-&gt;&gt;W: Spawn with assets, render node and socket FD
+    W--&gt;&gt;L: HELLO capabilities
+    L-&gt;&gt;W: CONFIG generation and visible streams
+    W--&gt;&gt;L: BUFFER descriptors and FRAME ready fence
+    L-&gt;&gt;S: Import ready GPU texture on render thread
+    S--&gt;&gt;L: Consumer GPU release fence
+    L-&gt;&gt;W: RELEASE after every consumer completes
+    L-&gt;&gt;W: VISIBILITY on tint/power change
+    L-&gt;&gt;W: STOP on unlock
+    L-&gt;&gt;C: Release desktop suspend lease</code>
+</pre>
+</details>
+<p>Acquire the desktop lease only after the lock host starts; it is never a precondition for locking. Start project workers only while a session is actually locked. Explorer preview uses an explicit short-lived preview session without acquiring a desktop lease or altering power state. Video sources use the existing player.</p>
+<p>Changing source or geometry increments a generation. Keep the existing background until the first valid replacement frame, then atomically switch the source shown. A failed new source retains a usable fallback and never changes lock ownership. The same generation/configuration request is idempotent; stale frames are closed and discarded.</p>
+<p>Tint changes affect composition immediately. A group at 100% tint needs no animated output; disable its stream independently of whether DPMS/DDC has completed. If every group is covered/off, freeze engine animation and its clock. Resume on existing wake/activity handling with fresh frames; rendering never performs monitor power commands. Inactive streams hold their last valid frame for a wake transition. Rotation while all groups are inactive updates pending selection and starts it only when a group becomes visible, without resetting deadlines.</p>
+<h2 id="private-protocol-and-errors">Private protocol and errors</h2>
+<p>Transport: inherited AF_UNIX SOCK_SEQPACKET socketpair, SCM_RIGHTS descriptors, no filesystem listener. The bridge launches the worker; the channel itself is the capability. Clear unrelated inherited descriptors and environment. Protocol version 1 uses fixed-size little-endian structures, no serialized object graphs, no arbitrary command strings and no paths in frame messages.</p>
+<p>Header: magic <code>LWP1</code>, major version, message type, payload bytes, generation uint64 and monotonically increasing sequence uint64. Cap each packet at 4096 bytes and ancillary FDs at eight. Validate exact length/type, reserved bits, positive dimensions, overflow-safe pitch/offset arithmetic, configured budgets, device identity, known IDs and generation before importing. Close every descriptor on reject/disconnect, set CLOEXEC, and reject MSG_TRUNC/MSG_CTRUNC or unexpected descriptor counts.</p>
+<div class="table-scroll">
+<table>
+<thead>
+<tr>
+<th scope="col">Message</th>
+<th scope="col">Sender</th>
+<th scope="col">Payload and descriptor rules</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HELLO</td>
+<td>Worker</td>
+<td>Supported protocol, device major/minor, formats/modifiers, engine build. No FDs. Bridge replies only with a compatible configuration.</td>
+</tr>
+<tr>
+<td>CONFIG</td>
+<td>Bridge</td>
+<td>Generation, stream IDs/dimensions, 30-FPS target and per-stream consumer IDs. No FDs. Source/assets are fixed at spawn.</td>
+</tr>
+<tr>
+<td>BUFFER</td>
+<td>Worker</td>
+<td>Stream/slot, width/height, fourcc/modifier, pitch/offset; exactly one DMA-BUF FD. Only three slots per configured stream.</td>
+</tr>
+<tr>
+<td>FRAME</td>
+<td>Worker</td>
+<td>Stream/slot, frame sequence, presentation timestamp; exactly one native ready-fence FD. Cannot overwrite a leased slot.</td>
+</tr>
+<tr>
+<td>RELEASE</td>
+<td>Bridge</td>
+<td>Stream/slot/frame and consumer ID; exactly one consumer release-fence FD, or zero only when never submitted for sampling. Worker reuses only after every expected release fence signals.</td>
+</tr>
+<tr>
+<td>VISIBILITY</td>
+<td>Bridge</td>
+<td>Enabled streams and freeze-clock flag. No FDs; idempotent.</td>
+</tr>
+<tr>
+<td>ERROR</td>
+<td>Either</td>
+<td>Fixed enum: unsupported backend/device/format/source, invalid protocol, resource limit, timeout, render failure. Bounded diagnostic string; no assets or secret data.</td>
+</tr>
+<tr>
+<td>STOP</td>
+<td>Bridge</td>
+<td>Graceful shutdown request. No FDs. Exit within two seconds, then terminate/kill within a further two seconds.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>An unsignaled ready/release fence is not reused by timeout. Tear down that worker generation and its imports safely; resume only with new allocations. Worker protocol/format errors fail the current source immediately. Five seconds to handshake and ten seconds to first frame; transient exit gets one retry after one second per source per lock session. The controller gets only status/source IDs, never frame FDs or credentials.</p>
+<h2 id="data-and-persistence">Data and persistence</h2>
+<p>
+<code>lock-video.json</code> becomes version 2 while retaining its filename for migration. Fields: <code>version:2</code>, <code>activeSource:{kind,id,path,workshopId?}</code>, legacy <code>activeVideo</code> while the source is video, <code>lastChanged</code>, <code>intervalMinutes:30</code>, and <code>shuffleRemaining</code> of stable typed IDs. Existing selected local video and rotation timestamp migrate exactly. Write atomically; do not destructively rewrite the old state until typed-source support is installed on both sides. Legacy video setters and old state remain accepted. If downgrade cannot understand a project, restore the last known video/fallback without replacing user selections globally.</p>
+<p>A source ID identifies a downloaded Workshop ID or canonical local video path. Validate paths against explicitly permitted roots before launch; resolve symlinks and reject escapes. Do not execute project scripts on the host. Missing/deleted projects leave their IDs out of discovery. Failure exclusions are in-memory per lock session and do not remove Workshop files or blacklist permanently. A bounded candidate scan tries each discovered source at most once before settling on fallback.</p>
+<p>The controller&#x27;s runtime lease stores owner PID/start time, lease token and generation atomically under its existing runtime directory. It stores no passwords and never overwrites persistent enabled/selection settings. On restart compare owner liveness/start time before honoring it. One current owner is sufficient on this machine; no distributed coordination or database indexes are needed.</p>
+<p>Existing plugin configuration retains DisplayPower and wallpaper-span fields and adds <code>liveWallpaper.enabled</code>, <code>liveWallpaper.fps</code> (default 30, allowed 1–60) and a typed source field. Offline/silent restrictions are fixed for this first release rather than offering misleading toggles. Existing Explorer controls use dynamic Aether tokens. Buffer and fence IDs exist only in memory; logs record phase, source ID, failure enum and timing, never credentials or wallpaper contents. Rotate logs with existing service retention.</p>
+<h2 id="lifecycles-and-consistency">Lifecycles and consistency</h2>
+<details>
+<summary>Diagram source: mermaid</summary>
+<pre>
+<code>stateDiagram-v2
+    [*] --&gt; Fallback
+    Fallback --&gt; Starting: locked project source
+    Starting --&gt; Live: first validated frame
+    Starting --&gt; Failed: deadline or incompatibility
+    Live --&gt; Paused: every stream covered or off
+    Paused --&gt; Live: visible group resumes
+    Live --&gt; Starting: source or geometry generation changes
+    Paused --&gt; Starting: pending source on wake
+    Live --&gt; Failed: worker or bridge failure
+    Paused --&gt; Failed: worker failure
+    Failed --&gt; Starting: one bounded transient retry
+    Failed --&gt; Fallback: exhausted or unsupported
+    Fallback --&gt; Stopped: unlock or disable
+    Starting --&gt; Stopped: unlock or disable
+    Live --&gt; Stopped: unlock or disable
+    Paused --&gt; Stopped: unlock or disable
+    Failed --&gt; Stopped: unlock or disable
+    Stopped --&gt; [*]</code>
+</pre>
+</details>
+<div class="table-scroll">
+<table>
+<thead>
+<tr>
+<th scope="col">Stateful owner</th>
+<th scope="col">States and guarded transitions</th>
+<th scope="col">Effects, retry and recovery</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Lock worker session</td>
+<td>Fallback/Starting/Live/Paused/Failed/Stopped as diagram; Starting also accepts new source generation. Unlock/disable ends every active state.</td>
+<td>Optional worker never owns lock; stale generation cannot return to Live. Deadlines and single retry as above. New lock session clears failures.</td>
+</tr>
+<tr>
+<td>Buffer slot</td>
+<td>Free → Rendering → Ready → Leased → Releasing → Free. All consumers/fences must finish before Free.</td>
+<td>Dropped unsubmitted Ready frames can release without sampling. Never reuse Leased on timeout. Disconnect retires the generation; close FDs and destroy imports on their owning threads.</td>
+</tr>
+<tr>
+<td>Desktop lease</td>
+<td>Absent → Held on lock; Held → Absent on unlock/death/disable. Recovery validates process identity.</td>
+<td>Acquire/release token operations idempotent. Unknown or stale releases ignored. Persistent user stop always prevents resume.</td>
+</tr>
+<tr>
+<td>Rotation</td>
+<td>Selected → Pending on interval/change while covered; Pending → Selected after source applied; failed candidate excluded for session.</td>
+<td>Preserve shuffle and timestamp semantics; timer never wakes displays or resets power deadlines. Pending changes coalesce to the latest source.</td>
+</tr>
+<tr>
+<td>Installation</td>
+<td>Current → Staged → Validated → Activated, or Staged/Validated → Rejected.</td>
+<td>Current artifacts remain until atomic activation; unlocked guard required. Failed builds leave installed behavior intact. Rollback restores prior pin/artifact manifest.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Invalid state messages are rejected without granting slot ownership. Control requests are sequenced by the bridge; render-thread releases include generation and frame sequence. No promise of exactly-once frame display is needed: dropping frames is permitted, drawing stale or overwritten buffers is not. The compositor and existing auth service have their own unchanged lifecycles.</p>
+<h2 id="security-and-permissions">Security and permissions</h2>
+<p>Launch through bubblewrap with private user/mount/PID/IPC/network namespaces, read-only allowlisted engine/runtime libraries, assets and chosen DRM render node. Provide minimal /proc and /dev, private tmpfs HOME/cache, required CEF helper binaries, and only the inherited frame/control channel. No normal Wayland socket, X11 connection, session bus, PulseAudio/PipeWire sockets, home directory, credentials, Steam login data or writable host path. Deny networking and route audio to a null implementation. Explicitly include only assets needed by validated project dependencies; reject path escapes and ensure read-only mounts are not aliases to broad host directories.</p>
+<p>Use no-new-privileges, resource caps and syscall restrictions compatible with Mesa/CEF. Keep CEF subprocesses inside the same outer sandbox and remove unnecessary relaxed web-security/debug switches for lock mode. Do not assume CEF&#x27;s own sandbox is sufficient. Verify namespace restrictions through an instrumented test worker, not just command-line inspection. If required namespaces or GPU capabilities are unavailable, report unsupported and retain fallback; never silently launch unsandboxed.</p>
+<p>The renderer can affect pixels only inside the wallpaper item, below an opaque authentication card, tint and trusted lock indicators. It cannot create windows, inject input, power monitors, unlock or cover trusted controls. No keyboard/pointer content is forwarded, even for web projects. The importer is small but still part of the lock process&#x27;s graphics attack surface: malformed metadata validation and sandboxing reduce risk, not a proof of immunity to GPU-driver vulnerabilities. If the entire locker crashes, rely on the compositor&#x27;s ext-session-lock failure behavior; prove this in a disposable nested test before a real session test. Never build an automatic unlock-on-crash path.</p>
+<h2 id="failures-and-operational-recovery">Failures and operational recovery</h2>
+<p>Missing module/Qt ABI mismatch: use legacy background, show status in Explorer when unlocked, rerun installer to rebuild. Non-OpenGL scenegraph or device mismatch: no global graphics override; report unsupported and revisit a backend-specific importer only with a revised design. Worker crash/hang: retain fallback, bounded restart then skip source. DMA-BUF exhaustion/fence timeout: terminate generation, release imports safely and reduce activity; do not force slot reuse. Hotplug/scale/transform changes: re-resolve monitor roles, retire old generation and rebuild streams while preserving lock and deadline state. All displays off: pause renderer; wake uses existing verified hardware power code first, then visibility resume.</p>
+<p>If no projects can run, the lock uses its existing video/image background. A degraded renderer never blocks authentication or pauses power recovery. To recover, unlock normally, inspect bounded diagnostics, disable liveWallpaper, or rerun the pinned installer. Never update lock authentication code while the session is locked. Test and install only during an unlocked window; no automatic unlock command.</p>
+<h2 id="deployment-and-resource-targets">Deployment and resource targets</h2>
+<p>Single machine, one lock session, one selected-project worker with CEF subprocesses only for web sources. No remote API, cloud service or background network fetch. Fetch source dependencies during authorized installation, not while locked. Build against system EGL/GBM for the bridge and worker; isolate bundled CEF EGL/GLES libraries to prevent symbol/device mismatches. Record upstream/fork URLs, exact published hashes and modifications in PLUGINS.md; document every installer/helper shell script in SCRIPTS.md.</p>
+<p>Acceptance targets: a supported local scene produces a first frame within ten seconds; render target 30 FPS at actual configured geometry with no growing queue; no main-thread blocking fence waits; no CPU readback in the shared-frame transport; stable FD/GPU memory counts across 100 rotations and monitor-generation changes; authentication input remains responsive under worker stalls. Record frame timing, resident/GPU memory, render-device identity, engine build and CPU/GPU utilization against the existing desktop renderer with the same scene. These are measured acceptance checks, not claimed current results or a universal performance guarantee.</p>
+<p>When all groups are hidden, rendering stops and GPU usage returns toward idle; the paused process can retain bounded assets/buffers. The desktop renderer must not render concurrently while the lease is held. The importer may consume driver/compositor-internal copies depending on negotiated format; call the path verified GPU sharing rather than asserting every driver operation is zero-copy.</p>
+<h2 id="verification-rollout-and-rollback">Verification, rollout and rollback</h2>
+<ol>
+<li>Prove surfaceless EGL worker → DMA-BUF → native Qt item outside the real locker, on the actual Quickshell backend/device. Test modifier negotiation, fences, two side consumers, visibility and disconnect. Stop the feature if this GPU-sharing milestone fails; do not substitute recorded loops or CPU frame streaming.</li>
+<li>Add engine project rendering with existing per-project compatibility overrides. Verify representative scene projects and the local White Tree web project. Measure web&#x27;s internal CEF upload separately. Classify unsupported engine features explicitly.</li>
+<li>Verify protocol validation with truncated packets, extra/missing FDs, stale sequences, overflowed sizes, unknown slots, failed imports and permanently unsignaled fences. Prove no descriptor growth or GUI-thread deadlock. Test sandbox denial of host files, networking, session sockets and arbitrary display surfaces.</li>
+<li>Verify typed-source migration, legacy setters, bounded failed-source rotation, plugin disable/re-enable, desktop user-stop behavior, owner/controller crashes, hotplug and Qt-module absence. Test the optional Loader in the existing locker with the native module deliberately unavailable.</li>
+<li>Integrate background-only rendering and test fail-closed lock ownership in a nested compositor. Then conduct a short actual locked-session test with the user present: correct main and side crops, responsive authentication, tint/timeouts unchanged, DDC-off sides stop rendering and wake safely, unsupported project and worker crash preserve usable lock.</li>
+<li>Publish authorized renderer, lock and controller commits; verify hashes are fetchable; update setup pins, role-based configuration and documentation together. Run fresh-install and repeat-install checks in a staged environment, then install on this unlocked machine. Do not incorporate unrelated dirty changes.</li>
+</ol>
+<p>Roll out behind liveWallpaper.enabled, enabling it only after the GPU and lock tests pass. Rollback disables live rendering, terminates its worker/lease, restores prior published pins and staged artifacts, and preserves existing wallpaper/power selections. No cached recordings exist to clean up. Required implementation plan follows approval of this written specification.</p>
+<h2 id="references">References</h2>
+<ul>
+<li>
+<a href="https://doc.qt.io/qt-6/qnativeinterface-qsgopengltexture.html">Qt native OpenGL texture wrapping</a>
+</li>
+<li>
+<a href="https://registry.khronos.org/EGL/extensions/MESA/EGL_MESA_image_dma_buf_export.txt">EGL DMA-BUF export</a>
+</li>
+<li>
+<a href="https://registry.khronos.org/EGL/extensions/ANDROID/EGL_ANDROID_native_fence_sync.txt">EGL native fence synchronization</a>
+</li>
+<li>
+<a href="https://wayland.app/protocols/ext-session-lock-v1">ext-session-lock protocol</a>
+</li>
+<li>
+<a href="https://github.com/containers/bubblewrap">Bubblewrap implementation and limitations</a>
+</li>
+<li>
+<a href="https://github.com/Almamu/linux-wallpaperengine/blob/b016d7d1fdcf4e5fd2f9c9fa420a8aaa07fee02d/src/WallpaperEngine/Render/Drivers/Output/Output.h">Renderer output interface</a>
+</li>
+<li>
+<a href="https://github.com/Almamu/linux-wallpaperengine/blob/b016d7d1fdcf4e5fd2f9c9fa420a8aaa07fee02d/src/WallpaperEngine/WebBrowser/CEF/RenderHandler.cpp">Existing CEF frame upload</a>
+</li>
+</ul>
+</article>
+</main>
+</body>
+</html>
