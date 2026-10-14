@@ -209,7 +209,8 @@ class T3PlannerExecutorTest(unittest.TestCase):
         self.assertEqual(cfg.get("executor", {}).get("model"), "antigravity/gemini-3.8-flash")
         self.assertEqual(cfg.get("executor", {}).get("thinking"), "high")
         self.assertEqual(cfg.get("maxFixRounds"), 2)
-        self.assertEqual(cfg.get("shellPolicy"), "read-and-test-allowlist")
+        self.assertTrue(cfg.get("planner", {}).get("allowEdits"))
+        self.assertEqual(cfg.get("shellPolicy"), "planner-workspace")
 
         # Check settings.json updates
         settings = json.loads(self.settings_path.read_text())

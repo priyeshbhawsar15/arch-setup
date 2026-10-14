@@ -337,16 +337,16 @@ A desktop-only control card on **DP-4**, directly below Weather at the right edg
 - **Feature ID:** `t3-planner-executor`.
 - **Type:** Separately maintained orchestration adapter package for T3 Code.
 - **Original upstream and installation source:** `git@github.com:priyeshbhawsar15/t3-planner-executor.git` (private GitHub repository).
-- **Pinned release:** `5f534a2f2f6ae164f59751e7ffcda1717b077361` (published and verified private release; explicit `--pin PENDING_PUBLICATION` remains rejected by the installer).
+- **Pinned release:** `7ab9c0dd9774a75ee814a49ef41b281a03e96c36` (published and verified private release; explicit `--pin PENDING_PUBLICATION` remains rejected by the installer).
 - **Local modifications:** None copied into `arch-setups`. The separate repository houses the runtime package; this repository manages personal configuration seeding, lifecycle scripts, and T3 integration.
 
 ### Behavior and controls
 
-Connects T3 Code to an automated Planner -> Executor -> Planner Review workflow loop, providing transparent multi-model dispatch across Pi, Codex, Claude, and native Antigravity. Wrappers intercept provider requests to enforce shell execution policies and multi-round iterative review. State file transactions are synchronized using Linux `util-linux` (`flock`) advisory locks alongside unique atomic temporary files (`<statefile>.<pid>.<uuid>.tmp`) during mutations to protect concurrent ledger updates. The lock helper uses a verified standalone Node.js runtime discovered on PATH (or set with `T3_STATE_NODE_BINARY`), rather than assuming compiled Pi can evaluate JavaScript through `process.execPath`. Runtime verification shares the acquisition deadline; helper startup failures are distinguished from actual lock contention. Fully quit and reopen T3 Code when idle after an update so existing provider processes load the corrected module.
+Connects T3 Code to an automated Planner -> Executor -> Planner Review workflow loop, providing transparent multi-model dispatch across Pi, Codex, Claude, and native Antigravity. Wrappers intercept provider requests to enforce shell execution policies and multi-round iterative review. By default, fresh configurations seed the **hybrid workflow** (`planner.allowEdits: true` and `shellPolicy: 'planner-workspace'`), allowing the root Planner turn to directly handle localized low-complexity edits (a few lines, small config/doc/test updates, routine working-tree merges and conflict resolutions) and run verification checks, while delegating substantial, multicomponent, parallel, or explicitly requested work (`executor=<provider>`) to child Executor threads. Comprehensive operational documentation is maintained in the package guide at [`WORKFLOW.md`](https://github.com/priyeshbhawsar15/t3-planner-executor/blob/main/WORKFLOW.md) (also available locally at sibling `../t3-planner-executor/WORKFLOW.md`). State file transactions are synchronized using Linux `util-linux` (`flock`) advisory locks alongside unique atomic temporary files (`<statefile>.<pid>.<uuid>.tmp`) during mutations to protect concurrent ledger updates. The lock helper uses a verified standalone Node.js runtime discovered on PATH (or set with `T3_STATE_NODE_BINARY`), rather than assuming compiled Pi can evaluate JavaScript through `process.execPath`. Runtime verification shares the acquisition deadline; helper startup failures are distinguished from actual lock contention. Fully quit and reopen T3 Code when idle after an update so existing provider processes load the corrected module.
 
 - **Personal Configuration:** Managed runtime configuration resides at `~/.config/t3code/planner-executor/config.json`, seeded only for missing keys from `t3/planner-executor.json`:
   - `enabled`: `true`
-  - `planner`: provider `inherit`, model `inherit`, thinking `inherit`
+  - `planner`: provider `inherit`, model `inherit`, thinking `inherit`, `allowEdits`: `true`
   - `executor`: provider `pi`, model `antigravity/gemini-3.8-flash`, thinking `high`
   - `providerDefaults`:
     - `pi`: model `antigravity/gemini-3.8-flash`, thinking `high`
@@ -354,8 +354,8 @@ Connects T3 Code to an automated Planner -> Executor -> Planner Review workflow 
     - `claudeAgent`: model `null`, thinking `null`
     - `antigravity`: model `gemini-3.8-flash-low`, thinking `null`
   - `maxFixRounds`: 2
-  - `shellPolicy`: `read-and-test-allowlist`
-  Existing custom operator settings are strictly preserved on install and update.
+  - `shellPolicy`: `planner-workspace`
+  Existing explicit operator values are preserved on install and update. Missing keys receive seed defaults; an older config without `allowEdits` may acquire `true` while retaining its shell policy. Check both controls when updating. To switch an explicitly strict configuration to hybrid, set `allowEdits: true` and `planner-workspace`. Strict mode (`allowEdits: false`, `read-and-test-allowlist`) remains supported.
 
 ### Dependencies, conflicts, and lifecycle
 

@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
 
 DEFAULT_REPO_URL="git@github.com:priyeshbhawsar15/t3-planner-executor.git"
-DEFAULT_REPO_PIN="5f534a2f2f6ae164f59751e7ffcda1717b077361"
+DEFAULT_REPO_PIN="7ab9c0dd9774a75ee814a49ef41b281a03e96c36"
 
 REPO_URL="${T3_PLANNER_EXECUTOR_REPO_URL:-$DEFAULT_REPO_URL}"
 REPO_PIN="${T3_PLANNER_EXECUTOR_REPO_PIN:-$DEFAULT_REPO_PIN}"

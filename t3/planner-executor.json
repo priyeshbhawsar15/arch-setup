@@ -3,7 +3,8 @@
   "planner": {
     "provider": "inherit",
     "model": "inherit",
-    "thinking": "inherit"
+    "thinking": "inherit",
+    "allowEdits": true
   },
   "executor": {
     "provider": "pi",
@@ -34,5 +35,5 @@
     }
   },
   "maxFixRounds": 2,
-  "shellPolicy": "read-and-test-allowlist"
+  "shellPolicy": "planner-workspace"
 }
