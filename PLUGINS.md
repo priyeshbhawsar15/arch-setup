@@ -337,12 +337,12 @@ A desktop-only control card on **DP-4**, directly below Weather at the right edg
 - **Feature ID:** `t3-planner-executor`.
 - **Type:** Separately maintained orchestration adapter package for T3 Code.
 - **Original upstream and installation source:** `git@github.com:priyeshbhawsar15/t3-planner-executor.git` (private GitHub repository).
-- **Pinned release:** `e0a0481c8c590ccc825a1e7509e6d663846927dd` (published and verified private release; explicit `--pin PENDING_PUBLICATION` remains rejected by the installer).
+- **Pinned release:** `5f534a2f2f6ae164f59751e7ffcda1717b077361` (published and verified private release; explicit `--pin PENDING_PUBLICATION` remains rejected by the installer).
 - **Local modifications:** None copied into `arch-setups`. The separate repository houses the runtime package; this repository manages personal configuration seeding, lifecycle scripts, and T3 integration.
 
 ### Behavior and controls
 
-Connects T3 Code to an automated Planner -> Executor -> Planner Review workflow loop, providing transparent multi-model dispatch across Pi, Codex, Claude, and native Antigravity. Wrappers intercept provider requests to enforce shell execution policies and multi-round iterative review. State file transactions are synchronized using Linux `util-linux` (`flock`) advisory locks alongside unique atomic temporary files (`<statefile>.<pid>.<uuid>.tmp`) during mutations to protect concurrent ledger updates. Existing running provider processes ignore new locks until restarted, so active provider processes should be restarted after update when idle.
+Connects T3 Code to an automated Planner -> Executor -> Planner Review workflow loop, providing transparent multi-model dispatch across Pi, Codex, Claude, and native Antigravity. Wrappers intercept provider requests to enforce shell execution policies and multi-round iterative review. State file transactions are synchronized using Linux `util-linux` (`flock`) advisory locks alongside unique atomic temporary files (`<statefile>.<pid>.<uuid>.tmp`) during mutations to protect concurrent ledger updates. The lock helper uses a verified standalone Node.js runtime discovered on PATH (or set with `T3_STATE_NODE_BINARY`), rather than assuming compiled Pi can evaluate JavaScript through `process.execPath`. Runtime verification shares the acquisition deadline; helper startup failures are distinguished from actual lock contention. Fully quit and reopen T3 Code when idle after an update so existing provider processes load the corrected module.
 
 - **Personal Configuration:** Managed runtime configuration resides at `~/.config/t3code/planner-executor/config.json`, seeded only for missing keys from `t3/planner-executor.json`:
   - `enabled`: `true`
