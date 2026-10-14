@@ -13,6 +13,7 @@ installers=(
   install-codex.sh
   install-github-cli.sh
   install-t3code.sh
+  install-t3-planner-executor.sh
   install-steam.sh
   install-lutris.sh
   install-sunshine.sh

@@ -332,6 +332,41 @@ A desktop-only control card on **DP-4**, directly below Weather at the right edg
 
 **Verification:** 11 backend tests (including preset/horizontal swing validation, removed scene defaults and an unrelated-process stop guard), manifest validation, live read-only REST/WebSocket connection, rendered compact thermostat/dropdowns, dynamic theme binding, Pin layer switch and disable/re-enable process/window cleanup passed. `/tmp/ha-clean-final.png` confirms both large room readings, no duplicate current-temperature block, aligned dropdown columns and all four switches visible without scrolling; no widget runtime errors were observed. HA remains at y=1231 beneath Weather's y=1215 bottom (16px gap), matching its 409px window width including inset. The prior right-edge reveal test passed; this revision retains that mask/handle while removing all expansion/slide animations and retaining the full card height. Pin was reset to Bottom and Auto-Hide left enabled. Physical device actions, full keyboard navigation, hotplug/sleep and fresh-machine launcher/authentication remain manual acceptance items; see the plugin's `TESTING.md`. No device-changing service calls were issued during verification.
 
+## T3 Planner-Executor Workflow Adapter
+
+- **Feature ID:** `t3-planner-executor`.
+- **Type:** Separately maintained orchestration adapter package for T3 Code.
+- **Original upstream and installation source:** `git@github.com:priyeshbhawsar15/t3-planner-executor.git` (private GitHub repository).
+- **Pinned release:** `e0a0481c8c590ccc825a1e7509e6d663846927dd` (published and verified private release; explicit `--pin PENDING_PUBLICATION` remains rejected by the installer).
+- **Local modifications:** None copied into `arch-setups`. The separate repository houses the runtime package; this repository manages personal configuration seeding, lifecycle scripts, and T3 integration.
+
+### Behavior and controls
+
+Connects T3 Code to an automated Planner -> Executor -> Planner Review workflow loop, providing transparent multi-model dispatch across Pi, Codex, Claude, and native Antigravity. Wrappers intercept provider requests to enforce shell execution policies and multi-round iterative review. State file transactions are synchronized using Linux `util-linux` (`flock`) advisory locks alongside unique atomic temporary files (`<statefile>.<pid>.<uuid>.tmp`) during mutations to protect concurrent ledger updates. Existing running provider processes ignore new locks until restarted, so active provider processes should be restarted after update when idle.
+
+- **Personal Configuration:** Managed runtime configuration resides at `~/.config/t3code/planner-executor/config.json`, seeded only for missing keys from `t3/planner-executor.json`:
+  - `enabled`: `true`
+  - `planner`: provider `inherit`, model `inherit`, thinking `inherit`
+  - `executor`: provider `pi`, model `antigravity/gemini-3.8-flash`, thinking `high`
+  - `providerDefaults`:
+    - `pi`: model `antigravity/gemini-3.8-flash`, thinking `high`
+    - `codex`: model `gpt-6-luna`, thinking `high`, serviceTier `default`
+    - `claudeAgent`: model `null`, thinking `null`
+    - `antigravity`: model `gemini-3.8-flash-low`, thinking `null`
+  - `maxFixRounds`: 2
+  - `shellPolicy`: `read-and-test-allowlist`
+  Existing custom operator settings are strictly preserved on install and update.
+
+### Dependencies, conflicts, and lifecycle
+
+- **Prerequisites:** Node.js, Git, Python 3, Linux `util-linux` (`flock` for cross-process state file transaction locks), and a mise-managed executor CLI (`pi` configured by default, `codex`, `gh`).
+- **Native Antigravity:** Discovers `agy_acp_server.par` and `localharness_external` from active managed tools under `~/.t3/tools/antigravity-acp/<platform>-<arch>/active.json` or existing descriptors; reports pending status with rerun instructions without fabricating binaries or marking the adapter activated if not configured.
+- **Install or verify:** `./install-t3-planner-executor.sh` (registered in `install-all.sh` immediately after `install-t3code.sh`). Checks exact pinned revision, byte-for-byte runtime files, executable modes, symlinks, valid JSON shape, exact Pi extension arguments in `settings.json`, and native Antigravity descriptors. Matching state prints `already installed` and exits 0.
+- **Enable:** `./install-t3-planner-executor.sh --enable` persists the enabled choice and sets `enabled: true`. Fails closed preserving state if config or dependencies are invalid.
+- **Disable:** `./install-t3-planner-executor.sh --disable` sets `enabled: false` and remembers the choice across `install-all.sh`. Fails closed without profile changes if config is malformed.
+- **Remove:** `./install-t3-planner-executor.sh --remove` preflights settings, unconfigures all managed T3 provider instances and aliases (restoring verified backend paths), removes the launcher symlink, archives all managed runtime files, settings, and descriptors under `~/.local/state/arch-setups/backups/t3-planner-executor-remove-<timestamp>/`, and unlinks only owned adapter files while preserving custom manual files, local workflow state, and personal config. Refuses deletion if backend paths cannot be verified. Historical backups, vendor binaries (`~/.t3/tools`), and authentication remain untouched.
+- **Conflicts:** None; preserves Codex mise protocol-safe launcher and other Pi extensions.
+
 ## Removed integrations
 
 The `per-monitor-bar` plugin remains removed. Its installer, source checkout, visibility-mode shortcut, and local state were archived during the plugin reset. Omarchy's default `Super+Shift+Space` bar toggle remains in use.
