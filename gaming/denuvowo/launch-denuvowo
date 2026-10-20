@@ -1,0 +1,64 @@
+#!/usr/bin/env python3
+"""Launch any selected DenuvOwO title through the shared runtime and UMU."""
+import argparse
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import sys
+
+
+def launch_plan(game_id, executable, arguments, home, environ):
+    if not re.fullmatch(r'[a-z0-9][a-z0-9_-]{0,63}', game_id):
+        raise ValueError('Game ID must be 1–64 lowercase letters, digits, underscores or hyphens.')
+    executable = Path(executable).expanduser().resolve()
+    if not executable.is_file() or executable.suffix.lower() != '.exe':
+        raise ValueError(f'Windows executable not found: {executable}')
+    wrapper = home / '.local/bin/linuwux'
+    library = home / '.local/share/linuwux/LinUwUx.so'
+    manifest = home / '.local/share/arch-setups/denuvowo/runtime.json'
+    if not wrapper.is_file() or not os.access(wrapper, os.X_OK) or not library.is_file():
+        raise ValueError('LinUwUx is not installed; run install-linuwux.sh.')
+    umu = shutil.which('umu-run', path=environ.get('PATH', os.defpath))
+    if not umu:
+        raise ValueError('umu-run is missing; run install-linuwux.sh.')
+    if environ.get('PROTONPATH'):
+        proton = Path(environ['PROTONPATH']).expanduser().resolve()
+    else:
+        proton = Path(json.loads(manifest.read_text())['proton_path'])
+    if not (proton / 'proton').is_file() or not os.access(proton / 'proton', os.X_OK):
+        raise ValueError(f'Proton runner is unavailable: {proton}')
+    env = dict(environ)
+    for key in ('SteamAppId', 'SteamGameId', 'STEAM_COMPAT_DATA_PATH'):
+        env.pop(key, None)
+    # Never reuse an inherited prefix or another title's UMU database identity.
+    env.update(WINEPREFIX=str(home / '.local/share/wineprefixes/denuvowo' / game_id),
+               GAMEID=environ.get('DENUWOWO_GAMEID', 'umu-default'), PROTONPATH=str(proton))
+    return executable.parent, env, [str(wrapper), umu, str(executable), *arguments]
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('game_id', help='Stable per-game ID, e.g. my-game')
+    parser.add_argument('executable', help='Path to the Windows .exe')
+    parser.add_argument('arguments', nargs=argparse.REMAINDER)
+    args = parser.parse_args()
+    try:
+        cwd, env, command = launch_plan(args.game_id, args.executable, args.arguments,
+                                        Path.home(), os.environ)
+        prefix = Path(env['WINEPREFIX'])
+        # Refuse a redirected prefix so distinct IDs remain isolated by default.
+        if prefix.resolve() != prefix:
+            raise ValueError(f'Refusing a symlinked game prefix: {prefix}')
+        os.umask(0o077)
+        prefix.mkdir(parents=True, exist_ok=True, mode=0o700)
+        os.chdir(cwd)
+        os.execvpe(command[0], command, env)
+    except (OSError, ValueError, KeyError) as error:
+        print(f'launch-denuvowo: {error}', file=sys.stderr)
+        return 1
+
+
+if __name__ == '__main__':
+    sys.exit(main())

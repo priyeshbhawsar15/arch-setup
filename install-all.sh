@@ -16,6 +16,7 @@ installers=(
   install-t3-planner-executor.sh
   install-steam.sh
   install-lutris.sh
+  install-linuwux.sh
   install-sunshine.sh
   install-tailscale.sh
   install-keyd.sh
