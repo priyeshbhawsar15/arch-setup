@@ -1,0 +1,36 @@
+diff --git i/cfg_structurizer.cpp w/cfg_structurizer.cpp
+index 7fcea7b..1487f6e 100644
+--- i/cfg_structurizer.cpp
++++ w/cfg_structurizer.cpp
+@@ -2828,6 +2828,13 @@ void CFGStructurizer::insert_phi(PHINode &node)
+ 
+ 			const auto update_frontier = [&](CFGNode *candidate_frontier)
+ 			{
++				// An intermediate loop header needs an incoming value for its
++				// back edge too. Do not pick one which would require inventing
++				// a cyclic SSA value that this insertion pass cannot resolve.
++				if (candidate_frontier->pred_back_edge &&
++				    find_incoming_value(candidate_frontier->pred_back_edge, incoming_values) == incoming_values.end())
++					return;
++
+ 				if (frontier == nullptr || candidate_frontier->forward_post_visit_order > frontier->forward_post_visit_order)
+ 				{
+ 					// Pick the earliest frontier in the CFG.
+@@ -2952,8 +2959,15 @@ void CFGStructurizer::insert_phi(PHINode &node)
+ 		frontier_phi.relaxed = phi.relaxed;
+ 		module.get_builder().addName(frontier_phi.id, (String("frontier_phi_") + frontier->name).c_str());
+ 
+-		assert(!frontier->pred_back_edge);
+-		for (auto *input : frontier->pred)
++		// Rewriting loop exits can make a collector an intermediate loop
++		// header. Its latch is a real predecessor, not an optional input.
++		auto frontier_inputs = frontier->pred;
++		if (frontier->pred_back_edge)
++		{
++			assert(find_incoming_value(frontier->pred_back_edge, incoming_values) != incoming_values.end());
++			frontier_inputs.push_back(frontier->pred_back_edge);
++		}
++		for (auto *input : frontier_inputs)
+ 		{
+ 			auto itr = find_incoming_value(input, incoming_values);
+ 			if (itr != incoming_values.end())
