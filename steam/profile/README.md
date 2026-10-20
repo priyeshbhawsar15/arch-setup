@@ -111,8 +111,10 @@ patches, Steam tokens, prefixes, saves, or NVIDIA model DLLs into Git.
 F1's existing custom `~/.local/bin/launch-f1-25-4k` and its shader-fix/private
 runtime are external prerequisites, not something this conversation added or
 an OptiScaler target. The profile restores its Lutris entry/artwork only when
-that launcher exists. Rebuilding that runtime needs its original source and
-provenance; this profile deliberately does not vendor its private binaries.
+that launcher exists. The manual [F1 25 recovery runbook](../../docs/gaming/f1-25-recovery.md)
+records backup/restore, the final launch chain, CPU/graphics checks, shader-source
+pins and rebuild guidance, troubleshooting and known recovery limitations. This
+profile does not apply that runbook or vendor private runtime binaries.
 
 ## Backups, updates and checks
 
