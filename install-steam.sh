@@ -5,6 +5,12 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
 
+# Apply only the desktop UI fix safely while Steam/games are running.
+if [[ "${1:-}" == "--ui-scale-only" ]]; then
+  python3 "$SCRIPT_DIR/steam/configure-ui-scale.py"
+  exit 0
+fi
+
 steam_installed=false
 if is_command_available steam || pacman -Q steam >/dev/null 2>&1; then
   steam_installed=true
@@ -19,6 +25,9 @@ if ! is_command_available gamescope || ! pacman -Q gamescope >/dev/null 2>&1; th
   log "Installing Gamescope with Omarchy..."
   omarchy pkg add gamescope
 fi
+
+# Keep the desktop client compact despite the session's GDK_SCALE=2.
+python3 "$SCRIPT_DIR/steam/configure-ui-scale.py"
 
 # Deploy the Gamescope HDR launcher wrapper
 local_bin="${HOME}/.local/bin"

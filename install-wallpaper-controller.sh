@@ -11,7 +11,7 @@ source "$SCRIPT_DIR/lib.sh"
 plugin_id="priyesh.wallpaper-controller"
 plugin_url="https://github.com/priyeshbhawsar15/omawallpaper-manager.git"
 plugin_ssh_url="git@github.com:priyeshbhawsar15/omawallpaper-manager.git"
-plugin_commit="68dd1671286ac88b381f1a882fdb20c1415de996"
+plugin_commit="418884ce00419798dfbb0cb5eff27eefa6c4bf4d"
 plugin_dir="$HOME/.config/omarchy/plugins/$plugin_id"
 config_seed="$SCRIPT_DIR/omarchy/wallpaper-controller.json"
 config_file="$HOME/.config/omarchy/wallpaper-controller.json"
@@ -161,7 +161,8 @@ remove_plugin() {
   mkdir -p -- "$backup_dir"
 
   for path in "$config_file" "$HOME/.local/state/omarchy/wallpaper-controller" \
-    "$HOME/.config/omarchy/backgrounds/wallpaper-controller-transparent.png"; do
+    "$HOME/.config/omarchy/backgrounds/wallpaper-controller-transparent.png" \
+    "$HOME/.config/omarchy/backgrounds/wallpaper-controller-black.png"; do
     if [[ -e "$path" || -L "$path" ]]; then
       relative_path="${path#$HOME/}"
       mkdir -p -- "$backup_dir/$(dirname -- "$relative_path")"
