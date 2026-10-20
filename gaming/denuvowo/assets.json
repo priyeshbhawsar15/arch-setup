@@ -1,0 +1,14 @@
+{
+  "linuwux": {
+    "version": "v26.09.28.4",
+    "url": "https://github.com/brcly/linuwux-runtime/releases/download/v26.09.28.4/LinUwUx.so",
+    "sha256": "2af3cce278382872688b852403f96b7faf8776bd41daa2d75bd45e9d83b99ad9",
+    "source": "https://github.com/brcly/linuwux-runtime/tree/v26.09.28.4"
+  },
+  "proton": {
+    "version": "GE-Proton11-7-x86_64",
+    "url": "https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton11-7/GE-Proton11-7-x86_64.tar.gz",
+    "sha256": "c5448b76a230384e2d7bc6beb5ccb97bafb7e2c3b6c527cb03a1a546bbcb00a0",
+    "source": "https://github.com/GloriousEggroll/proton-ge-custom/tree/GE-Proton11-7"
+  }
+}

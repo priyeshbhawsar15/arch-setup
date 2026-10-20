@@ -1,0 +1,28 @@
+#!/bin/bash
+# Generic LD_PRELOAD prefix; no game-specific flags or global environment edits.
+set -euo pipefail
+lib="$HOME/.local/share/linuwux/LinUwUx.so"
+if [[ $# == 0 ]]; then
+  printf 'Usage: %s COMMAND [ARGS...]\n' "$0" >&2
+  exit 2
+fi
+if [[ ! -r "$lib" ]]; then
+  printf 'LinUwUx library is missing: %s\nRun install-linuwux.sh first.\n' "$lib" >&2
+  exit 1
+fi
+if [[ "$lib" == *:* || "$lib" == *[[:space:]]* ]]; then
+  printf 'LinUwUx library path cannot contain whitespace or colons.\n' >&2
+  exit 1
+fi
+# ld.so accepts colons and spaces. Keep other libraries, without duplicate LinUwUx.
+IFS=': ' read -r -a inherited <<< "${LD_PRELOAD:-}"
+preload="$lib"
+for entry in "${inherited[@]}"; do
+  [[ -n "$entry" && "$entry" != "$lib" ]] || continue
+  if [[ "${1##*/}" == gamescope && "$entry" == *gameoverlayrenderer.so* ]]; then
+    continue
+  fi
+  preload+=":$entry"
+done
+export LD_PRELOAD="$preload"
+exec "$@"
