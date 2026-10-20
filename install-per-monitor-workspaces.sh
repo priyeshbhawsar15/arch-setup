@@ -17,6 +17,9 @@ shell_config="$HOME/.config/omarchy/shell.json"
 toggle_path="$HOME/.local/state/omarchy/toggles/hypr/per-monitor-workspaces.lua"
 state_dir="$HOME/.local/state/omarchy"
 
+bar_role="workspaces"
+bar_state_file="${XDG_STATE_HOME:-$HOME/.local/state}/arch-setups/mmsbrggr.per-monitor-workspaces/bar-layout.json"
+
 require_omarchy
 
 fail() {
@@ -39,12 +42,7 @@ shibumi_is_active() {
 }
 
 plugin_checkout_is_current() {
-  [[ -d "$plugin_dir/.git" ]] || return 1
-  [[ "$(git -C "$plugin_dir" remote get-url origin 2>/dev/null || true)" == "$plugin_url" ]] || return 1
-  [[ "$(git -C "$plugin_dir" rev-parse HEAD 2>/dev/null || true)" == "$plugin_commit" ]] || return 1
-  git -C "$plugin_dir" diff --quiet || return 1
-  git -C "$plugin_dir" diff --cached --quiet || return 1
-  [[ -z "$(git -C "$plugin_dir" status --porcelain --untracked-files=all)" ]] || return 1
+  managed_plugin_checkout_current "$plugin_dir" "$plugin_url" "$plugin_commit"
 }
 
 plugin_is_enabled() {
@@ -70,48 +68,15 @@ plugin_is_configured() {
     .bar.id == "hancore.shibumi.bar"
     and any(.bar.layout.left[], .bar.layout.center[], .bar.layout.right[];
       type == "object" and .id == $id and .shibumiModule == true and .count == 5)
-    and all(.plugins[] | select(type == "object" and .id? == "hancore.shibumi.state");
-      (.shibumi.order.left // []) | all(. != ("G:" + $id)))
-  ' "$shell_config" >/dev/null
+  ' "$shell_config" >/dev/null && manage_bar_layout check
 }
 
 checkout_pinned_plugin() {
-  local parent stage
-  parent="$(dirname -- "$plugin_dir")"
-  mkdir -p -- "$parent"
-  stage="$(mktemp -d "$parent/.${plugin_id}.install.XXXXXX")"
-  cleanup_stage() { rm -rf -- "$stage"; }
-  trap cleanup_stage RETURN
-
-  GIT_TERMINAL_PROMPT=0 git clone --quiet --no-checkout "$plugin_url" "$stage" \
-    || fail "could not clone $plugin_url"
-  git -C "$stage" checkout --quiet --detach "$plugin_commit" \
-    || fail "could not check out pinned commit $plugin_commit"
-  git -C "$stage" submodule update --init --recursive
-  omarchy plugin validate "$stage" \
-    || fail "the pinned plugin checkout did not pass Omarchy validation"
-  mv -- "$stage" "$plugin_dir"
-  trap - RETURN
+  install_pinned_plugin "$plugin_dir" "$plugin_url" "$plugin_commit" "$plugin_id"
 }
 
 update_pinned_plugin() {
-  [[ -d "$plugin_dir/.git" ]] || fail "the existing plugin is not a Git checkout"
-  [[ "$(git -C "$plugin_dir" remote get-url origin 2>/dev/null || true)" == "$plugin_url" ]] \
-    || fail "the existing plugin checkout is not managed by this installer"
-  git -C "$plugin_dir" diff --quiet \
-    || fail "the existing plugin checkout has uncommitted changes"
-  git -C "$plugin_dir" diff --cached --quiet \
-    || fail "the existing plugin checkout has staged changes"
-  [[ -z "$(git -C "$plugin_dir" status --porcelain --untracked-files=all)" ]] \
-    || fail "the existing plugin checkout has untracked files"
-
-  git -C "$plugin_dir" fetch --quiet --tags origin \
-    || fail "could not fetch the reviewed pinned revision"
-  git -C "$plugin_dir" checkout --quiet --detach "$plugin_commit" \
-    || fail "could not check out pinned commit $plugin_commit"
-  git -C "$plugin_dir" submodule update --init --recursive
-  omarchy plugin validate "$plugin_dir" \
-    || fail "the updated pinned checkout did not pass Omarchy validation"
+  checkout_pinned_plugin
 }
 
 write_enabled_toggle() {
@@ -122,70 +87,12 @@ write_enabled_toggle() {
 EOF
 }
 
-remove_restored_stock_workspace_entry() {
-  [[ -f "$shell_config" ]] || return 0
-  local temporary
-  temporary="$(mktemp "${shell_config}.per-monitor-workspaces.XXXXXX")"
-  jq '
-    def entry_id: if type == "object" then (.id // "" | tostring) else tostring end;
-    .bar.layout.left |= map(select(entry_id != "omarchy.workspaces"))
-    | .bar.layout.center |= map(select(entry_id != "omarchy.workspaces"))
-    | .bar.layout.right |= map(select(entry_id != "omarchy.workspaces"))
-  ' "$shell_config" > "$temporary"
-  chmod --reference="$shell_config" "$temporary"
-  mv -- "$temporary" "$shell_config"
-}
-
-remove_native_shibumi_workspace_bar_entry() {
-  [[ -f "$shell_config" ]] || return 0
-  python3 - <<PY
-import json
-with open("$shell_config", "r") as f:
-    data = json.load(f)
-
-left = data.get("bar", {}).get("layout", {}).get("left", [])
-data["bar"]["layout"]["left"] = [e for e in left if (e.get("id") if isinstance(e, dict) else e) != "hancore.shibumi.workspaces"]
-
-for p in data.get("plugins", []):
-    if isinstance(p, dict) and p.get("id") == "hancore.shibumi.state":
-        shibumi = p.get("shibumi", {})
-        order = shibumi.get("order", {})
-        roles = shibumi.get("v1SlotRoles", {})
-        left_order = order.get("left", [])
-        if left_order:
-            left_order = [g for g in left_order if g != "G:mmsbrggr.per-monitor-workspaces"]
-            if "G2" in left_order:
-                left_order.remove("G2")
-            g1_idx = left_order.index("G1") if "G1" in left_order else -1
-            left_order.insert(g1_idx + 1 if g1_idx >= 0 else 0, "G2")
-            order["left"] = left_order
-            roles["left"] = ["base"] * len(left_order)
-
-with open("$shell_config", "w") as f:
-    json.dump(data, f, indent=2)
-PY
-}
-
-restore_native_shibumi_workspace_bar_entry() {
-  [[ -f "$shell_config" ]] || return 0
-  python3 - <<PY
-import json
-with open("$shell_config", "r") as f:
-    data = json.load(f)
-
-left = data.get("bar", {}).get("layout", {}).get("left", [])
-if not any((e.get("id") if isinstance(e, dict) else e) == "hancore.shibumi.workspaces" for e in left):
-    idx = -1
-    for i, e in enumerate(left):
-        if (e.get("id") if isinstance(e, dict) else e) == "hancore.shibumi.control-center":
-            idx = i
-            break
-    left.insert(idx + 1 if idx >= 0 else 0, {"id": "hancore.shibumi.workspaces"})
-    data["bar"]["layout"]["left"] = left
-
-with open("$shell_config", "w") as f:
-    json.dump(data, f, indent=2)
-PY
+# Keep the reversible layout change separate from Omarchy's plugin registry.
+# Restore before disabling a cloned widget so the registry cannot replace an
+# unrelated stock workspace entry with a manufactured fallback.
+manage_bar_layout() {
+  python3 "$SCRIPT_DIR/config/bar-layout.py" "$shell_config" "$bar_state_file" \
+    "$plugin_id" "$bar_role" "$1"
 }
 
 reload_hyprland() {
@@ -202,11 +109,8 @@ enable_plugin() {
 
   omarchy-shell shell rescanPlugins >/dev/null
   wait_for_plugin_discovery
+  manage_bar_layout enable
   omarchy plugin enable "$plugin_id"
-  omarchy bar set "$plugin_id" shibumiModule true --json
-  omarchy bar set "$plugin_id" count 5 --json
-  omarchy bar move "$plugin_id" --section left --before hancore.shibumi.status
-  remove_native_shibumi_workspace_bar_entry
   write_enabled_toggle
   reload_hyprland
 
@@ -215,32 +119,21 @@ enable_plugin() {
 }
 
 disable_plugin() {
-  if plugin_is_enabled; then
+  local was_enabled=false
+  if plugin_is_enabled; then was_enabled=true; fi
+  manage_bar_layout disable
+  if [[ "$was_enabled" == true ]]; then
     omarchy plugin disable "$plugin_id"
   fi
-  # Restore Shibumi's native workspace bar entry and clean up temporary stock entries
-  restore_native_shibumi_workspace_bar_entry
-  remove_restored_stock_workspace_entry
   rm -f -- "$toggle_path"
   reload_hyprland
   log "Per-monitor Workspaces is disabled; Shibumi's native workspace widget and Omarchy's numeric workspace rules are restored."
 }
 
 backup_feature_data() {
-  local backup_dir path relative_path
-  backup_dir="$HOME/.local/state/arch-setups/backups/per-monitor-workspaces-remove-$(date +%Y%m%d%H%M%S)"
-  mkdir -p -- "$backup_dir"
-  for path in \
-    "$toggle_path" \
-    "$state_dir/$plugin_id.lua" \
-    "$state_dir/$plugin_id.layouts.lua" \
-    "$state_dir/$plugin_id.offer-dismissed"; do
-    [[ -e "$path" || -L "$path" ]] || continue
-    relative_path="${path#$HOME/}"
-    mkdir -p -- "$backup_dir/$(dirname -- "$relative_path")"
-    cp -a -- "$path" "$backup_dir/$relative_path"
-  done
-  printf '%s\n' "$backup_dir"
+  backup_feature_paths per-monitor-workspaces-remove "$toggle_path" "$state_dir/$plugin_id.lua" \
+    "$state_dir/$plugin_id.layouts.lua" "$state_dir/$plugin_id.offer-dismissed" \
+    "$shell_config" "$(dirname -- "$bar_state_file")"
 }
 
 remove_plugin() {
@@ -282,10 +175,6 @@ if plugin_is_enabled && plugin_is_configured && [[ "$checkout_changed" == false 
   exit 0
 fi
 
-if plugin_is_enabled; then
-  omarchy plugin disable "$plugin_id"
-  remove_restored_stock_workspace_entry
-fi
 
 enable_plugin
 if [[ "$checkout_changed" == true ]]; then

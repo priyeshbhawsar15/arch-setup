@@ -1,0 +1,39 @@
+{
+  "enabled": true,
+  "planner": {
+    "provider": "inherit",
+    "model": "inherit",
+    "thinking": "inherit",
+    "allowEdits": true
+  },
+  "executor": {
+    "provider": "pi",
+    "model": "antigravity/gemini-3.8-flash",
+    "thinking": "high"
+  },
+  "providerDefaults": {
+    "pi": {
+      "provider": "pi",
+      "model": "antigravity/gemini-3.8-flash",
+      "thinking": "high"
+    },
+    "codex": {
+      "provider": "codex",
+      "model": "gpt-6-luna",
+      "thinking": "high",
+      "serviceTier": "default"
+    },
+    "claudeAgent": {
+      "provider": "claudeAgent",
+      "model": null,
+      "thinking": null
+    },
+    "antigravity": {
+      "provider": "antigravity",
+      "model": "gemini-3.8-flash-low",
+      "thinking": null
+    }
+  },
+  "maxFixRounds": 2,
+  "shellPolicy": "planner-workspace"
+}

@@ -1,5 +1,11 @@
 # Live lock wallpapers through an isolated GPU renderer
 
+The [14 October 2026 bridge lifecycle revision](live-lock-bridge-lifecycle.md)
+supersedes the native bridge's internal ownership model. Its approach is
+approved, including the written revision and replacement implementation plan;
+implementation is authorized and begins with the immutable epoch runtime.
+The scope, security boundaries and rollout requirements below still apply.
+
 Status: written design for review. Date: 2026-10-12. Product implementation has not started. The user selected an isolated renderer with GPU buffer sharing and rejected cached video loops.
 
 ## Scope and decisions

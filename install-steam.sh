@@ -32,6 +32,10 @@ if [[ ! -f "$target_wrapper" ]] || ! cmp -s "$source_wrapper" "$target_wrapper";
   chmod +x "$target_wrapper"
   wrapper_changed=true
 fi
+if [[ ! -x "$target_wrapper" ]]; then
+  chmod +x "$target_wrapper"
+  wrapper_changed=true
+fi
 
 # Configure Gamescope HDR across all installed Steam games
 configured_output=""

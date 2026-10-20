@@ -9,8 +9,8 @@ source "$SCRIPT_DIR/lib.sh"
 
 plugin_id="io.github.sirjul1337.lock-explorer"
 plugin_url="https://github.com/priyeshbhawsar15/omarchy-lock-explorer.git"
-plugin_tag="v1.7.7-phased-power"
-plugin_commit="7f0da0169e41615493834e39d9c84c889b3ac30e"
+plugin_revision="v1.7.7 with monitor spanning and power controls"
+plugin_commit="b1b010a9113185b215b652c141c4b30168a2836f"
 plugin_dir="$HOME/.config/omarchy/plugins/$plugin_id"
 shell_config="$HOME/.config/omarchy/shell.json"
 menu_file="$HOME/.config/omarchy/extensions/omarchy-menu.jsonc"
@@ -144,14 +144,24 @@ if filtered != text.splitlines(keepends=True):
 PY
 }
 
-power_config_is_current() {
-  jq -e --arg id "$plugin_id" 'any(.plugins[]; .id == $id and .phasedPower == {main:"DP-6", sides:["DP-5","DP-4"], offMs:60000, dimMs:300000, overlayOpacity:0.5})' "$shell_config" >/dev/null
+managed_config_is_current() {
+  jq -e --arg id "$plugin_id" --argjson roles "$monitor_roles" --argjson policy "$monitor_policy" '
+    def integer_between($lo; $hi): type == "number" and . >= $lo and . <= $hi and floor == .;
+    any(.plugins[]; .id == $id
+      and .phasedPower.main == $roles[$policy.lockMain]
+      and .phasedPower.sides == [$policy.lockSides[] | $roles[.]]
+      and .phasedPower.ddcPowerOffMonitors == [$policy.lockSides[] | $roles[.]]
+      and (.phasedPower.mainTimeoutMs | integer_between(1000; 3600000))
+      and (.phasedPower.sideTimeoutMs | integer_between(1000; 3600000))
+      and (.phasedPower.mainTint | integer_between(0; 100))
+      and (.phasedPower.sideTint | integer_between(0; 100))
+      and .wallpaperSpanGroups == [[$policy.wallpaperSpan[] | $roles[.]]])' "$shell_config" >/dev/null
 }
 
-configure_power() {
-  power_config_is_current && return 0
+configure_plugin() {
+  managed_config_is_current && return 0
   cp -a -- "$shell_config" "$shell_config.bak-lock-power-$(date +%Y%m%d%H%M%S)"
-  SHELL_CONFIG="$shell_config" PLUGIN_ID="$plugin_id" python3 - <<'PY'
+  SHELL_CONFIG="$shell_config" PLUGIN_ID="$plugin_id" MONITOR_ROLES="$monitor_roles" MONITOR_POLICY="$monitor_policy" python3 - <<'PY'
 import json
 import os
 from pathlib import Path
@@ -162,9 +172,22 @@ entry = next((e for e in entries if e.get('id') == os.environ['PLUGIN_ID']), Non
 if entry is None:
     entry = {'id': os.environ['PLUGIN_ID']}
     entries.append(entry)
-entry['phasedPower'] = {'main': 'DP-6', 'sides': ['DP-5', 'DP-4'], 'offMs': 60000, 'dimMs': 300000, 'overlayOpacity': 0.5}
+power = entry.setdefault('phasedPower', {})
+roles = json.loads(os.environ['MONITOR_ROLES'])
+policy = json.loads(os.environ['MONITOR_POLICY'])
+power['main'] = roles[policy['lockMain']]
+power['sides'] = [roles[r] for r in policy['lockSides']]
+power['ddcPowerOffMonitors'] = power['sides']
+power.setdefault('mainTimeoutMs', power.get('offMs', 60000))
+power.setdefault('sideTimeoutMs', power.get('dimMs', 300000))
+power.setdefault('mainTint', 100)
+power.setdefault('sideTint', 90)
+for key in ('offMs', 'dimMs', 'overlayOpacity'):
+    power.pop(key, None)
+entry['wallpaperSpanGroups'] = [[roles[r] for r in policy['wallpaperSpan']]]
 path.write_text(json.dumps(config, indent=2) + '\n')
 PY
+  managed_config_is_current || fail "invalid monitor timeout/tint settings; use seconds 1–3600 and tint 0–100% in Lock Screen Explorer"
 }
 
 require_unlocked() {
@@ -176,7 +199,10 @@ require_unlocked() {
 
 restore_power() {
   [[ -f "$plugin_dir/display-power.py" ]] || return 0
-  python3 "$plugin_dir/display-power.py" wake DP-5 DP-4 DP-6
+  local outputs=()
+  mapfile -t outputs < <(jq -r --arg id "$plugin_id" '
+    .plugins[] | select(.id == $id) | .phasedPower | [.main, .sides[]?] | .[] | select(type == "string")' "$shell_config")
+  python3 "$plugin_dir/display-power.py" wake "${outputs[@]}"
 }
 
 enable_plugin() {
@@ -231,6 +257,13 @@ ensure_command jq jq
 ensure_command python3 python
 ensure_command ddcutil ddcutil
 
+monitor_roles="$(python3 "$SCRIPT_DIR/hypr/scripts/monitor-layout.py" --config "$SCRIPT_DIR/monitor-layout.json" resolve)" \
+  || fail "cannot resolve configured monitor identities"
+monitor_policy="$(cat "$SCRIPT_DIR/monitor-layout.json")"
+jq -e --argjson roles "$monitor_roles" '
+  [.lockMain, .lockSides[], .wallpaperSpan[]] | all(.[]; $roles[.] != null)' \
+  <<<"$monitor_policy" >/dev/null || fail "connect the configured lock and wallpaper displays before installing"
+
 require_unlocked
 checkout_changed=false
 if [[ -e "$plugin_dir" || -L "$plugin_dir" ]]; then
@@ -243,16 +276,16 @@ else
   checkout_changed=true
 fi
 
-if plugin_is_enabled && [[ "$checkout_changed" == false ]] && power_config_is_current; then
+if plugin_is_enabled && [[ "$checkout_changed" == false ]] && managed_config_is_current; then
   log "Lock Screen Explorer is already installed."
   exit 0
 fi
 
 # Enabling an existing plugin is idempotent; disabling first discards its
 # plugin-entry settings (including the user's lock design and video).
-configure_power
+configure_plugin
 enable_plugin
 # Git checkout hot-reloads several files; drain stale lock IPC handlers once.
 require_unlocked
 omarchy restart shell
-log "Installed and activated Lock Screen Explorer at $plugin_tag ($plugin_commit)."
+log "Installed and activated Lock Screen Explorer at $plugin_revision ($plugin_commit)."

@@ -1,12 +1,20 @@
 #!/usr/bin/env python3
 """Sync installed Steam games and non-Steam shortcuts into Lutris."""
 
+import copy
+from datetime import datetime, timezone
 import glob
+import json
 import os
+from pathlib import Path
 import shlex
+import shutil
 import struct
+import subprocess
 import sys
-import time
+import tempfile
+
+import yaml
 
 try:
     import gi
@@ -14,14 +22,75 @@ try:
     from lutris import settings
     from lutris.config import write_game_config, LutrisConfig
     from lutris.database import sql
+    from lutris.database.schema import syncdb
     from lutris.database.games import add_game, get_game_by_field, get_games
     from lutris.services.steam import SteamService, SteamGame
     from lutris.util.steam.appmanifest import AppManifest, get_appmanifests
     from lutris.util.steam.config import get_steamapps_dirs, get_steam_dir
     from lutris.util.strings import slugify
+    from lutris.util.system import create_folder
 except ImportError as ex:
-    print(f"Lutris libraries not available: {ex}")
-    sys.exit(0)
+    print(f"Lutris libraries not available: {ex}", file=sys.stderr)
+    sys.exit(1)
+
+
+def initialize_lutris():
+    """Prepare only the directories/schema needed by this non-GUI import."""
+    for directory in (settings.DATA_DIR, settings.CONFIG_DIR, settings.GAME_CONFIG_DIR,
+                      os.path.dirname(settings.DB_PATH)):
+        create_folder(directory)
+    syncdb()
+
+
+def save_yaml_update(path, desired, original):
+    """Back up and atomically replace a changed YAML file without racing its UI."""
+    current = path.read_bytes() if path.exists() else None
+    if current != original:
+        raise RuntimeError(f"Lutris configuration changed during synchronization: {path}")
+    if original is not None:
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+        backup = path.with_name(f"{path.name}.bak-steam-{stamp}")
+        shutil.copy2(path, backup)
+        print(f"Backed up Lutris configuration to {backup}")
+    fd, temporary = tempfile.mkstemp(prefix=".lutris-steam-", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w") as stream:
+            yaml.safe_dump(desired, stream, sort_keys=False)
+            stream.flush()
+            os.fsync(stream.fileno())
+        current = path.read_bytes() if path.exists() else None
+        if current != original:
+            raise RuntimeError(f"Lutris configuration changed during synchronization: {path}")
+        if original is not None:
+            shutil.copymode(path, temporary)
+        os.replace(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
+
+def update_game_config(filename, managed):
+    path = Path(filename).resolve()
+    original = path.read_bytes() if path.exists() else None
+    data = yaml.safe_load(original) if original is not None else {}
+    if data is None:
+        data = {}
+    if not isinstance(data, dict):
+        raise ValueError(f"Lutris configuration is not a mapping: {path}")
+    desired = copy.deepcopy(data)
+    game = desired.setdefault("game", {})
+    system = desired.setdefault("system", {})
+    if not isinstance(game, dict) or not isinstance(system, dict):
+        raise ValueError(f"Invalid game/system mapping in Lutris configuration: {path}")
+    environment = system.setdefault("env", {})
+    if not isinstance(environment, dict):
+        raise ValueError(f"Invalid environment mapping in Lutris configuration: {path}")
+    game.update(managed["game"])
+    environment.update(managed["system"]["env"])
+    if desired == data:
+        return False
+    save_yaml_update(path, desired, original)
+    return True
 
 
 def parse_binary_vdf(data):
@@ -78,6 +147,10 @@ def parse_launch_options(launch_options):
 
 
 def sync_all():
+    if subprocess.run(["pgrep", "-x", "lutris"], capture_output=True).returncode == 0:
+        raise RuntimeError("Close Lutris before synchronizing its database and game configurations.")
+    initialize_lutris()
+    changes = 0
     # 1. Sync Native Steam Games
     svc = SteamService()
     runtime_appids = {"228980", "1070560", "1493710", "1628350", "3658110", "4183110"}
@@ -101,6 +174,9 @@ def sync_all():
             existing = get_game_by_field(lutris_game_id, "installer_slug")
             if not existing:
                 svc.install_from_steam(m)
+                if not get_game_by_field(lutris_game_id, "installer_slug"):
+                    raise RuntimeError(f"Lutris failed to import Steam game {m.steamid}")
+                changes += 1
 
     print(f"Synced {native_count} native Steam games to Lutris.")
 
@@ -128,6 +204,15 @@ def sync_all():
                 appid_32 = sc.get("appid", 0)
                 if not appid_32:
                     continue
+                # Personal direct-Proton profiles own these entries. Importing
+                # their Steam settings here would discard OptiScaler overrides.
+                profile_file = Path(__file__).resolve().parent / "profile/games.json"
+                if profile_file.exists():
+                    profile = json.loads(profile_file.read_text())
+                    managed_ids = {g["shortcut_id"] for g in profile["games"] if g.get("shortcut_id")}
+                    managed_ids.update(profile["retired_shortcuts"])
+                    if appid_32 in managed_ids:
+                        continue
 
                 shortcut_id_64 = (appid_32 << 32) | 0x02000000
                 env, args = parse_launch_options(launch_options)
@@ -150,8 +235,7 @@ def sync_all():
 
                 if existing:
                     config_filename = os.path.join(settings.CONFIG_DIR, "games/%s.yml" % existing["configpath"])
-                    from lutris.util.yaml import write_yaml_to_file
-                    write_yaml_to_file(game_config, config_filename)
+                    changes += int(update_game_config(config_filename, game_config))
                 else:
                     configpath = write_game_config(installer_slug, game_config)
                     add_game(
@@ -167,18 +251,19 @@ def sync_all():
                         directory=start_dir if start_dir else os.path.dirname(exe),
                     )
                     print(f"Added non-Steam game: {name} (appid: {shortcut_id_64})")
+                    changes += 1
                 non_steam_count += 1
 
     print(f"Synced {non_steam_count} non-Steam shortcuts to Lutris.")
 
     # 3. Fix Epic Games Launcher if installed
-    lutris_games_dir = os.path.expanduser("~/.local/share/lutris/games")
+    lutris_games_dir = settings.GAME_CONFIG_DIR
     if os.path.isdir(lutris_games_dir):
-        import yaml
         for yml_file in glob.glob(os.path.join(lutris_games_dir, "epic-games-store*.yml")):
             try:
-                with open(yml_file, "r") as f:
-                    data = yaml.safe_load(f) or {}
+                path = Path(yml_file).resolve()
+                original = path.read_bytes()
+                data = yaml.safe_load(original) or {}
 
                 modified = False
                 if "game" in data and "args" in data["game"]:
@@ -195,11 +280,15 @@ def sync_all():
                         modified = True
 
                 if modified:
-                    with open(yml_file, "w") as f:
-                        yaml.dump(data, f, default_flow_style=False)
+                    save_yaml_update(path, data, original)
+                    changes += 1
                     print(f"Fixed Epic Games Launcher configuration in {yml_file}")
             except Exception as ex:
-                print(f"Error checking {yml_file}: {ex}")
+                print(f"Error checking {yml_file}: {ex}", file=sys.stderr)
+                raise
+    if not changes:
+        print("Lutris library is already installed and current.")
+    return changes
 
 
 if __name__ == "__main__":

@@ -9,7 +9,7 @@ source "$SCRIPT_DIR/lib.sh"
 
 plugin_id="priyesh.system-metrics"
 plugin_url="https://github.com/priyeshbhawsar15/omarchy-system-metrics.git"
-plugin_commit="0a2fd78d7f5b0571f90e3cc2c1fa8869c75aad76"
+plugin_commit="aac22520daa5f27b94699dad3479c8d811062995"
 plugin_dir="$HOME/.config/omarchy/plugins/$plugin_id"
 
 require_omarchy
@@ -29,12 +29,7 @@ ensure_command() {
 }
 
 plugin_checkout_is_current() {
-  [[ -d "$plugin_dir/.git" ]] || return 1
-  [[ "$(git -C "$plugin_dir" remote get-url origin 2>/dev/null || true)" == "$plugin_url" ]] || return 1
-  [[ "$(git -C "$plugin_dir" rev-parse HEAD 2>/dev/null || true)" == "$plugin_commit" ]] || return 1
-  git -C "$plugin_dir" diff --quiet || return 1
-  git -C "$plugin_dir" diff --cached --quiet || return 1
-  [[ -z "$(git -C "$plugin_dir" status --porcelain --untracked-files=all)" ]] || return 1
+  managed_plugin_checkout_current "$plugin_dir" "$plugin_url" "$plugin_commit"
 }
 
 plugin_is_enabled() {
@@ -55,49 +50,18 @@ wait_for_plugin_discovery() {
 }
 
 checkout_pinned_plugin() {
-  local parent stage
-  parent="$(dirname -- "$plugin_dir")"
-  mkdir -p -- "$parent"
-  stage="$(mktemp -d "$parent/.${plugin_id}.install.XXXXXX")"
-  cleanup_stage() { rm -rf -- "$stage"; }
-  trap cleanup_stage RETURN
-
-  GIT_TERMINAL_PROMPT=0 git clone --quiet --no-checkout "$plugin_url" "$stage" \
-    || fail "could not clone $plugin_url"
-  git -C "$stage" checkout --quiet --detach "$plugin_commit" \
-    || fail "could not check out pinned commit $plugin_commit"
-  git -C "$stage" submodule update --init --recursive
-  omarchy plugin validate "$stage" \
-    || fail "the pinned plugin checkout did not pass Omarchy validation"
-  mv -- "$stage" "$plugin_dir"
-  trap - RETURN
+  install_pinned_plugin "$plugin_dir" "$plugin_url" "$plugin_commit" "$plugin_id"
 }
 
 update_pinned_plugin() {
-  [[ -d "$plugin_dir/.git" ]] || fail "the existing plugin is not a Git checkout"
-  [[ "$(git -C "$plugin_dir" remote get-url origin 2>/dev/null || true)" == "$plugin_url" ]] \
-    || fail "the existing plugin checkout is not managed by this installer"
-  git -C "$plugin_dir" diff --quiet \
-    || fail "the existing plugin checkout has uncommitted changes"
-  git -C "$plugin_dir" diff --cached --quiet \
-    || fail "the existing plugin checkout has staged changes"
-  [[ -z "$(git -C "$plugin_dir" status --porcelain --untracked-files=all)" ]] \
-    || fail "the existing plugin checkout has untracked files"
-
-  git -C "$plugin_dir" fetch --quiet --tags origin \
-    || fail "could not fetch the reviewed pinned revision"
-  git -C "$plugin_dir" checkout --quiet --detach "$plugin_commit" \
-    || fail "could not check out pinned commit $plugin_commit"
-  git -C "$plugin_dir" submodule update --init --recursive
-  omarchy plugin validate "$plugin_dir" \
-    || fail "the updated pinned checkout did not pass Omarchy validation"
+  install_pinned_plugin "$plugin_dir" "$plugin_url" "$plugin_commit" "$plugin_id"
 }
 
 enable_plugin() {
   omarchy-shell shell rescanPlugins >/dev/null
   wait_for_plugin_discovery
   omarchy plugin enable "$plugin_id"
-  [[ -x "$plugin_dir/install.sh" ]] && "$plugin_dir/install.sh"
+  reconcile_plugin_helper system-metrics-collector "$plugin_dir/bin/system-metrics-collector"
   plugin_is_enabled || fail "Omarchy did not enable $plugin_id"
 }
 
@@ -105,21 +69,12 @@ disable_plugin() {
   if plugin_is_enabled; then
     omarchy plugin disable "$plugin_id"
   fi
-  [[ -x "$plugin_dir/uninstall.sh" ]] && "$plugin_dir/uninstall.sh"
+  remove_plugin_helper system-metrics-collector "$plugin_dir/bin/system-metrics-collector"
   log "System Metrics HUD is disabled."
 }
 
 backup_feature_data() {
-  local backup_dir path relative_path
-  backup_dir="$HOME/.local/state/arch-setups/backups/system-metrics-remove-$(date +%Y%m%d%H%M%S)"
-  mkdir -p -- "$backup_dir"
-  for path in "$HOME/.config/system-metrics" "$HOME/.local/state/omarchy/system-metrics"; do
-    [[ -e "$path" || -L "$path" ]] || continue
-    relative_path="${path#$HOME/}"
-    mkdir -p -- "$backup_dir/$(dirname -- "$relative_path")"
-    cp -a -- "$path" "$backup_dir/$relative_path"
-  done
-  printf '%s\n' "$backup_dir"
+  backup_feature_paths system-metrics-remove "$HOME/.config/omarchy/system-metrics.json" "$HOME/.config/system-metrics" "$HOME/.local/state/omarchy/system-metrics"
 }
 
 remove_plugin() {
@@ -142,6 +97,9 @@ ensure_command git git
 ensure_command jq jq
 ensure_command python3 python
 
+python3 "$SCRIPT_DIR/hypr/scripts/monitor-layout.py" --config "$SCRIPT_DIR/monitor-layout.json" \
+  configure-widget .config/omarchy/system-metrics.json || fail "cannot configure the System Metrics display"
+
 checkout_changed=false
 if [[ -e "$plugin_dir" || -L "$plugin_dir" ]]; then
   if ! plugin_checkout_is_current; then
@@ -153,6 +111,8 @@ else
   checkout_changed=true
 fi
 
+reconcile_plugin_helper system-metrics-collector "$plugin_dir/bin/system-metrics-collector"
+
 if plugin_is_enabled && [[ "$checkout_changed" == false ]]; then
   log "System Metrics HUD is already installed."
   exit 0
@@ -163,4 +123,8 @@ if plugin_is_enabled; then
 fi
 
 enable_plugin
+if [[ "$checkout_changed" == true ]]; then
+  # An existing QML service can retain its old component after a pin update.
+  omarchy restart shell
+fi
 log "Installed and activated System Metrics HUD at $plugin_commit."

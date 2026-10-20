@@ -1,0 +1,465 @@
+{
+  "games": [
+    {
+      "key": "steam-shortcut-3434077619",
+      "name": "TS4_x64.exe",
+      "slug": "ts4_x64exe",
+      "runner": "wine",
+      "year": null,
+      "shortcut_id": 3434077619,
+      "desktop": false,
+      "config": {
+        "game": {
+          "exe": "${HOME}/games-links/sims4/game/The Sims 4/Game/Bin/TS4_x64.exe",
+          "working_dir": "${HOME}/games-links/sims4/game/The Sims 4/Game/Bin/",
+          "args": "",
+          "prefix": "${HOME}/.local/share/Steam/steamapps/compatdata/3434077619/pfx",
+          "arch": "win64"
+        },
+        "wine": {
+          "version": "Proton 10.0"
+        },
+        "system": {
+          "disable_runtime": true,
+          "prefix_command": "steam-gamescope-hdr",
+          "env": {}
+        }
+      }
+    },
+    {
+      "key": "steam-shortcut-3681072528",
+      "name": "Red Dead Redemption 2",
+      "slug": "rdr2-launcher",
+      "runner": "wine",
+      "year": 2019,
+      "shortcut_id": 3681072528,
+      "desktop": true,
+      "config": {
+        "game": {
+          "exe": "${HOME}/games-links/rdr2/Launcher.exe",
+          "working_dir": "${HOME}/games-links/rdr2/",
+          "args": "",
+          "prefix": "${HOME}/.local/share/Steam/steamapps/compatdata/3681072528/pfx",
+          "arch": "win64"
+        },
+        "wine": {
+          "version": "Proton - Experimental"
+        },
+        "system": {
+          "disable_runtime": true,
+          "prefix_command": "gamescope -w 3840 -h 2160 -W 3840 -H 2160 -r 120 -f --hdr-enabled --hdr-sdr-content-nits 203 --",
+          "env": {
+            "PROTON_LOG": "1",
+            "WINEDLLOVERRIDES": "vulkan-1=b;version,dxgi,dinput8=n,b",
+            "ENABLE_HDR_WSI": "1",
+            "DXVK_HDR": "1",
+            "FSR4_VK_LOG": "1"
+          }
+        }
+      },
+      "artwork": {
+        "banner": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1174180/header.jpg?t=1759502961",
+        "cover": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1174180/library_600x900_2x.jpg?t=1759502961",
+        "icon": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/1174180/5106abd9c1187a97f23295a0ba9470c94804ec6c.jpg"
+      },
+      "store_url": "https://store.steampowered.com/app/1174180/",
+      "upscaler": "fsr4vk-043"
+    },
+    {
+      "key": "steam-shortcut-4217488047",
+      "name": "Ghost of Tsushima DIRECTOR'S CUT",
+      "slug": "ghost-of-tsushima",
+      "runner": "wine",
+      "year": 2024,
+      "shortcut_id": 4217488047,
+      "desktop": true,
+      "config": {
+        "game": {
+          "exe": "/run/media/priyesh/games/Games/Ghost of Tsushima/GhostOfTsushima.exe",
+          "working_dir": "/run/media/priyesh/games/Games/Ghost of Tsushima",
+          "args": "",
+          "prefix": "${HOME}/.local/share/wineprefixes/steam-shortcut-4217488047",
+          "arch": "win64"
+        },
+        "wine": {
+          "version": "Proton - Experimental"
+        },
+        "system": {
+          "disable_runtime": true,
+          "prefix_command": "steam-gamescope-hdr",
+          "env": {
+            "PROTON_LOG": "1",
+            "WINEDLLOVERRIDES": "dxgi=n,b"
+          }
+        }
+      },
+      "artwork": {
+        "banner": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2215430/header.jpg?t=1763409398",
+        "cover": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2215430/library_600x900_2x.jpg?t=1763409398",
+        "icon": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/2215430/e87b8cbe31f7bc5f40ee6ed94ccfa18f59f04fbc.jpg"
+      },
+      "store_url": "https://store.steampowered.com/app/2215430/",
+      "upscaler": "optiscaler-094"
+    },
+    {
+      "key": "steam-shortcut-3013353202",
+      "name": "Cyberpunk 2077",
+      "slug": "cyberpunk-2077",
+      "runner": "wine",
+      "year": 2020,
+      "shortcut_id": 3013353202,
+      "desktop": true,
+      "config": {
+        "game": {
+          "exe": "${HOME}/games-links/cyberpunk2077/bin/x64/Cyberpunk2077.exe",
+          "working_dir": "${HOME}/games-links/cyberpunk2077/bin/x64/",
+          "args": "",
+          "prefix": "${HOME}/.local/share/wineprefixes/steam-shortcut-3013353202",
+          "arch": "win64"
+        },
+        "wine": {
+          "version": "Proton - Experimental"
+        },
+        "system": {
+          "disable_runtime": true,
+          "prefix_command": "steam-gamescope-hdr",
+          "env": {
+            "PROTON_LOG": "1",
+            "WINEDLLOVERRIDES": "dxgi=n,b"
+          }
+        }
+      },
+      "artwork": {
+        "banner": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1091500/e9047d8ec47ae3d94bb8b464fb0fc9e9972b4ac7/header.jpg?t=1784714077",
+        "cover": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1091500/6399de67cce3cecadce7900e03f6e09ff910a235/library_capsule_2x.jpg?t=1784714077",
+        "icon": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/1091500/6897c3848f3e0350d512f59d5bae174a1e3739f9.jpg"
+      },
+      "store_url": "https://store.steampowered.com/app/1091500/",
+      "upscaler": "optiscaler-094"
+    },
+    {
+      "key": "steam-shortcut-2623494187",
+      "name": "DEATH STRANDING 2: ON THE BEACH",
+      "slug": "death-stranding-2",
+      "runner": "wine",
+      "year": 2026,
+      "shortcut_id": 2623494187,
+      "desktop": true,
+      "config": {
+        "game": {
+          "exe": "${HOME}/games-links/deathstranding2/DS2.exe",
+          "working_dir": "${HOME}/games-links/deathstranding2/",
+          "args": "",
+          "prefix": "${HOME}/.local/share/wineprefixes/steam-shortcut-2623494187",
+          "arch": "win64"
+        },
+        "wine": {
+          "version": "Proton - Experimental"
+        },
+        "system": {
+          "disable_runtime": true,
+          "prefix_command": "steam-gamescope-hdr",
+          "env": {
+            "PROTON_LOG": "1",
+            "WINEDLLOVERRIDES": "dxgi=n,b"
+          }
+        }
+      },
+      "artwork": {
+        "banner": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3280350/6270c77b0729e2df0a17d660286eeddfd9169386/header.jpg?t=1774022345",
+        "cover": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3280350/9b523fd411eeaefe80f238489745325a1cd2317f/library_capsule_2x.jpg?t=1774022345",
+        "icon": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/3280350/d3d279eef0742abbfb318492123a454466c7e004.jpg"
+      },
+      "store_url": "https://store.steampowered.com/app/3280350/",
+      "upscaler": "optiscaler-094"
+    },
+    {
+      "key": "steam-shortcut-3657607958",
+      "name": "ELDEN RING",
+      "slug": "elden-ring",
+      "runner": "wine",
+      "year": 2022,
+      "shortcut_id": 3657607958,
+      "desktop": true,
+      "config": {
+        "game": {
+          "exe": "${HOME}/games-links/eldenring/Game/eldenring.exe",
+          "working_dir": "${HOME}/games-links/eldenring/Game/",
+          "args": "",
+          "prefix": "${HOME}/.local/share/wineprefixes/steam-shortcut-3657607958",
+          "arch": "win64"
+        },
+        "wine": {
+          "version": "Proton - Experimental"
+        },
+        "system": {
+          "disable_runtime": true,
+          "prefix_command": "steam-gamescope-hdr",
+          "env": {
+            "PROTON_LOG": "1"
+          }
+        }
+      },
+      "artwork": {
+        "banner": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1245620/header.jpg?t=1790290043",
+        "cover": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1245620/library_600x900_2x.jpg?t=1790290043",
+        "icon": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/1245620/b6e290dd5a92ce98f89089a207733c70c41a1871.jpg"
+      },
+      "store_url": "https://store.steampowered.com/app/1245620/"
+    },
+    {
+      "key": "steam-shortcut-3834757053",
+      "name": "Halo: Campaign Evolved",
+      "slug": "halo-campaign-evolved",
+      "runner": "wine",
+      "year": 2026,
+      "shortcut_id": 3834757053,
+      "desktop": true,
+      "config": {
+        "game": {
+          "arch": "win64",
+          "args": "",
+          "exe": "${HOME}/games-links/halo/Meteorite/Binaries/Win64/HaloCampaignEvolved.exe",
+          "prefix": "${HOME}/.local/share/Steam/steamapps/compatdata/3834757053/pfx",
+          "working_dir": "${HOME}/games-links/halo/Meteorite/Binaries/Win64/"
+        },
+        "system": {
+          "disable_runtime": true,
+          "env": {
+            "PROTON_LOG": "1",
+            "WINEDLLOVERRIDES": "dxgi=n,b"
+          },
+          "prefix_command": "steam-gamescope-hdr"
+        },
+        "wine": {
+          "version": "Proton - Experimental"
+        }
+      },
+      "artwork": {
+        "banner": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2806050/30d8542d35d7919b34e5f5dbe955d04c3f99e6da/header.jpg?t=1786379031",
+        "cover": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2806050/712eb45cff910f317c1a7e8fc5f487f26f83c195/library_capsule_2x.jpg?t=1786379031",
+        "icon": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/2806050/abe495b3c48b435e4ed7229fe9f50417c14381ba.jpg"
+      },
+      "store_url": "https://store.steampowered.com/app/2806050/",
+      "upscaler": "optiscaler-094"
+    },
+    {
+      "key": "steam-shortcut-2808961219",
+      "name": "Escape Academy",
+      "slug": "escape-academy",
+      "runner": "wine",
+      "year": 2022,
+      "shortcut_id": 2808961219,
+      "desktop": true,
+      "config": {
+        "game": {
+          "exe": "${HOME}/games-links/escape-academy/Escape Academy.exe",
+          "working_dir": "${HOME}/games-links/escape-academy/",
+          "args": "",
+          "prefix": "${HOME}/.local/share/wineprefixes/steam-shortcut-2808961219",
+          "arch": "win64"
+        },
+        "wine": {
+          "version": "Proton - Experimental"
+        },
+        "system": {
+          "disable_runtime": true,
+          "prefix_command": "steam-gamescope-hdr",
+          "env": {
+            "PROTON_LOG": "1"
+          }
+        }
+      },
+      "artwork": {
+        "banner": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1812090/header.jpg?t=1747087130",
+        "cover": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1812090/library_600x900_2x.jpg?t=1747087130",
+        "icon": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/1812090/99839dead94f4e2a28cf93807afdcdc15b820d7a.jpg"
+      },
+      "store_url": "https://store.steampowered.com/app/1812090/"
+    },
+    {
+      "key": "steam-shortcut-2314256998",
+      "name": "Mixtape",
+      "slug": "mixtape",
+      "runner": "wine",
+      "year": 2026,
+      "shortcut_id": 2314256998,
+      "desktop": true,
+      "config": {
+        "game": {
+          "exe": "${HOME}/games-links/mixtape/Mixtape.exe",
+          "working_dir": "${HOME}/games-links/mixtape/",
+          "args": "",
+          "prefix": "${HOME}/.local/share/wineprefixes/steam-shortcut-2314256998",
+          "arch": "win64"
+        },
+        "wine": {
+          "version": "Proton - Experimental"
+        },
+        "system": {
+          "disable_runtime": true,
+          "prefix_command": "steam-gamescope-hdr",
+          "env": {
+            "PROTON_LOG": "1"
+          }
+        }
+      },
+      "artwork": {
+        "banner": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2582320/95bbf1097b6f66f39b56f6388250c97a2f43b59e/header.jpg?t=1785424305",
+        "cover": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2582320/a392d647446fb58123fb1e1651c7fa7ab234e2ee/library_600x900_2x.jpg?t=1785424305",
+        "icon": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/2582320/ddabcf615a23cdc271ab5e2379478be636d555ad.jpg"
+      },
+      "store_url": "https://store.steampowered.com/app/2582320/"
+    },
+    {
+      "key": "steam-shortcut-2788472094",
+      "name": "Overcooked! 2",
+      "slug": "overcooked-2",
+      "runner": "wine",
+      "year": 2018,
+      "shortcut_id": 2788472094,
+      "desktop": true,
+      "config": {
+        "game": {
+          "exe": "${HOME}/games-links/overcooked2/Overcooked2.exe",
+          "working_dir": "${HOME}/games-links/overcooked2/",
+          "args": "",
+          "prefix": "${HOME}/.local/share/wineprefixes/steam-shortcut-2788472094",
+          "arch": "win64"
+        },
+        "wine": {
+          "version": "Proton - Experimental"
+        },
+        "system": {
+          "disable_runtime": true,
+          "prefix_command": "steam-gamescope-hdr",
+          "env": {
+            "PROTON_LOG": "1"
+          }
+        }
+      },
+      "artwork": {
+        "banner": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/728880/9305414f49b2f7aee7f7198dc507d6b66383fdd6/header.jpg?t=1789548883",
+        "cover": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/728880/library_600x900_2x.jpg?t=1789548883",
+        "icon": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/728880/bac36f471109038ae0b40619de4109d475f86a54.jpg"
+      },
+      "store_url": "https://store.steampowered.com/app/728880/"
+    },
+    {
+      "key": "steam-shortcut-2898745417",
+      "name": "F1 25",
+      "slug": "f1-25-4k-shader-fix",
+      "runner": "linux",
+      "year": 2025,
+      "shortcut_id": 2898745417,
+      "desktop": true,
+      "config": {
+        "game": {
+          "args": "",
+          "exe": "${HOME}/.local/bin/launch-f1-25-4k",
+          "working_dir": "${HOME}/.local/share/f1-25-shaderfix.RfimSS/steam-4k.ZefBvE"
+        },
+        "system": {
+          "disable_runtime": true
+        }
+      },
+      "artwork": {
+        "banner": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3059520/76dc8ac45f1bd6dec26e04434ca1c8814e7bb330/header.jpg?t=1786646076",
+        "cover": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3059520/660d69e1717e93fcabc23f85100d123892ace85c/library_capsule_2x.jpg?t=1786646076",
+        "icon": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/3059520/acf774ad92979047362e1be3ca6bad2b6b090ac4.jpg"
+      },
+      "store_url": "https://store.steampowered.com/app/3059520/"
+    },
+    {
+      "key": "local-hs2",
+      "name": "HS2",
+      "slug": "hs2",
+      "runner": "wine",
+      "year": null,
+      "shortcut_id": null,
+      "desktop": false,
+      "config": {
+        "game": {
+          "arch": "win64",
+          "args": "-screen-width 3840 -screen-height 2160 -screen-fullscreen 1",
+          "exe": "/run/media/priyesh/F1F5227BC4FE0E49/etc/[ScrewThisNoise] HoneySelect 2 DX BetterRepack R16/HoneySelect2.exe",
+          "prefix": "${HOME}/.local/share/wineprefixes/hs2",
+          "working_dir": "/run/media/priyesh/F1F5227BC4FE0E49/etc/[ScrewThisNoise] HoneySelect 2 DX BetterRepack R16"
+        },
+        "system": {
+          "disable_runtime": true,
+          "env": {
+            "WINEDLLOVERRIDES": "winhttp=n,b"
+          }
+        },
+        "wine": {
+          "version": "GE-Proton11-7-x86_64"
+        }
+      },
+      "setup_xml": "/run/media/priyesh/F1F5227BC4FE0E49/etc/[ScrewThisNoise] HoneySelect 2 DX BetterRepack R16/UserData/setup.xml"
+    },
+    {
+      "key": "local-ks",
+      "name": "KS",
+      "slug": "ks",
+      "runner": "wine",
+      "year": null,
+      "shortcut_id": null,
+      "desktop": false,
+      "config": {
+        "game": {
+          "exe": "/run/media/priyesh/F1F5227BC4FE0E49/etc/[ScrewThisNoise] Koikatsu Sunshine EX BetterRepack R12/KoikatsuSunshine.exe",
+          "working_dir": "/run/media/priyesh/F1F5227BC4FE0E49/etc/[ScrewThisNoise] Koikatsu Sunshine EX BetterRepack R12",
+          "prefix": "${HOME}/.local/share/wineprefixes/ks",
+          "arch": "win64",
+          "args": "-screen-width 3840 -screen-height 2160 -screen-fullscreen 1"
+        },
+        "wine": {
+          "version": "GE-Proton11-7-x86_64"
+        },
+        "system": {
+          "disable_runtime": true,
+          "env": {
+            "WINEDLLOVERRIDES": "winhttp=n,b"
+          }
+        }
+      },
+      "setup_xml": "/run/media/priyesh/F1F5227BC4FE0E49/etc/[ScrewThisNoise] Koikatsu Sunshine EX BetterRepack R12/UserData/setup.xml"
+    }
+  ],
+  "retired_shortcuts": [
+    3425461811,
+    2395607006
+  ],
+  "assets": [
+    {
+      "name": "Optiscaler_0.9.4-final.20260718._MM.7z",
+      "url": "https://github.com/optiscaler/OptiScaler/releases/download/v0.9.4/Optiscaler_0.9.4-final.20260718._MM.7z",
+      "sha256": "575cb4df866116093df75af607e37fd70e10f5163e0f23fd5c804142e80ef0ad"
+    },
+    {
+      "name": "fsr4vk-v0.4.3.zip",
+      "url": "https://github.com/dvj5411/fsr4vk/releases/download/v0.4.3/fsr4vk-v0.4.3.zip",
+      "sha256": "3dd2fe7a6b14a1d045c23aa51b63cb45a53576d64eba5f96cb0e334e55ce9827"
+    },
+    {
+      "name": "OptiScaler_v10.0.0-pre1_20261020.7z",
+      "url": "https://github.com/optiscaler/OptiScaler-nightly/releases/download/nightly-20261020/OptiScaler_v10.0.0-pre1_20261020.7z",
+      "sha256": "dae01c74f2637d5940e1b5110503e1ed9706cd21ef876ff51099f1b3801ac401"
+    }
+  ],
+  "symlinks": {
+    "${HOME}/games-links/F1-25": "/run/media/priyesh/F1F5227BC4FE0E49/Games/F1 25",
+    "${HOME}/games-links/cyberpunk2077": "/run/media/priyesh/games/Games/Cyberpunk 2077",
+    "${HOME}/games-links/deathstranding2": "/run/media/priyesh/games/Games/DEATH STRANDING 2",
+    "${HOME}/games-links/eldenring": "/run/media/priyesh/games/Games/ELDEN RING",
+    "${HOME}/games-links/escape-academy": "/run/media/priyesh/games/Games/Escape Academy",
+    "${HOME}/games-links/ghost-of-tsushima": "/run/media/priyesh/games/Games/Ghost of Tsushima",
+    "${HOME}/games-links/halo": "/run/media/priyesh/games/Games/Halo - Campaign Evolved",
+    "${HOME}/games-links/launch-f1-25.sh": "${HOME}/.local/bin/launch-f1-25.sh",
+    "${HOME}/games-links/mixtape": "/run/media/priyesh/games/Games/Mixtape",
+    "${HOME}/games-links/overcooked2": "/run/media/priyesh/games/Games/Overcooked! 2",
+    "${HOME}/games-links/rdr2": "/run/media/priyesh/games/Games/Red Dead Redemption 2",
+    "${HOME}/games-links/sims4": "/run/media/priyesh/games/etc/Sims 4"
+  }
+}

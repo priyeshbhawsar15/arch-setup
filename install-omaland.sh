@@ -9,6 +9,7 @@ source "$SCRIPT_DIR/lib.sh"
 
 plugin_id="bobbynicholas.omaland"
 plugin_url="https://github.com/bobby-nicholas/omaland.git"
+upstream_url="https://github.com/bobby-nicholas/omaland.git"
 plugin_commit="ec232b6aa2e31b2f089ad89b653cd706989865b9"
 plugin_dir="$HOME/.config/omarchy/plugins/$plugin_id"
 
@@ -32,12 +33,7 @@ ensure_command() {
 }
 
 plugin_checkout_is_current() {
-  [[ -d "$plugin_dir/.git" ]] || return 1
-  [[ "$(git -C "$plugin_dir" remote get-url origin 2>/dev/null || true)" == "$plugin_url" ]] || return 1
-  [[ "$(git -C "$plugin_dir" rev-parse HEAD 2>/dev/null || true)" == "$plugin_commit" ]] || return 1
-  git -C "$plugin_dir" diff --quiet || return 1
-  git -C "$plugin_dir" diff --cached --quiet || return 1
-  [[ -z "$(git -C "$plugin_dir" status --porcelain --untracked-files=all)" ]] || return 1
+  managed_plugin_checkout_current "$plugin_dir" "$plugin_url" "$plugin_commit"
 }
 
 plugin_is_enabled() {
@@ -58,42 +54,11 @@ wait_for_plugin_discovery() {
 }
 
 checkout_pinned_plugin() {
-  local parent stage
-  parent="$(dirname -- "$plugin_dir")"
-  mkdir -p -- "$parent"
-  stage="$(mktemp -d "$parent/.${plugin_id}.install.XXXXXX")"
-  cleanup_stage() { rm -rf -- "$stage"; }
-  trap cleanup_stage RETURN
-
-  GIT_TERMINAL_PROMPT=0 git clone --quiet --no-checkout "$plugin_url" "$stage" \
-    || fail "could not clone $plugin_url"
-  git -C "$stage" checkout --quiet --detach "$plugin_commit" \
-    || fail "could not check out pinned commit $plugin_commit"
-  git -C "$stage" submodule update --init --recursive
-  omarchy plugin validate "$stage" \
-    || fail "the pinned plugin checkout did not pass Omarchy validation"
-  mv -- "$stage" "$plugin_dir"
-  trap - RETURN
+  install_pinned_plugin "$plugin_dir" "$plugin_url" "$plugin_commit" "$plugin_id" "$upstream_url"
 }
 
 update_pinned_plugin() {
-  [[ -d "$plugin_dir/.git" ]] || fail "the existing plugin is not a Git checkout"
-  [[ "$(git -C "$plugin_dir" remote get-url origin 2>/dev/null || true)" == "$plugin_url" ]] \
-    || fail "the existing plugin checkout is not managed by this installer"
-  git -C "$plugin_dir" diff --quiet \
-    || fail "the existing plugin checkout has uncommitted changes"
-  git -C "$plugin_dir" diff --cached --quiet \
-    || fail "the existing plugin checkout has staged changes"
-  [[ -z "$(git -C "$plugin_dir" status --porcelain --untracked-files=all)" ]] \
-    || fail "the existing plugin checkout has untracked files"
-
-  git -C "$plugin_dir" fetch --quiet --tags origin \
-    || fail "could not fetch the reviewed pinned revision"
-  git -C "$plugin_dir" checkout --quiet --detach "$plugin_commit" \
-    || fail "could not check out pinned commit $plugin_commit"
-  git -C "$plugin_dir" submodule update --init --recursive
-  omarchy plugin validate "$plugin_dir" \
-    || fail "the updated pinned checkout did not pass Omarchy validation"
+  checkout_pinned_plugin
 }
 
 enable_plugin() {
@@ -106,70 +71,50 @@ enable_plugin() {
 }
 
 install_desktop_entry() {
+  if [[ -e "$desktop_file" || -L "$desktop_file" ]]; then
+    if [[ -L "$desktop_file" ]] || ! grep -q '^X-Omaland-Managed=true$' "$desktop_file"; then
+      log "Preserving custom Omaland desktop entry: $desktop_file"
+      return 0
+    fi
+  fi
+  local stage
   mkdir -p -- "$(dirname -- "$desktop_file")"
-  sed "s|@ICON@|$plugin_dir/icon.png|" "$plugin_dir/omaland.desktop" > "$desktop_file"
-  chmod +x "$desktop_file"
+  stage="$(mktemp "${desktop_file}.XXXXXX")"
+  sed "s|@ICON@|$plugin_dir/icon.png|" "$plugin_dir/omaland.desktop" > "$stage"
+  chmod 755 "$stage"
+  if [[ -f "$desktop_file" ]] && cmp -s "$stage" "$desktop_file" && [[ -x "$desktop_file" ]]; then
+    rm -- "$stage"
+    return 0
+  fi
+  if [[ -f "$desktop_file" ]]; then backup_paths omaland-desktop "$desktop_file" >/dev/null; fi
+  mv -- "$stage" "$desktop_file"
   update-desktop-database "$(dirname -- "$desktop_file")" >/dev/null 2>&1 || true
 }
 
 remove_desktop_entry() {
-  if [[ -f "$desktop_file" ]]; then
+  if [[ -f "$desktop_file" && ! -L "$desktop_file" ]] && grep -q '^X-Omaland-Managed=true$' "$desktop_file"; then
     rm -f -- "$desktop_file"
     update-desktop-database "$(dirname -- "$desktop_file")" >/dev/null 2>&1 || true
   fi
 }
 
-install_menu_entry() {
-  mkdir -p -- "$(dirname -- "$menu_file")"
-  if [[ ! -f "$menu_file" ]]; then
-    cat >"$menu_file" <<'EOF'
-{
-  "style.hyprland": {"icon": "󰸌", "label": "Hyprland", "aliases": ["hyprland", "looknfeel"]},
-  "style.hyprland.omaland": {"icon": "󰸌", "label": "Omaland Visual Editor", "aliases": ["omaland"], "action": "omarchy-shell shell toggle bobbynicholas.omaland"},
-  "style.hyprland.edit": {"icon": "󰏫", "label": "Edit Config", "action": "omarchy-launch-config-editor \"$HOME/.config/hypr/looknfeel.lua\""}
+menu_entries() {
+  jq -cn \
+    --arg edit 'omarchy-launch-config-editor "$HOME/.config/hypr/looknfeel.lua"' \
+    '{"style.hyprland": {icon:"󰸌", label:"Hyprland", aliases:["hyprland","looknfeel"]},
+      "style.hyprland.omaland": {icon:"󰸌", label:"Omaland Visual Editor", aliases:["omaland"], action:"omarchy-shell shell toggle bobbynicholas.omaland"},
+      "style.hyprland.edit": {icon:"󰏫", label:"Edit Config", action:$edit}}'
 }
-EOF
-    return
-  fi
 
-  if grep -q '"style.hyprland.omaland"' "$menu_file" 2>/dev/null; then
-    return
-  fi
-
-  MENU_FILE="$menu_file" python3 - <<'PY'
-import os
-from pathlib import Path
-
-path = Path(os.environ["MENU_FILE"])
-text = path.read_text()
-
-entries = '''
-  "style.hyprland": {"icon": "󰸌", "label": "Hyprland", "aliases": ["hyprland", "looknfeel"]},
-  "style.hyprland.omaland": {"icon": "󰸌", "label": "Omaland Visual Editor", "aliases": ["omaland"], "action": "omarchy-shell shell toggle bobbynicholas.omaland"},
-  "style.hyprland.edit": {"icon": "󰏫", "label": "Edit Config", "action": "omarchy-launch-config-editor \\"$HOME/.config/hypr/looknfeel.lua\\"}'''
-
-if '"style.hyprland.omaland"' not in text:
-    lines = text.rstrip().splitlines()
-    if len(lines) > 1 and lines[-1].strip() == "}":
-        lines[-2] = lines[-2].rstrip() + ","
-        lines.insert(-1, entries)
-        path.write_text("\n".join(lines) + "\n")
-PY
+install_menu_entry() {
+  python3 "$SCRIPT_DIR/config/managed-config.py" merge-menu "$menu_file" "$(menu_entries)" \
+    --keep-existing style.hyprland
 }
 
 remove_menu_entry() {
   [[ -f "$menu_file" ]] || return 0
-  MENU_FILE="$menu_file" python3 - <<'PY'
-import os
-from pathlib import Path
-
-path = Path(os.environ["MENU_FILE"])
-text = path.read_text()
-filtered = [line for line in text.splitlines(keepends=True)
-            if '"style.hyprland' not in line]
-if filtered != text.splitlines(keepends=True):
-    path.write_text("".join(filtered))
-PY
+  python3 "$SCRIPT_DIR/config/managed-config.py" remove-menu "$menu_file" \
+    style.hyprland.omaland style.hyprland.edit --empty-parent style.hyprland
 }
 
 disable_plugin() {
@@ -184,8 +129,8 @@ disable_plugin() {
 backup_feature_data() {
   local backup_dir path relative_path
   backup_dir="$HOME/.local/state/arch-setups/backups/omaland-remove-$(date +%Y%m%d%H%M%S)"
-  mkdir -p -- "$backup_dir"
-  for path in "$HOME/.config/omaland" "$HOME/.local/state/omaland"; do
+  install -d -m700 -- "$backup_dir"
+  for path in "$HOME/.config/hypr/looknfeel.lua" "$HOME/.config/hypr/hyprland.lua" "$menu_file" "$desktop_file"; do
     [[ -e "$path" || -L "$path" ]] || continue
     relative_path="${path#$HOME/}"
     mkdir -p -- "$backup_dir/$(dirname -- "$relative_path")"
@@ -212,6 +157,8 @@ esac
 
 ensure_command git git
 ensure_command jq jq
+ensure_command python3 python
+ensure_command lua lua
 
 checkout_changed=false
 if [[ -e "$plugin_dir" || -L "$plugin_dir" ]]; then
@@ -224,7 +171,12 @@ else
   checkout_changed=true
 fi
 
+jq -e '.archSetups.personalModule == "hypr/looknfeel.lua"' "$plugin_dir/manifest.json" >/dev/null \
+  || fail "the reviewed personal-module fork must be published and pinned before activation"
+
 if plugin_is_enabled && [[ "$checkout_changed" == false ]]; then
+  install_desktop_entry
+  install_menu_entry
   log "Omaland is already installed."
   exit 0
 fi

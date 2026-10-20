@@ -2,11 +2,17 @@
 
 ## Current monitor assignments
 
-DP-6 is now the main OLED; DP-5 and DP-4 are the portrait side displays (this supersedes historical connector references below). The managed Shibumi filters show all top-bar controls/indicators on DP-6 and retain workspaces/center notch on both sides. Obsidian Tasks is on DP-5; Quota, System Metrics, Weather, Immich and Home Assistant remain on DP-4. Wallpaper Controller uses `spanGroups: [["DP-5", "DP-4"]]`, leaving DP-6 as an independent full-screen wallpaper instead of part of a mixed-scale span. Lock Explorer's configured main power target is DP-6 and its dimmed sides are DP-5/DP-4. `install-monitor-layout.sh` idempotently applies this supported configuration after feature installers, with backups and without overwriting personal data, wallpaper selections or stop state. No plugin pins or sources change. Existing feature enable/disable/removal controls remain unchanged. Lock Explorer's source-level video span still uses the old pair; correcting that separate lock-screen feature requires a published plugin update.
+`monitor-layout.json` is the source of display identities and feature assignments. `main` matches the Microstep OLED, `side_left` matches the Lenovo ending in `0x01010101`, and `side_right` matches the Lenovo ending in `0x59333830`. Today these resolve to DP-6, DP-5 and DP-4 respectively; connector names are discovered, not monitor identities.
+
+`barMain` selects the display with full Shibumi controls. `widgetTargets` assigns Tasks to `side_left` and Quota, Metrics, Weather, Immich and Home Assistant to `side_right`. `wallpaperSpan` selects the portrait pair for Wallpaper Controller and Lock Explorer; `lockMain` and `lockSides` select their power groups. `windowSpan` selects the two displays used by `Super+Ctrl+Shift+F`, and `singleMonitorKeep`/`singleMonitorDisable` configure `Super+Shift+M`. The shortcuts resolve identities each time; the Shibumi filters and Hyprland monitor/workspace rules use descriptions instead of ports.
+
+After changing cables or these assignments, run `./install-monitor-layout.sh` in the active desktop session with the displays connected. It discovers connector names for plugins that require them, preserves unrelated settings, credentials, wallpaper choices, stop state and lock timeout/tint edits, and backs up changes. Missing displays leave existing plugin targets intact; reconnect them and rerun. This setup does not continuously rewrite plugin configuration on hotplug. `./install-all.sh` applies the same policy after feature installation. Change identities/assignments here rather than editing generated files under `~/.config/`; inspect identities with `hyprctl -j monitors all`. For new hardware, update the exact description including serial; ambiguous matches fail instead of selecting another screen.
+
+No feature is enabled by this policy; each plugin keeps its own enable/disable/removal controls below. System Metrics now supports a configuration file in its published source. Other plugin pins and sources are unchanged by this monitor repair. Monitor geometry remains configurable in hyprmoncfg; its generated profile rules load after the repository's description-based fallback in `hypr/monitors.lua`. A window span requires horizontally adjacent displays with matching logical heights. The monitor manager can override single-monitor rules when applying a profile; reapply the toggle after such a layout change.
 
 ## Main-screen Bluetooth bar control
 
-Shibumi's existing `hancore.shibumi.bluetooth` widget is enabled through its supported G15 setting in `shell.json` (`hancore.shibumi.state` → `shibumi.widgets.G15.enabled: true`). It provides the Bluetooth bar control on main output DP-5; the managed GroupSlot filter suppresses G15 on secondary outputs. No new plugin or shortcut is added. Depends on Shibumi and BlueZ. `install-shibumi-shell.sh` reapplies this setting idempotently, backing up changed configuration. To disable it, turn off Bluetooth's bar slot in Shibumi's layout settings; rerunning the installer re-enables the managed preference.
+Shibumi's existing `hancore.shibumi.bluetooth` widget is enabled through its supported G15 setting in `shell.json` (`hancore.shibumi.state` → `shibumi.widgets.G15.enabled: true`). It provides the Bluetooth bar control on the configured `barMain` display; the managed GroupSlot filter suppresses G15 on secondary outputs. No new plugin or shortcut is added. Depends on Shibumi and BlueZ. `install-shibumi-shell.sh` reapplies this setting idempotently, backing up changed configuration. To disable it, turn off Bluetooth's bar slot in Shibumi's layout settings; rerunning the installer re-enables the managed preference.
 
 ## Desktop widget screen lifecycle
 
@@ -130,14 +136,91 @@ Provides automatic multi-monitor profile layout switching on hotplug, lid open/c
 - **Type:** Customized community plugin fork.
 - **Original upstream URL:** `https://github.com/SirJul1337/omarchy-lock-explorer.git`
 - **Installation source:** `https://github.com/priyeshbhawsar15/omarchy-lock-explorer.git`
-- **Pinned commit:** `7f0da0169e41615493834e39d9c84c889b3ac30e` (persistent brightness-recovery fork, based on v1.7.7).
-- **Local modifications:** The fork adds native QtMultimedia video wallpaper playback to `designs/Wallpaper.qml` and `designs/VideoWallpaper.qml` so all built-in designs play active video wallpapers seamlessly, spans video wallpaper playback across secondary monitors (`DP-6` and `DP-4`) using `VideoOutput.PreserveAspectCrop` container mapping to maintain original aspect ratios without stretching, automatically restores live desktop wallpaper on session unlock via `wallpaper-controller restore`, adds opt-in per-output locked idle power management with compositor activity detection instead of QML pointer-change wakeups, enables crisp video playback on side monitors (`designs/Companion.qml`), and optimizes Explorer grid preview performance by decoding video only for the currently selected card while unselected cards display static background thumbnails.
+- **Pinned commit:** `b1b010a9113185b215b652c141c4b30168a2836f` (monitor-spanning, timeout/tint controls and persistent brightness-recovery fork, based on v1.7.7).
+- **Local modifications:** The fork adds native QtMultimedia video wallpaper playback to `designs/Wallpaper.qml` and `designs/VideoWallpaper.qml` so all built-in designs play active video wallpapers seamlessly, spans video wallpaper playback across the configured secondary monitors (`DP-5` and `DP-4`) using actual logical monitor positions and sizes with `VideoOutput.PreserveAspectCrop`, leaving main `DP-6` independent, automatically restores live desktop wallpaper on session unlock via `wallpaper-controller restore`, adds opt-in per-output locked idle power management with compositor activity detection instead of QML pointer-change wakeups, enables crisp video playback on side monitors (`designs/Companion.qml`), and optimizes Explorer grid preview performance by decoding video only for the currently selected card while unselected cards display static background thumbnails.
+
+Live scene/web wallpaper support is being developed separately under the
+[approved design](docs/system-design/live-lock-wallpapers.md). It is unreleased
+and is not included in this installation pin. Its source-failure notification
+now uses the controller's positional source ID and session lease token;
+regression checks run without touching the installed shell. Worker startup,
+GPU buffer lifetime and bridge consumer-mask handling still block publication,
+installer integration and activation. The unpublished renderer builds and its
+protocol, Qt GPU-import and sandboxed engine suites passed on 2026-10-14 with
+the active Wayland session supplied to Qt. Separate fence-aware RGB checks
+confirmed animated scene and offline White Tree web pixels. These checks cover
+the renderer; the native bridge still starts before final GPU/stream
+configuration and can retain textures from a previous source. Its existing
+passing tests do not establish safe source replacement. The bridge has exhausted
+its two delegated fix rounds; the installed plugin and pins remain unchanged.
+Read-only architecture reassessment on 2026-10-14 confirmed that configuration,
+worker identity, consumer registration and GPU resource lifetime are coupled in
+the bridge's mutable current-broker state. The proposed revision is a session
+coordinator that starts workers from complete configuration snapshots and binds
+every buffer/import/release to its originating worker session. It also needs
+asynchronous retirement and actual multi-window GPU item tests; this ownership
+approach was approved on 2026-10-14; its [written lifecycle revision](docs/system-design/live-lock-bridge-lifecycle.md)
+and [implementation plan](docs/superpowers/plans/2026-10-14-live-lock-bridge-lifecycle.md)
+were approved, and implementation is authorized, beginning with the immutable
+epoch runtime. Acceptance and installation remain pending. The native build, ten
+existing bridge checks and twelve source-failure/span checks passed again, but
+these checks do not establish GPU item lifecycle safety.
+
+The initial immutable epoch runtime was reviewed on 2026-10-14. A fresh native
+build and both CTest suites passed (2/2), but source review found missing
+replacement/reaping barriers, incomplete device and buffer validation, and an
+out-of-bounds release-fence poll path. After the first fix round, a fresh native
+run (2/2), JavaScript/Python regressions (37/20) and an independent ASan/UBSan
+runtime run passed. A direct production-code probe still reproduced reused
+registration tokens, invalid membership after removing a stream's sole
+consumer, visibility sent before the handshake, and retry before its delay.
+Source review also found that error/quarantine notifications could open the
+replacement gate without confirmed process exit. After the second and final
+runtime fix round, the four original direct reproductions pass, both native
+suites pass (including 14 runtime cases), the 37 JavaScript and 20 Python
+regressions pass, and an independent ASan/UBSan run with leak detection passes
+without suppressions (FD baseline 5, final 5).
+
+Runtime acceptance is still blocked. Further direct production-code checks on
+2026-10-14 reproduced rejection of consumers sharing the same GPU with distinct
+window/context serials (`spawns=0`, device mismatch) and permanent replacement
+gating after a launcher exception (a subsequent valid source leaves launch
+attempts at 1). `SessionCoordinator` compares context serials as if they were
+GPU identity; `WorkerSession::isReaped()` returns false for an attempt that
+failed before launching a child. Source review also found that reaped error
+epochs remain in the retiring map, and quarantine continuation never updates
+the epoch's reap state or reports completion. On resumption, the previous
+`/tmp/live-lock-parent-review-20261014/` artifacts were absent. A fresh runtime
+build and CTest run passed (1/1), but a rebuilt production-code probe reproduced
+both failures: same-GPU/different-context registration gave zero spawns and one
+error; after a pre-child launch exception, a new valid source still left one
+launch attempt and a retiring epoch. The replacement probe source is
+`/tmp/live-lock-runtime-reassessment-20261014.cpp` (temporary verification
+artifact, not an installation dependency). The completed read-only
+reassessment confirms these are implementation violations of the approved
+design; a further redesign is not warranted. Parent review also confirmed
+that error epochs stay in the retiring map and that the quarantine reaper
+never publishes completion. Required corrections are to compare GPU identity
+independently of each window's context serial, recognize completed launches
+that created no child, and notify/prune retirement only after confirmed
+process cleanup. Acceptance must cover distinct contexts on one GPU,
+launch-failure recovery, removal of reaped error epochs, and late quarantine
+completion without opening the replacement gate early. No third fix round
+or replacement work unit was started. The runtime's two fix rounds are exhausted;
+GPU-item reconstruction and lifecycle acceptance have not started. The
+installed plugin and exact installation pin are unchanged.
 
 ### Behavior and controls
 
 Provides custom lock screen designs, a preview/picker overlay to switch between lock screens, and a designer overlay to build custom lock screens. Accessible from Omarchy Menu (**Style › Lock Screen Explorer**).
 
-Managed `phasedPower` on the plugin entry in `~/.config/omarchy/shell.json`: main `DP-5` powers off after **60 seconds**; sides `DP-4`/`DP-6` remain powered and reach hardware minimum brightness (DDC VCP 10 = 0) after **300 seconds total**, indefinitely. Both side lock surfaces also receive a **50%-opaque black attenuation overlay** (`overlayOpacity: 0.5`) above all content, without intercepting input; it disappears immediately on activity/unlock and never covers DP-5. This is literal optical black, not a decorative theme color; existing Aether-themed content remains unchanged underneath. Brightness writes are checked with VCP 10 readback. Pre-dim values are saved atomically/fsynced in `${XDG_STATE_HOME:-~/.local/state}/omarchy/lock-explorer-power/`, surviving logout/reboot; legacy runtime data is migrated when available. Once startup confirms the compositor session is unlocked, saved brightness is restored automatically with up to five bounded attempts; failed restores retain saved values. This fixes brightness remaining at 0 on the unlocked desktop after a reboot erased the former runtime-only restore state. Connector-matched buses reported as invalid by `ddcutil detect` are tested for actual brightness access before being discarded; a failure on one side does not skip the other and is logged. Compositor input activity restores all displays and their original side brightness, then restarts both deadlines; unlocking restores them too. Geometry changes/PAM retries do not wake monitors. Requires Python 3, ddcutil, I2C permissions and DDC-capable sides; monitor buses are discovered by connector, not pinned bus numbers. Conflicts with other display-power daemons. No new shortcut. Legacy `blankMs`/`keepDisplayOn` do not apply in this mode. Unlock before installation, disable/removal or shell restart; installer checks this and restores saved brightness before disable. Remove `phasedPower` while unlocked to revert to legacy behavior. Verification: **both DP-4 and DP-6 read back brightness 0** in a live hardware roundtrip and then returned to their original 100. Unit tests (12 Python + 17 JS, including fresh-process restoration and runtime-state migration), QML syntax checks, facade validation and manifest validation passed; physical full-duration lock/overlay/wake/suspend/hotplug acceptance remains pending.
+Managed `wallpaperSpanGroups: [["DP-5", "DP-4"]]` on the plugin entry in `~/.config/omarchy/shell.json` fixes the former hardcoded DP-6/DP-4 span. DP-6 shows the complete lock wallpaper; the two portrait sides show consecutive crops from one canvas. The mapping respects monitor positions, dimensions and scaling, and a lone connected side falls back to the complete image. Set `wallpaperSpanGroups: []` for independent playback everywhere; running the installer restores the managed pair. Wallpaper selection, independent lock-video rotation, lock design and boot video are preserved. No wallpaper-controller changes or new dependency. Geometry regression tests and live wallpaper-only previews were verified on all three outputs; an actual authenticated lock/unlock visual check remains user acceptance.
+
+Managed `phasedPower` on the plugin entry in `~/.config/omarchy/shell.json`: main **DP-6** defaults to **60 seconds / 100% tint (power off)**; sides **DP-5/DP-4** default to **300 seconds / 90% black tint**. Open **Lock Screen Explorer → Settings → Monitor timeouts and tint** to edit each group's timeout (1–3600 seconds) and tint slider (0–100%). The deadlines are independent, measured from locking or last compositor input activity, so either can expire first. 0% adds no overlay; 1–99% overlays literal optical black above all content without intercepting input or changing hardware brightness; 100% powers that group off and pauses its lock video. The Lenovo sides additionally receive a direct DDC hardware-off command, so their backlights turn off completely; DP-6 uses Hyprland DPMS. Activity/unlock wakes the outputs, clears overlays and restarts both deadlines. Changing these settings resets the countdowns; unrelated settings and wallpaper rotation do not. Aether-themed content remains underneath the optical overlay.
+
+Persisted fields are `mainTimeoutMs`, `sideTimeoutMs` (milliseconds), `mainTint`, `sideTint` (integer percentages), alongside `main`, `sides`, and managed `ddcPowerOffMonitors: ["DP-5", "DP-4"]`. The installer migrates old timeout values, seeds the requested 90% side tint once, removes the obsolete `offMs`/`dimMs`/`overlayOpacity` fields, and preserves valid user edits on subsequent runs. Script controls: `omarchy-shell lock setDisplayPowerSetting <field> <value>`; status includes `displayPowerSettings` and `powerPhase`. Removing `phasedPower` while unlocked restores legacy global blank controls. Disabling/removing the plugin removes its settings UI and timed behavior; lifecycle scripts require an unlocked session and wake the outputs first.
+
+Requires Hyprland Lua DPMS and Quickshell; no new package or shortcut. The existing Python/ddcutil helper retains recovery of any pre-update brightness saved in `${XDG_STATE_HOME:-~/.local/state}/omarchy/lock-explorer-power/`; percentage tint no longer changes DDC brightness. For the Lenovo sides, the helper persists DDC bus addresses in `power.json` before sending write-only VCP D6=5 hardware off. Wake first enables DPMS, then sends D6=1 to saved buses with initial DDC probes bypassed; on-state readback is required before removing each recovery record. This also runs during confirmed-unlocked startup and disable/removal. Failed outputs retain recovery state and do not skip the other side. Conflicts with other display-power daemons. The settings, geometry and hardware-command regression suite, QML controls/facade checks, and live hardware helper off/wake cycle are verified; full-duration lock/wake/suspend/hotplug acceptance remains separate.
 
 - **Install or re-enable:** `./install-lock-explorer.sh` — validates and installs the pinned checkout, enables the plugin in Omarchy shell, and registers its menu shortcut.
 - **Disable:** `./install-lock-explorer.sh --disable` — disables the plugin in Omarchy shell and removes its menu shortcut.
@@ -205,8 +288,8 @@ Provides a live AI provider quota and connection health desktop HUD on portrait 
 - **Type:** Original plugin, maintained in its own repository.
 - **Original upstream URL:** Not applicable; this is the original plugin repository.
 - **Installation source:** `https://github.com/priyeshbhawsar15/omarchy-system-metrics.git`
-- **Pinned commit:** `0a2fd78d7f5b0571f90e3cc2c1fa8869c75aad76`
-- **Local modifications:** None. The edge-docked collapse fix is maintained in the plugin repository.
+- **Pinned commit:** `aac22520daa5f27b94699dad3479c8d811062995`
+- **Local modifications:** The original plugin now supports a reloadable `targetScreen` setting instead of a hardcoded DP-4 target; its source remains in the separate repository. The edge-docked collapse fix is maintained in the plugin repository.
 
 ### Behavior and controls
 
@@ -223,6 +306,8 @@ Provides a real-time hardware telemetry HUD on portrait monitor `DP-4` (position
 - **Install or re-enable:** `./install-system-metrics.sh` — installs the pinned checkout and enables the plugin in Omarchy shell.
 - **Disable:** `./install-system-metrics.sh --disable` — disables the plugin and hides the HUD.
 - **Remove:** `./install-system-metrics.sh --remove` — archives configuration and state under `~/.local/state/arch-setups/backups/system-metrics-remove-<timestamp>/`, then disables and removes the plugin.
+
+**Monitor configuration:** `~/.config/omarchy/system-metrics.json` contains `targetScreen`; the standalone installer and managed monitor policy create/update it for `widgetTargets`. Connect the configured widget display when installing/re-enabling. A pin update restarts the shell once to clear cached QML; unchanged installation does not restart. Configuration changes reload without a shell restart. If the selected display is absent, the existing second-screen/first-screen fallback applies. Removal backs up this file along with existing state. Screen-selection tests in the plugin repository run with `node tests/screen-target.test.cjs`. For updates, review and test changes in the separate repository, publish them, then update this setup’s exact pin and documentation; do not follow a branch tip.
 
 ## Weather Widget
 
@@ -331,6 +416,41 @@ A desktop-only control card on **DP-4**, directly below Weather at the right edg
 - **Update:** review/test in the separate original repository, publish authorized changes, then advance the installer pin and both documentation entries together. Do not use branch-tip `omarchy plugin update`.
 
 **Verification:** 11 backend tests (including preset/horizontal swing validation, removed scene defaults and an unrelated-process stop guard), manifest validation, live read-only REST/WebSocket connection, rendered compact thermostat/dropdowns, dynamic theme binding, Pin layer switch and disable/re-enable process/window cleanup passed. `/tmp/ha-clean-final.png` confirms both large room readings, no duplicate current-temperature block, aligned dropdown columns and all four switches visible without scrolling; no widget runtime errors were observed. HA remains at y=1231 beneath Weather's y=1215 bottom (16px gap), matching its 409px window width including inset. The prior right-edge reveal test passed; this revision retains that mask/handle while removing all expansion/slide animations and retaining the full card height. Pin was reset to Bottom and Auto-Hide left enabled. Physical device actions, full keyboard navigation, hotplug/sleep and fresh-machine launcher/authentication remain manual acceptance items; see the plugin's `TESTING.md`. No device-changing service calls were issued during verification.
+
+## T3 Planner-Executor Workflow Adapter
+
+- **Feature ID:** `t3-planner-executor`.
+- **Type:** Separately maintained orchestration adapter package for T3 Code.
+- **Original upstream and installation source:** `git@github.com:priyeshbhawsar15/t3-planner-executor.git` (private GitHub repository).
+- **Pinned release:** `7ab9c0dd9774a75ee814a49ef41b281a03e96c36` (published and verified private release; explicit `--pin PENDING_PUBLICATION` remains rejected by the installer).
+- **Local modifications:** None copied into `arch-setups`. The separate repository houses the runtime package; this repository manages personal configuration seeding, lifecycle scripts, and T3 integration.
+
+### Behavior and controls
+
+Connects T3 Code to an automated Planner -> Executor -> Planner Review workflow loop, providing transparent multi-model dispatch across Pi, Codex, Claude, and native Antigravity. Wrappers intercept provider requests to enforce shell execution policies and multi-round iterative review. By default, fresh configurations seed the **hybrid workflow** (`planner.allowEdits: true` and `shellPolicy: 'planner-workspace'`), allowing the root Planner turn to directly handle localized low-complexity edits (a few lines, small config/doc/test updates, routine working-tree merges and conflict resolutions) and run verification checks, while delegating substantial, multicomponent, parallel, or explicitly requested work (`executor=<provider>`) to child Executor threads. Comprehensive operational documentation is maintained in the package guide at [`WORKFLOW.md`](https://github.com/priyeshbhawsar15/t3-planner-executor/blob/main/WORKFLOW.md) (also available locally at sibling `../t3-planner-executor/WORKFLOW.md`). State file transactions are synchronized using Linux `util-linux` (`flock`) advisory locks alongside unique atomic temporary files (`<statefile>.<pid>.<uuid>.tmp`) during mutations to protect concurrent ledger updates. The lock helper uses a verified standalone Node.js runtime discovered on PATH (or set with `T3_STATE_NODE_BINARY`), rather than assuming compiled Pi can evaluate JavaScript through `process.execPath`. Runtime verification shares the acquisition deadline; helper startup failures are distinguished from actual lock contention. Fully quit and reopen T3 Code when idle after an update so existing provider processes load the corrected module.
+
+- **Personal Configuration:** Managed runtime configuration resides at `~/.config/t3code/planner-executor/config.json`, seeded only for missing keys from `t3/planner-executor.json`:
+  - `enabled`: `true`
+  - `planner`: provider `inherit`, model `inherit`, thinking `inherit`, `allowEdits`: `true`
+  - `executor`: provider `pi`, model `antigravity/gemini-3.8-flash`, thinking `high`
+  - `providerDefaults`:
+    - `pi`: model `antigravity/gemini-3.8-flash`, thinking `high`
+    - `codex`: model `gpt-6-luna`, thinking `high`, serviceTier `default`
+    - `claudeAgent`: model `null`, thinking `null`
+    - `antigravity`: model `gemini-3.8-flash-low`, thinking `null`
+  - `maxFixRounds`: 2
+  - `shellPolicy`: `planner-workspace`
+  Existing explicit operator values are preserved on install and update. Missing keys receive seed defaults; an older config without `allowEdits` may acquire `true` while retaining its shell policy. Check both controls when updating. To switch an explicitly strict configuration to hybrid, set `allowEdits: true` and `planner-workspace`. Strict mode (`allowEdits: false`, `read-and-test-allowlist`) remains supported.
+
+### Dependencies, conflicts, and lifecycle
+
+- **Prerequisites:** Node.js, Git, Python 3, Linux `util-linux` (`flock` for cross-process state file transaction locks), and a mise-managed executor CLI (`pi` configured by default, `codex`, `gh`).
+- **Native Antigravity:** Discovers `agy_acp_server.par` and `localharness_external` from active managed tools under `~/.t3/tools/antigravity-acp/<platform>-<arch>/active.json` or existing descriptors; reports pending status with rerun instructions without fabricating binaries or marking the adapter activated if not configured.
+- **Install or verify:** `./install-t3-planner-executor.sh` (registered in `install-all.sh` immediately after `install-t3code.sh`). Checks exact pinned revision, byte-for-byte runtime files, executable modes, symlinks, valid JSON shape, exact Pi extension arguments in `settings.json`, and native Antigravity descriptors. Matching state prints `already installed` and exits 0.
+- **Enable:** `./install-t3-planner-executor.sh --enable` persists the enabled choice and sets `enabled: true`. Fails closed preserving state if config or dependencies are invalid.
+- **Disable:** `./install-t3-planner-executor.sh --disable` sets `enabled: false` and remembers the choice across `install-all.sh`. Fails closed without profile changes if config is malformed.
+- **Remove:** `./install-t3-planner-executor.sh --remove` preflights settings, unconfigures all managed T3 provider instances and aliases (restoring verified backend paths), removes the launcher symlink, archives all managed runtime files, settings, and descriptors under `~/.local/state/arch-setups/backups/t3-planner-executor-remove-<timestamp>/`, and unlinks only owned adapter files while preserving custom manual files, local workflow state, and personal config. Refuses deletion if backend paths cannot be verified. Historical backups, vendor binaries (`~/.t3/tools`), and authentication remain untouched.
+- **Conflicts:** None; preserves Codex mise protocol-safe launcher and other Pi extensions.
 
 ## Removed integrations
 

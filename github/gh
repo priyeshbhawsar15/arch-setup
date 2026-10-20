@@ -2,4 +2,9 @@
 # Preserve mise setup, but reserve stdout for the actual GitHub CLI response.
 export MISE_MINIMUM_RELEASE_AGE=0
 mise use -g "gh" >&2 || exit 1
-exec mise x "gh" -- "gh" "$@"
+executable="$(mise which gh)" || exit 1
+if [[ "$executable" != /* || ! -x "$executable" || "$executable" -ef "${BASH_SOURCE[0]}" ]]; then
+  printf 'gh: mise did not resolve a usable backend executable (wrapper recursion refused).\n' >&2
+  exit 1
+fi
+exec "$executable" "$@"

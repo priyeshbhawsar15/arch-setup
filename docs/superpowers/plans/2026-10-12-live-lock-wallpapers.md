@@ -54,6 +54,12 @@ Interfaces: engine-selected lock output uses inherited socket FD/device path; no
 
 ## Task 3: Optional native Qt background bridge
 
+**Superseded:** The mutable-broker implementation failed review after its two
+fix rounds and remains stopped. The user approved an ownership-model redesign.
+Use the [replacement lifecycle plan](2026-10-14-live-lock-bridge-lifecycle.md)
+after its written-artifact review; the original Task 3 checklist below is
+historical scope, not authorization for a third fix round.
+
 Files in lock fork: `native/LiveWallpaperItem.{h,cpp}`, `native/FrameBroker.{h,cpp}`, `native/SandboxLauncher.{h,cpp}`, `native/CMakeLists.txt`, `LiveWallpaper.qml`, `designs/Wallpaper.qml`, `LockHost.qml`, `Service.qml`, tests.
 
 Interfaces: QML item properties `sourcePath`, `streamId`, `consumerId`, `frameVisible`, `fps`, `status`; shared broker per source generation. QML typed source setter accepts validated JSON metadata. Native module is imported only by optional asynchronously loaded LiveWallpaper.qml.

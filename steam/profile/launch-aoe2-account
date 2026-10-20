@@ -1,0 +1,99 @@
+#!/usr/bin/python3
+"""Launch AoE II using a remembered Steam account; never store passwords."""
+import fcntl
+import os
+from pathlib import Path
+import re
+import shutil
+import subprocess
+import sys
+import time
+
+ACCOUNTS = {'pbtroopers': 'pbtrooper15', 'the_gremlin15': 'The_Gremlin15'}
+HOME = Path.home()
+LOGIN = HOME / '.local/share/Steam/config/loginusers.vdf'
+REGISTRY = HOME / '.steam/registry.vdf'
+
+def notify(message):
+    subprocess.run(['notify-send', 'Age of Empires II', message], check=False)
+
+def running():
+    return subprocess.run(['pgrep', '-u', str(os.getuid()), '-x', 'steam'], stdout=subprocess.DEVNULL).returncode == 0
+
+def current_account():
+    m = re.search(r'"AutoLoginUser"\s*"([^"\n]*)"', REGISTRY.read_text(), re.I)
+    return m.group(1) if m else None
+
+def atomic_write(path, text):
+    # Resolve Steam symlinks rather than replacing them.
+    path = path.resolve()
+    temp = path.with_name(path.name + '.aoe2-tmp')
+    fd = os.open(temp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, 'w') as stream:
+        stream.write(text)
+    os.replace(temp, path)
+
+def set_account(account):
+    original = LOGIN.read_text()
+    found = False
+    def replace(match):
+        nonlocal found
+        body = match.group(2)
+        name = re.search(r'"AccountName"\s*"([^"\n]*)"', body, re.I)
+        selected = bool(name and name.group(1).lower() == account.lower())
+        found = found or selected
+        value = '1' if selected else '0'
+        if re.search(r'"MostRecent"\s*"[^"\n]*"', body, re.I):
+            body = re.sub(r'("MostRecent"\s*)"[^"\n]*"', lambda m: m.group(1) + '"' + value + '"', body, flags=re.I)
+        else:
+            body = body.rstrip() + '\n\t\t"MostRecent"\t\t"' + value + '"\n\t'
+        return match.group(1) + body + match.group(3)
+    updated = re.sub(r'("\d{17}"\s*\{)([^{}]*)(\})', replace, original)
+    if not found:
+        raise RuntimeError('This account is no longer remembered by Steam. Sign in to it manually first.')
+    registry = REGISTRY.read_text()
+    updated_registry, count = re.subn(r'("AutoLoginUser"\s*)"[^"\n]*"', lambda m: m.group(1) + '"' + account + '"', registry, flags=re.I)
+    if count != 1:
+        raise RuntimeError('Cannot safely locate Steam AutoLoginUser; configuration was not changed.')
+    backup = HOME / '.local/share/aoe2-account-launcher/backups' / time.strftime('%Y%m%d-%H%M%S')
+    backup.mkdir(parents=True, exist_ok=True, mode=0o700)
+    os.chmod(backup, 0o700)
+    for src in (LOGIN, REGISTRY):
+        dest = backup / src.name
+        shutil.copy2(src, dest)
+        os.chmod(dest, 0o600)
+    atomic_write(LOGIN, updated)
+    atomic_write(REGISTRY, updated_registry)
+
+def main():
+    if len(sys.argv) != 2 or sys.argv[1] not in ACCOUNTS:
+        raise RuntimeError('Specify a configured Steam account.')
+    account = sys.argv[1]
+    lockpath = Path(os.environ.get('XDG_RUNTIME_DIR', '/tmp')) / f'aoe2-account-{os.getuid()}.lock'
+    with open(lockpath, 'w') as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            notify('Another account launch is already in progress.')
+            return
+        if current_account() != account:
+            if running():
+                answer = subprocess.run(['zenity', '--question', '--title=Switch Steam account?', '--text=' + f'Switch to {ACCOUNTS[account]} and launch Age of Empires II?\n\nSteam will close and restart. Save and quit any running Steam games first.\nSteam Guard may be required.', '--ok-label=Restart Steam', '--cancel-label=Cancel'])
+                if answer.returncode != 0:
+                    return
+                subprocess.run(['steam', '-shutdown'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=20)
+                deadline = time.monotonic() + 60
+                while running() and time.monotonic() < deadline:
+                    time.sleep(1)
+                if running():
+                    raise RuntimeError('Steam did not close. Close it manually and try again; no account settings were changed.')
+                time.sleep(2)
+            set_account(account)
+        subprocess.Popen(['steam', 'steam://rungameid/813780'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception as error:
+        notify(str(error))
+        sys.exit(1)

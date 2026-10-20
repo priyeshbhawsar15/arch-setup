@@ -18,6 +18,17 @@ NON_GAME_NAMES = (
     "steamworks common redistributables",
     "wallpaper engine",
 )
+VDF_STRING = r'((?:\\.|[^"\\])*)'
+
+
+def unescape_vdf(value: str) -> str:
+    escapes = {'"': '"', '\\': '\\', 'n': '\n', 'r': '\r', 't': '\t'}
+    return re.sub(r'\\(.)', lambda match: escapes.get(match[1], match[0]), value)
+
+
+def escape_vdf(value: str) -> str:
+    return (value.replace('\\', '\\\\').replace('"', '\\"')
+            .replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t'))
 
 
 def parse_binary_vdf(data: bytes) -> dict:
@@ -163,14 +174,26 @@ def configure_halo_proton(steam_root: Path) -> bool:
 
 def get_installed_games(steam_root: Path) -> dict[str, str]:
     games: dict[str, str] = {}
-    for manifest in sorted((steam_root / "steamapps").glob("appmanifest_*.acf")):
-        text = manifest.read_text(errors="replace")
-        m_id = re.search(r'^\s*"appid"\s+"(\d+)"', text, re.MULTILINE)
-        m_name = re.search(r'^\s*"name"\s+"([^"]+)"', text, re.MULTILINE)
-        if m_id and m_name:
-            appid, name = m_id.group(1), m_name.group(1)
-            if not any(marker in name.casefold() for marker in NON_GAME_NAMES):
-                games[appid] = name
+    libraries = {steam_root.resolve()}
+    for config in (steam_root / "steamapps/libraryfolders.vdf", steam_root / "config/libraryfolders.vdf"):
+        if not config.is_file():
+            continue
+        # New libraryfolders entries have a path field; old entries map an index
+        # directly to the library path. Ignore app IDs and unavailable libraries.
+        for match in re.finditer(r'^\s*"(?:path|\d+)"\s+"' + VDF_STRING + '"',
+                                 config.read_text(), re.MULTILINE | re.IGNORECASE):
+            path = Path(unescape_vdf(match[1]))
+            if path.is_absolute():
+                libraries.add(path.resolve())
+    for library in sorted(libraries):
+        for manifest in sorted((library / "steamapps").glob("appmanifest_*.acf")):
+            text = manifest.read_text(errors="replace")
+            m_id = re.search(r'^\s*"appid"\s+"(\d+)"', text, re.MULTILINE)
+            m_name = re.search(r'^\s*"name"\s+"' + VDF_STRING + '"', text, re.MULTILINE)
+            if m_id and m_name:
+                appid, name = m_id.group(1), unescape_vdf(m_name.group(1))
+                if not any(marker in name.casefold() for marker in NON_GAME_NAMES):
+                    games[appid] = name
     return games
 
 
@@ -201,7 +224,8 @@ def wrap_launch_options(val: str) -> str:
         return val
     if "%command%" in val:
         return val.replace("%command%", f"{WRAPPER} %command%", 1)
-    return f"{val} {WRAPPER} %command%"
+    # Without %command%, Steam interprets the value as arguments to the game.
+    return f"{WRAPPER} %command% {val}"
 
 
 def process_vdf(path: Path, games: dict[str, str]) -> tuple[bool, set[str]]:
@@ -214,14 +238,14 @@ def process_vdf(path: Path, games: dict[str, str]) -> tuple[bool, set[str]]:
     game_blocks: dict[str, tuple[int, int, str]] = {}
     active_game: tuple[str, int, str, int] | None = None
 
-    key_only = re.compile(r'^(\s*)"([^"]+)"\s*(?:\r?\n)?$')
-    key_val = re.compile(r'^(\s*)"([^"]+)"\s+"([^"]*)"\s*(\r?\n)?$')
+    key_only = re.compile(r'^(\s*)"' + VDF_STRING + r'"\s*(?:\r?\n)?$')
+    key_val = re.compile(r'^(\s*)"' + VDF_STRING + r'"\s+"' + VDF_STRING + r'"\s*(\r?\n)?$')
 
     for idx, line in enumerate(lines):
         stripped = line.strip()
         mk = key_only.match(line)
         if mk:
-            pending_key = mk.group(2)
+            pending_key = unescape_vdf(mk.group(2))
             continue
         if stripped == "{":
             key = pending_key or ""
@@ -258,15 +282,15 @@ def process_vdf(path: Path, games: dict[str, str]) -> tuple[bool, set[str]]:
         launch_ind = ind + "\t"
         for i in range(o_idx + 1, c_idx):
             mv = key_val.match(lines[i])
-            if mv and mv.group(2) == "LaunchOptions":
+            if mv and unescape_vdf(mv.group(2)) == "LaunchOptions":
                 launch_line = i
                 launch_ind = mv.group(1)
-                launch_val = mv.group(3)
+                launch_val = unescape_vdf(mv.group(3))
                 break
 
         new_val = wrap_launch_options(launch_val)
         nl = "\r\n" if lines[o_idx].endswith("\r\n") else "\n"
-        repl = f'{launch_ind}"LaunchOptions"\t\t"{new_val}"{nl}'
+        repl = f'{launch_ind}"LaunchOptions"\t\t"{escape_vdf(new_val)}"{nl}'
         if launch_line is None:
             edits.append((c_idx, c_idx, [repl]))
         elif lines[launch_line] != repl:

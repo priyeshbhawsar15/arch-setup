@@ -34,7 +34,7 @@ o.bind("SUPER + SHIFT + R", "Next wallpaper", "wallpaper-controller cycle")
 hl.unbind("SUPER + ALT + Q")
 o.bind("SUPER + ALT + Q", "Stop Wallpaper Engine", "wallpaper-controller stop")
 
-o.bind("SUPER + CTRL + SHIFT + F", "Toggle window span DP-6 + DP-4", "~/.config/hypr/scripts/window-span-dp6-dp4-toggle.sh")
+o.bind("SUPER + CTRL + SHIFT + F", "Toggle window span across portrait displays", "~/.config/hypr/scripts/window-span-dp6-dp4-toggle.sh")
 
 -- Cycle top bar visibility mode (Always show -> Auto-hide -> Disabled)
 hl.unbind("SUPER + SHIFT + SPACE")

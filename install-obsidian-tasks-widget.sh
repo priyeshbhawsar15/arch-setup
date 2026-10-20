@@ -30,12 +30,7 @@ ensure_command() {
 }
 
 plugin_checkout_is_current() {
-  [[ -d "$plugin_dir/.git" ]] || return 1
-  [[ "$(git -C "$plugin_dir" remote get-url origin 2>/dev/null || true)" == "$plugin_url" ]] || return 1
-  [[ "$(git -C "$plugin_dir" rev-parse HEAD 2>/dev/null || true)" == "$plugin_commit" ]] || return 1
-  git -C "$plugin_dir" diff --quiet || return 1
-  git -C "$plugin_dir" diff --cached --quiet || return 1
-  [[ -z "$(git -C "$plugin_dir" status --porcelain --untracked-files=all)" ]] || return 1
+  managed_plugin_checkout_current "$plugin_dir" "$plugin_url" "$plugin_commit"
 }
 
 plugin_is_enabled() {
@@ -56,42 +51,11 @@ wait_for_plugin_discovery() {
 }
 
 checkout_pinned_plugin() {
-  local parent stage
-  parent="$(dirname -- "$plugin_dir")"
-  mkdir -p -- "$parent"
-  stage="$(mktemp -d "$parent/.${plugin_id}.install.XXXXXX")"
-  cleanup_stage() { rm -rf -- "$stage"; }
-  trap cleanup_stage RETURN
-
-  GIT_TERMINAL_PROMPT=0 git clone --quiet --no-checkout "$plugin_url" "$stage" \
-    || fail "could not clone $plugin_url"
-  git -C "$stage" checkout --quiet --detach "$plugin_commit" \
-    || fail "could not check out pinned commit $plugin_commit"
-  git -C "$stage" submodule update --init --recursive
-  omarchy plugin validate "$stage" \
-    || fail "the pinned plugin checkout did not pass Omarchy validation"
-  mv -- "$stage" "$plugin_dir"
-  trap - RETURN
+  install_pinned_plugin "$plugin_dir" "$plugin_url" "$plugin_commit" "$plugin_id"
 }
 
 update_pinned_plugin() {
-  [[ -d "$plugin_dir/.git" ]] || fail "the existing plugin is not a Git checkout"
-  [[ "$(git -C "$plugin_dir" remote get-url origin 2>/dev/null || true)" == "$plugin_url" ]] \
-    || fail "the existing plugin checkout is not managed by this installer"
-  git -C "$plugin_dir" diff --quiet \
-    || fail "the existing plugin checkout has uncommitted changes"
-  git -C "$plugin_dir" diff --cached --quiet \
-    || fail "the existing plugin checkout has staged changes"
-  [[ -z "$(git -C "$plugin_dir" status --porcelain --untracked-files=all)" ]] \
-    || fail "the existing plugin checkout has untracked files"
-
-  git -C "$plugin_dir" fetch --quiet --tags origin \
-    || fail "could not fetch the reviewed pinned revision"
-  git -C "$plugin_dir" checkout --quiet --detach "$plugin_commit" \
-    || fail "could not check out pinned commit $plugin_commit"
-  git -C "$plugin_dir" submodule update --init --recursive
-  omarchy plugin validate "$plugin_dir" \
-    || fail "the updated pinned checkout did not pass Omarchy validation"
+  install_pinned_plugin "$plugin_dir" "$plugin_url" "$plugin_commit" "$plugin_id"
 }
 
 seed_configuration() {
@@ -114,7 +78,7 @@ enable_plugin() {
   omarchy-shell shell rescanPlugins >/dev/null
   wait_for_plugin_discovery
   omarchy plugin enable "$plugin_id"
-  [[ -x "$plugin_dir/install.sh" ]] && "$plugin_dir/install.sh"
+  reconcile_plugin_helper obsidian-tasks-widget "$plugin_dir/bin/obsidian-tasks-widget"
   plugin_is_enabled || fail "Omarchy did not enable $plugin_id"
 }
 
@@ -122,21 +86,12 @@ disable_plugin() {
   if plugin_is_enabled; then
     omarchy plugin disable "$plugin_id"
   fi
-  [[ -x "$plugin_dir/uninstall.sh" ]] && "$plugin_dir/uninstall.sh"
+  remove_plugin_helper obsidian-tasks-widget "$plugin_dir/bin/obsidian-tasks-widget"
   log "Obsidian Tasks widget is disabled."
 }
 
 backup_feature_data() {
-  local backup_dir path relative_path
-  backup_dir="$HOME/.local/state/arch-setups/backups/obsidian-tasks-remove-$(date +%Y%m%d%H%M%S)"
-  mkdir -p -- "$backup_dir"
-  for path in "$config_file" "$HOME/.local/state/omarchy/obsidian-tasks"; do
-    [[ -e "$path" || -L "$path" ]] || continue
-    relative_path="${path#$HOME/}"
-    mkdir -p -- "$backup_dir/$(dirname -- "$relative_path")"
-    cp -a -- "$path" "$backup_dir/$relative_path"
-  done
-  printf '%s\n' "$backup_dir"
+  backup_feature_paths obsidian-tasks-remove "$config_file" "$HOME/.local/state/omarchy/obsidian-tasks"
 }
 
 remove_plugin() {
@@ -172,6 +127,8 @@ else
 fi
 
 seed_configuration
+
+reconcile_plugin_helper obsidian-tasks-widget "$plugin_dir/bin/obsidian-tasks-widget"
 
 if plugin_is_enabled && [[ "$checkout_changed" == false ]]; then
   log "Obsidian Tasks widget is already installed."

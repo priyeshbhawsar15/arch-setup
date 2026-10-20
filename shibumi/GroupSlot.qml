@@ -57,7 +57,7 @@ Item {
     for (let index = 0; index < monitors.length; index++) {
       const monitor = monitors[index]
       if (String(monitor.name || "") === name) {
-        if (String(monitor.name || "") === "DP-6") return false
+        if (String(monitor.description || "") === "@bar-main-description@") return false
         return true
       }
     }

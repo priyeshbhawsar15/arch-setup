@@ -9,6 +9,7 @@ notify() {
 }
 
 fail() {
+  printf '%s\n' "$1" >&2
   notify "$1"
   exit 1
 }
@@ -90,8 +91,8 @@ if [[ -f "$state_file" ]]; then
     saved_width="$(jq -er '.size[0]' <<<"$saved_window")"
     saved_height="$(jq -er '.size[1]' <<<"$saved_window")"
 
-    dispatch "hl.dsp.window.move({ x = $saved_x, y = $saved_y, relative = false })"
     dispatch "hl.dsp.window.resize({ x = $saved_width, y = $saved_height, relative = false })"
+    dispatch "hl.dsp.window.move({ x = $saved_x, y = $saved_y, relative = false })"
   elif [[ "$current_floating" == "true" ]]; then
     saved_x="$(jq -er '.at[0]' <<<"$saved_window")"
     saved_y="$(jq -er '.at[1]' <<<"$saved_window")"
@@ -108,30 +109,9 @@ if [[ -f "$state_file" ]]; then
   exit 0
 fi
 
-canvas="$(hyprctl -j monitors | jq -cer '
-  def logical_dimensions:
-    if (.transform == 1 or .transform == 3 or .transform == 5 or .transform == 7) then
-      [(.height / .scale | round), (.width / .scale | round)]
-    else
-      [(.width / .scale | round), (.height / .scale | round)]
-    end;
-
-  map(select(.name == "DP-6" or .name == "DP-4") | . + { logical: logical_dimensions })
-  | if length != 2 then
-      error("DP-6 and DP-4 must both be connected")
-    else
-      (.[] | select(.name == "DP-6")) as $left
-      | (.[] | select(.name == "DP-4")) as $right
-      | if ($left.disabled or $right.disabled
-            or $left.y != $right.y
-            or $left.logical[1] != $right.logical[1]
-            or $left.x + $left.logical[0] != $right.x) then
-          error("DP-6 and DP-4 must be adjacent with matching heights")
-        else
-          { x: $left.x, y: $left.y, width: ($left.logical[0] + $right.logical[0]), height: $left.logical[1] }
-        end
-    end
-')" || fail "DP-6 and DP-4 are not available as a shared canvas"
+require_command python3
+helper="$(dirname -- "${BASH_SOURCE[0]}")/monitor-layout.py"
+canvas="$(python3 "$helper" canvas 2>&1)" || fail "$canvas"
 
 mkdir -p -- "$state_dir"
 temporary_state="$(mktemp "$state_dir/.${address#0x}.XXXXXX")"
@@ -154,9 +134,12 @@ canvas_width="$(jq -er '.width' <<<"$canvas")"
 canvas_height="$(jq -er '.height' <<<"$canvas")"
 
 dispatch 'hl.dsp.window.fullscreen_state({ internal = 0, client = 0, action = "set" })'
-dispatch 'hl.dsp.window.float({ action = "set" })'
-dispatch "hl.dsp.window.move({ x = $canvas_x, y = $canvas_y, relative = false })"
+if [[ "$(jq -r '.floating' <<<"$active_window")" == "false" ]]; then
+  dispatch 'hl.dsp.window.float({ action = "toggle" })'
+fi
+# Resizing can shift the floating origin; place the finished rectangle last.
 dispatch "hl.dsp.window.resize({ x = $canvas_width, y = $canvas_height, relative = false })"
+dispatch "hl.dsp.window.move({ x = $canvas_x, y = $canvas_y, relative = false })"
 if [[ "$(jq -r '.pinned' <<<"$active_window")" == "false" ]]; then
   dispatch 'hl.dsp.window.pin({ action = "set" })'
 fi

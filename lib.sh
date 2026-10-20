@@ -25,6 +25,152 @@ require_omarchy() {
   fi
 }
 
+# Archive feature data privately, preserving paths and leaving originals intact.
+backup_feature_paths() {
+  local label="$1" path relative backup parent
+  shift
+  parent="${XDG_STATE_HOME:-$HOME/.local/state}/arch-setups/backups"
+  mkdir -p -- "$parent"
+  backup="$(mktemp -d "$parent/${label}-$(date +%Y%m%dT%H%M%S)-XXXXXX")"
+  for path in "$@"; do
+    [[ -e "$path" || -L "$path" ]] || continue
+    relative="${path#/}"
+    mkdir -p -- "$backup/$(dirname -- "$relative")"
+    cp -a -- "$path" "$backup/$relative"
+  done
+  printf '%s\n' "$backup"
+}
+
+managed_plugin_checkout_current() {
+  local dir="$1" url="$2" revision="$3"
+  [[ -d "$dir/.git" && ! -L "$dir" ]] || return 1
+  [[ "$(git -C "$dir" remote get-url origin 2>/dev/null)" == "$url" ]] || return 1
+  [[ "$(git -C "$dir" rev-parse HEAD 2>/dev/null)" == "$revision" ]] || return 1
+  [[ -z "$(git -C "$dir" status --porcelain --untracked-files=all)" ]]
+}
+
+managed_git_checkout_current() {
+  local dir="$1" url="$2" revision="$3"
+  [[ -d "$dir/.git" && ! -L "$dir" ]] || return 1
+  [[ "$(git -C "$dir" remote get-url origin 2>/dev/null)" == "$url" ]] || return 1
+  [[ "$(git -C "$dir" rev-parse HEAD 2>/dev/null)" == "$revision" ]] || return 1
+  [[ -z "$(git -C "$dir" status --porcelain --untracked-files=all)" ]]
+}
+
+# Clone or update an exact pinned commit into a dedicated managed git checkout.
+# Requires matching origin + clean tree + HEAD; never overwrites unknown/dirty/symlink directories.
+install_pinned_git_checkout() (
+  set -euo pipefail
+  local dir="$1" url="$2" revision="$3" label="${4:-source}" parent stage previous="" origin
+  if [[ -e "$dir" || -L "$dir" ]]; then
+    [[ -d "$dir/.git" && ! -L "$dir" ]] || {
+      printf 'Managed path is not a git repository checkout: %s\n' "$dir" >&2; return 1;
+    }
+    origin="$(git -C "$dir" remote get-url origin 2>/dev/null || true)"
+    [[ "$origin" == "$url" ]] || {
+      printf 'Refusing foreign repository origin (%s != %s): %s\n' "$origin" "$url" "$dir" >&2; return 1;
+    }
+    [[ -z "$(git -C "$dir" status --porcelain --untracked-files=all)" ]] || {
+      printf 'Managed repository has local changes; refusing to overwrite: %s\n' "$dir" >&2; return 1;
+    }
+    if managed_git_checkout_current "$dir" "$url" "$revision"; then return 0; fi
+  fi
+  parent="$(dirname -- "$dir")"
+  mkdir -p -- "$parent"
+  stage="$(mktemp -d "$parent/.${label}.install.XXXXXX")"
+  trap 'rm -rf -- "$stage"; if [[ -n "$previous" && -e "$previous" && ! -e "$dir" ]]; then mv -- "$previous" "$dir"; fi' EXIT
+  GIT_TERMINAL_PROMPT=0 git clone --quiet --no-checkout "$url" "$stage"
+  git -C "$stage" checkout --quiet --detach "$revision"
+  if [[ -f "$stage/.gitmodules" ]]; then
+    git -C "$stage" submodule update --init --recursive
+  fi
+  if [[ -e "$dir" ]]; then
+    previous="$(mktemp -d "$parent/.${label}.previous.XXXXXX")"
+    rmdir -- "$previous"
+    mv -- "$dir" "$previous"
+  fi
+  mv -- "$stage" "$dir"
+  [[ -z "$previous" ]] || rm -rf -- "$previous"
+  trap - EXIT
+)
+
+
+# Validate a staged, exact revision before replacing an existing clean checkout.
+# The subshell EXIT trap also cleans staging directories on failed commands.
+install_pinned_plugin() (
+  set -euo pipefail
+  local dir="$1" url="$2" revision="$3" id="$4" reviewed_origin="${5:-}" parent stage previous="" origin
+  if [[ -e "$dir" || -L "$dir" ]]; then
+    [[ -d "$dir/.git" && ! -L "$dir" ]] || {
+      printf 'Plugin path is not a managed checkout: %s\n' "$dir" >&2; return 1;
+    }
+    origin="$(git -C "$dir" remote get-url origin)"
+    [[ "$origin" == "$url" || ( -n "$reviewed_origin" && "$origin" == "$reviewed_origin" ) ]] || {
+      printf 'Refusing foreign plugin origin: %s\n' "$dir" >&2; return 1;
+    }
+    [[ -z "$(git -C "$dir" status --porcelain --untracked-files=all)" ]] || {
+      printf 'Plugin has local changes; refusing to overwrite: %s\n' "$dir" >&2; return 1;
+    }
+    if managed_plugin_checkout_current "$dir" "$url" "$revision"; then return 0; fi
+  fi
+  parent="$(dirname -- "$dir")"
+  mkdir -p -- "$parent"
+  stage="$(mktemp -d "$parent/.${id}.install.XXXXXX")"
+  trap 'rm -rf -- "$stage"; if [[ -n "$previous" && -e "$previous" && ! -e "$dir" ]]; then mv -- "$previous" "$dir"; fi' EXIT
+  GIT_TERMINAL_PROMPT=0 git clone --quiet --no-checkout "$url" "$stage"
+  git -C "$stage" checkout --quiet --detach "$revision"
+  git -C "$stage" submodule update --init --recursive
+  [[ "$(jq -r '.id // empty' "$stage/manifest.json")" == "$id" ]] || {
+    printf 'Pinned checkout has unexpected plugin ID (expected %s)\n' "$id" >&2; return 1;
+  }
+  omarchy plugin validate "$stage" || {
+    printf 'Pinned plugin validation failed: %s\n' "$id" >&2; return 1;
+  }
+  if [[ -e "$dir" ]]; then
+    previous="$(mktemp -d "$parent/.${id}.previous.XXXXXX")"
+    rmdir -- "$previous"
+    mv -- "$dir" "$previous"
+  fi
+  mv -- "$stage" "$dir"
+  [[ -z "$previous" ]] || rm -rf -- "$previous"
+  trap - EXIT
+)
+
+reconcile_plugin_helper() {
+  local name="$1" executable="$2" link="$HOME/.local/bin/$1"
+  [[ -f "$executable" ]] || { printf 'Missing plugin helper: %s\n' "$executable" >&2; return 1; }
+  if [[ -e "$link" || -L "$link" ]]; then
+    [[ -L "$link" && "$(readlink "$link")" == "$executable" ]] || {
+      printf 'Preserving custom helper at %s; resolve the conflict before installing.\n' "$link" >&2; return 1;
+    }
+  fi
+  chmod +x -- "$executable"
+  mkdir -p -- "$(dirname -- "$link")"
+  [[ -L "$link" ]] || ln -s -- "$executable" "$link"
+}
+
+remove_plugin_helper() {
+  local name="$1" executable="$2" link="$HOME/.local/bin/$1"
+  if [[ -L "$link" && "$(readlink "$link")" == "$executable" ]]; then rm -- "$link"; fi
+}
+
+# A direct installer invocation is an explicit choice; install-all honors it.
+remember_feature_choice() {
+  [[ "${ARCH_SETUPS_AUTOMATED:-}" != 1 ]] || return 0
+  python3 "$SCRIPT_DIR/config/feature-profile.py" --profile "$SCRIPT_DIR/features.json" \
+    remember "$(basename -- "$1")" "$2"
+}
+
+feature_is_enabled() {
+  python3 "$SCRIPT_DIR/config/feature-profile.py" --profile "$SCRIPT_DIR/features.json" enabled "$1"
+}
+
+# Render display identity selectors from the single managed monitor policy.
+monitor_layout_render() {
+  python3 "$SCRIPT_DIR/hypr/scripts/monitor-layout.py" \
+    --config "$SCRIPT_DIR/monitor-layout.json" render "$1"
+}
+
 # Deploy a protocol-safe mise wrapper, replacing only explicitly known versions.
 # Additional arguments are complete legacy file contents (without final newline).
 install_mise_cli() {

@@ -1,0 +1,22 @@
+{
+  "monitors": {
+    "main": {"description": "Microstep MAG321UP OLED"},
+    "side_left": {"description": "Lenovo Group Limited LEN S22e-19 0x01010101"},
+    "side_right": {"description": "Lenovo Group Limited LEN S22e-19 0x59333830"}
+  },
+  "windowSpan": ["side_left", "side_right"],
+  "singleMonitorKeep": "main",
+  "singleMonitorDisable": ["side_left", "side_right"],
+  "wallpaperSpan": ["side_left", "side_right"],
+  "lockMain": "main",
+  "lockSides": ["side_left", "side_right"],
+  "barMain": "main",
+  "widgetTargets": {
+    ".config/omarchy/obsidian-tasks.json": "side_left",
+    ".config/omarchy/omniroute-quota.json": "side_right",
+    ".config/omarchy/system-metrics.json": "side_right",
+    ".config/omarchy/weather-widget.json": "side_right",
+    ".config/omarchy/immich-photo-frame.json": "side_right",
+    ".config/omarchy/home-assistant.json": "side_right"
+  }
+}
