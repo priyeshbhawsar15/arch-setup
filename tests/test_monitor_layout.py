@@ -149,6 +149,11 @@ else:
 
 class MonitorPolicyTest(unittest.TestCase):
     def setUp(self):
+        state = tempfile.TemporaryDirectory(prefix='monitor-test-state-')
+        self.addCleanup(state.cleanup)
+        environment = patch.dict(os.environ, {'XDG_STATE_HOME': state.name})
+        environment.start()
+        self.addCleanup(environment.stop)
         self.config = layout.load_config(REPO / 'monitor-layout.json')
 
     def test_duplicate_display_identity_is_rejected(self):

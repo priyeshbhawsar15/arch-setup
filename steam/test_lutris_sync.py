@@ -48,6 +48,37 @@ class LutrisSyncTests(unittest.TestCase):
             self.assertEqual(connection.execute("select name from games where installer_slug='steam-123'").fetchone(),
                              ("Fixture Game",))
 
+    def test_selected_profile_loads_through_lutris_in_both_directory_layouts(self):
+        import json
+        for legacy in (False, True):
+            with self.subTest(legacy=legacy):
+                root = self.home / ('legacy' if legacy else 'modern')
+                env = dict(self.env, HOME=str(root), XDG_CONFIG_HOME=str(root / 'config'),
+                           XDG_DATA_HOME=str(root / 'data'), XDG_STATE_HOME=str(root / 'state'),
+                           XDG_CACHE_HOME=str(root / 'cache'))
+                if legacy:
+                    (root / 'config/lutris').mkdir(parents=True)
+                executable = root / 'library/game/bin/x64/Cyberpunk2077.exe'
+                executable.parent.mkdir(parents=True)
+                executable.touch()
+                selection = root / 'selection.json'
+                selection.write_text(json.dumps({'schemaVersion': 1, 'libraries': {'primary': str(root / 'library')},
+                    'games': {'cyberpunk-2077': {'library': 'primary', 'path': 'game', 'desktop': legacy}}}))
+                env['ARCH_SETUPS_GAMING_PROFILE'] = str(selection)
+                for args in ([str(ROOT / 'steam/sync-lutris-steam.py'), '--initialize-only'],
+                             [str(ROOT / 'steam/configure-gaming-profile.py'), '--apply']):
+                    result = subprocess.run(['/usr/bin/python3', *args], env=env, capture_output=True, text=True, timeout=30)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                result = subprocess.run(['/usr/bin/python3', '-c', '''from lutris import settings
+from lutris.config import LutrisConfig
+from pathlib import Path
+config = LutrisConfig(runner_slug='wine', game_config_id='arch-profile-steam-shortcut-3013353202')
+assert config.game_config['exe'].endswith('/game/bin/x64/Cyberpunk2077.exe'), config.game_config
+print(settings.GAME_CONFIG_DIR)
+'''], env=env, capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertIn(str(root / ('config/lutris/games' if legacy else 'data/lutris/games')), result.stdout)
+
     def test_active_lutris_refuses_sync_before_creating_user_state(self):
         (self.home / "active-lutris").touch()
         result = self.sync()

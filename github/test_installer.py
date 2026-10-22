@@ -90,6 +90,18 @@ sys.exit(int(os.environ.get("FAKE_TOOL_EXIT", "0")))
                 self.assertIn('already installed', self.run_installer(tool))
                 self.assertEqual(len(self.backups(tool)), 1)
 
+    def test_fresh_omarchy_quiet_wrappers_are_backed_up_not_mistaken_for_custom(self):
+        self.env['FAKE_MISSING'] = '1'
+        for tool in ('gh', 'codex'):
+            stock = noisy_wrapper(tool).replace('mise use -g ', 'mise use -g --quiet ')
+            self.target(tool).write_text(stock)
+            self.run_installer(tool)
+            self.assertEqual(self.target(tool).read_bytes(), self.source(tool).read_bytes())
+            self.assertEqual(self.backups(tool)[0].read_text(), stock)
+            self.assertEqual(self.backups(tool)[0].parent.stat().st_mode & 0o777, 0o700)
+            self.assertIn('already installed', self.run_installer(tool))
+            self.assertEqual(len(self.backups(tool)), 1)
+
     def test_system_gh_wrapper_replaced(self):
         old = '#!/bin/bash\n# Keep GitHub CLI stdout machine-readable for T3 and other integrations.\nexec /usr/bin/gh "$@"\n'
         self.target('gh').write_text(old)
@@ -133,20 +145,21 @@ sys.exit(int(os.environ.get("FAKE_TOOL_EXIT", "0")))
             result = subprocess.run([str(self.target(tool)), *args], env=self.env,
                                     capture_output=True, text=True, check=True)
             self.assertEqual(json.loads(result.stdout), {'args': args, 'backend': 'mise'})
-            self.assertIn('mise setup announcement', result.stderr)
+            self.assertNotIn('mise setup announcement', result.stderr)
             self.env['FAKE_TOOL_EXIT'] = '7'
             result = subprocess.run([str(self.target(tool))], env=self.env, capture_output=True, text=True)
             self.assertEqual(result.returncode, 7)
             del self.env['FAKE_TOOL_EXIT']
 
-    def test_setup_failure_does_not_start_tool(self):
+    def test_missing_backend_does_not_attempt_runtime_installation(self):
         for tool in ('gh', 'codex'):
             self.run_installer(tool)
-            env = dict(self.env, FAKE_SETUP_FAIL='1')
+            env = dict(self.env, FAKE_MISSING='1', FAKE_SETUP_FAIL='1')
             result = subprocess.run([str(self.target(tool))], env=env, capture_output=True, text=True)
             self.assertEqual(result.returncode, 1)
             self.assertEqual(result.stdout, '')
-            self.assertIn('mise setup announcement', result.stderr)
+            self.assertIn('backend', result.stderr)
+            self.assertNotIn('mise setup announcement', result.stderr)
 
 
 if __name__ == '__main__':

@@ -13,9 +13,31 @@ is_command_available() {
 desktop_file_exists() {
   local desktop_file="$1"
 
-  [[ -f "$HOME/.local/share/applications/$desktop_file" ]] ||
-    [[ -f "/usr/share/applications/$desktop_file" ]] ||
-    [[ -f "$HOME/.nix-profile/share/applications/$desktop_file" ]]
+  local path
+  for path in "$HOME/.local/share/applications/$desktop_file" "/usr/share/applications/$desktop_file" "$HOME/.nix-profile/share/applications/$desktop_file"; do
+    [[ -f "$path" ]] || continue
+    # Stale launchers are not installed applications. Resolve the advertised
+    # executable without running/evaluating any desktop-entry command.
+    if python3 - "$path" <<'PY'
+import configparser, os, shlex, shutil, sys
+try:
+    entry = configparser.ConfigParser(interpolation=None, strict=False)
+    entry.read(sys.argv[1])
+    value = entry['Desktop Entry'].get('TryExec') or entry['Desktop Entry'].get('Exec', '')
+    args = shlex.split(value)
+    if args and os.path.basename(args[0]) == 'env':
+        args.pop(0)
+        while args and '=' in args[0]:
+            args.pop(0)
+    command = os.path.expanduser(args[0]) if args else ''
+    good = bool(command and shutil.which(command))
+except (ValueError, KeyError, configparser.Error):
+    good = False
+sys.exit(0 if good else 1)
+PY
+    then return 0; fi
+  done
+  return 1
 }
 
 require_omarchy() {
@@ -137,7 +159,7 @@ install_pinned_plugin() (
 )
 
 reconcile_plugin_helper() {
-  local name="$1" executable="$2" link="$HOME/.local/bin/$1"
+  local name="$1" executable="$2" link="${3:-$HOME/.local/bin/$1}"
   [[ -f "$executable" ]] || { printf 'Missing plugin helper: %s\n' "$executable" >&2; return 1; }
   if [[ -e "$link" || -L "$link" ]]; then
     [[ -L "$link" && "$(readlink "$link")" == "$executable" ]] || {
@@ -157,18 +179,43 @@ remove_plugin_helper() {
 # A direct installer invocation is an explicit choice; install-all honors it.
 remember_feature_choice() {
   [[ "${ARCH_SETUPS_AUTOMATED:-}" != 1 ]] || return 0
-  python3 "$SCRIPT_DIR/config/feature-profile.py" --profile "$SCRIPT_DIR/features.json" \
+  python3 "$SCRIPT_DIR/config/feature-profile.py" --profile "${ARCH_SETUPS_PROFILE:-$SCRIPT_DIR/features.json}" \
     remember "$(basename -- "$1")" "$2"
 }
 
 feature_is_enabled() {
-  python3 "$SCRIPT_DIR/config/feature-profile.py" --profile "$SCRIPT_DIR/features.json" enabled "$1"
+  local status=0
+  python3 "$SCRIPT_DIR/config/feature-profile.py" --profile "${ARCH_SETUPS_PROFILE:-$SCRIPT_DIR/features.json}" enabled "$1" || status=$?
+  if ((status > 1)); then
+    log "Invalid feature configuration; refusing to treat it as disabled." >&2
+    exit "$status"
+  fi
+  return "$status"
 }
 
-# Render display identity selectors from the single managed monitor policy.
+# Remember only successful explicit plugin lifecycle actions. Automatic setup
+# must not overwrite an operator's choices, including disabled dependencies.
+feature_lifecycle() {
+  [[ "${ARCH_SETUPS_AUTOMATED:-}" != 1 && "${ARCH_SETUPS_LIFECYCLE_RUNNING:-}" != 1 && "$(basename -- "$1")" == install-*.sh ]] || return 0
+  local script="$1" choice=true status=0
+  shift
+  case "${1:-}" in
+    --disable|--remove) choice=false ;;
+    ""|--enable) ;;
+    *) return 0 ;;
+  esac
+  python3 "$SCRIPT_DIR/config/feature-profile.py" validate || exit $?
+  # A separate Bash keeps installer staging/rollback traps independent of this
+  # success hook. Never source/eval an installer inside a conditional context.
+  ARCH_SETUPS_LIFECYCLE_RUNNING=1 bash "$script" "$@" || status=$?
+  if ((status == 0)); then remember_feature_choice "$script" "$choice" || status=$?; fi
+  exit "$status"
+}
+
+# Render display identity selectors from the selected host policy.
 monitor_layout_render() {
   python3 "$SCRIPT_DIR/hypr/scripts/monitor-layout.py" \
-    --config "$SCRIPT_DIR/monitor-layout.json" render "$1"
+    --config "${ARCH_SETUPS_MONITOR_LAYOUT:-$SCRIPT_DIR/monitor-layout.json}" render "$1"
 }
 
 # Deploy a protocol-safe mise wrapper, replacing only explicitly known versions.
@@ -176,8 +223,10 @@ monitor_layout_render() {
 install_mise_cli() {
   local tool="$1" source_wrapper="$2"
   shift 2
-  local target_wrapper="$HOME/.local/bin/$tool" executable legacy
+  local target_wrapper="$HOME/.local/bin/$tool" executable legacy stock_wrapper
   local replace=false changed=false backup_dir
+  # Exact Omarchy 4.0.6 stock shim; --quiet still installs/updates at runtime.
+  printf -v stock_wrapper '#!/bin/bash\nexport MISE_MINIMUM_RELEASE_AGE=0\nmise use -g --quiet "%s" || exit 1\nexec mise x "%s" -- "%s" "$@"' "$tool" "$tool" "$tool"
 
   if ! is_command_available mise; then
     log "mise is required to manage $tool; install mise before running this installer."
@@ -198,12 +247,17 @@ install_mise_cli() {
     if cmp -s "$source_wrapper" "$target_wrapper"; then
       if [[ ! -x "$target_wrapper" ]]; then replace=true; fi
     else
-      for legacy in "$@"; do
+      for legacy in "$@" "$stock_wrapper"; do
         if cmp -s "$target_wrapper" <(printf '%s\n' "$legacy"); then
           replace=true
           break
         fi
       done
+      # Exact previous protocol-safe wrappers performed mise installation at
+      # runtime. Migrate those known bytes; preserve all unknown custom code.
+      case "$tool:$(sha256sum "$target_wrapper" | cut -d' ' -f1)" in
+        codex:f0cf7a3c426d4666f75e3484a4d52a01a53eedac49dca53f5e474404ac05601c|gh:6c99d2be357fdf139e73dbaa604f9a778c225bca78aa0911744fb8f9413bb691) replace=true ;;
+      esac
       if [[ "$replace" == false ]]; then
         log "Preserving custom $tool wrapper at $target_wrapper; ensure stdout stays protocol-safe."
       fi
@@ -215,7 +269,7 @@ install_mise_cli() {
   if [[ "$replace" == true ]]; then
     if [[ -e "$target_wrapper" ]]; then
       backup_dir="${XDG_STATE_HOME:-$HOME/.local/state}/arch-setups/backups/$tool-mise-$(date +%Y%m%dT%H%M%S)-$$"
-      mkdir -p "$backup_dir"
+      mkdir -p -m 700 "$backup_dir"
       cp -a "$target_wrapper" "$backup_dir/$tool"
       log "Backed up $tool wrapper to $backup_dir/$tool"
     fi

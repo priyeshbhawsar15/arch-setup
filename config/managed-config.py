@@ -2,6 +2,7 @@
 """Edit owned top-level menu keys without discarding JSONC comments or siblings."""
 
 import argparse
+import fcntl
 import json
 import os
 from pathlib import Path
@@ -90,7 +91,22 @@ def remove_key(text, key):
     return text
 
 
-def replace_atomic(path, text):
+ANY_CONTENT = object()
+
+
+def replace_atomic(path, text, original=ANY_CONTENT):
+    state = Path(os.environ.get('XDG_STATE_HOME') or str(Path.home() / '.local/state')) / 'arch-setups'
+    state.mkdir(mode=0o700, parents=True, exist_ok=True)
+    with (state / 'configuration.lock').open('a') as lock:
+        os.chmod(lock.name, 0o600)
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        current = path.read_bytes() if path.exists() else None
+        if original is not ANY_CONTENT and current != original:
+            raise ValueError('configuration changed concurrently; retry')
+        _replace_atomic(path, text, current)
+
+
+def _replace_atomic(path, text, original):
     if path.is_symlink():
         raise ValueError(f'refusing to replace symlinked menu: {path}')
     parse_menu(text)
@@ -110,6 +126,8 @@ def replace_atomic(path, text):
             stream.flush()
             os.fsync(stream.fileno())
             os.fchmod(stream.fileno(), mode)
+        if (path.read_bytes() if path.exists() else None) != original:
+            raise ValueError('configuration changed during write; retry')
         os.replace(temporary, path)
     finally:
         if os.path.exists(temporary):
@@ -129,7 +147,8 @@ def main():
     command.add_argument('keys', nargs='+')
     command.add_argument('--empty-parent')
     args = parser.parse_args()
-    original = args.path.read_text() if args.path.exists() else '{\n}\n'
+    original_bytes = args.path.read_bytes() if args.path.exists() else None
+    original = original_bytes.decode() if original_bytes is not None else '{\n}\n'
     data, _, _ = parse_menu(original)
     if args.command == 'check-menu':
         return 0 if args.path.exists() and all(data.get(k) == v for k, v in args.entries.items()) else 1
@@ -149,7 +168,7 @@ def main():
             if not any(k.startswith(args.empty_parent + '.') for k in remaining):
                 text = remove_key(text, args.empty_parent)
     if text != original or not args.path.exists():
-        replace_atomic(args.path, text)
+        replace_atomic(args.path, text, original_bytes)
     return 0
 
 

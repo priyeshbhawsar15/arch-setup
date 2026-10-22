@@ -1,0 +1,16 @@
+{
+  "install-wallpaper-controller.sh": {"source": "https://github.com/priyeshbhawsar15/omawallpaper-manager.git", "aliases": ["git@github.com:priyeshbhawsar15/omawallpaper-manager.git"], "pin": "418884ce00419798dfbb0cb5eff27eefa6c4bf4d"},
+  "install-shibumi-shell.sh": {"source": "https://github.com/priyeshbhawsar15/Shibumi-Shell.git", "pin": "8b96105a10ef5128589adda7a4b50c4ff903a97d"},
+  "install-indicators.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-indicators.git", "pin": "f159ed5d870c7b402a4885ad1c72236620819e0f"},
+  "install-per-monitor-workspaces.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-per-monitor-workspaces.git", "pin": "0292ebec608cd7d3907b8f9f9427c252b242edf2"},
+  "install-hyprmoncfg.sh": {"source": "https://github.com/crmne/omarchy-hyprmoncfg.git", "pin": "cf05a04a50339510cd1f9d547fb5f80556ae6599"},
+  "install-lock-explorer.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-lock-explorer.git", "pin": "b1b010a9113185b215b652c141c4b30168a2836f"},
+  "install-omaland.sh": {"source": "https://github.com/priyeshbhawsar15/omaland.git", "pin": "796f134b98f97363290f13a5708eaf1045e11325"},
+  "install-calendar.sh": {"source": "https://github.com/tmn73/omarchy-calendar.git", "pin": "08f5c01fb3b40322787ebfa9805429baa19beb5f"},
+  "install-omniroute-quota.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-omniroute-quota.git", "pin": "b2e3be74e29d9d94e97be9db3d0242641d5b2348"},
+  "install-system-metrics.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-system-metrics.git", "pin": "aac22520daa5f27b94699dad3479c8d811062995"},
+  "install-weather-widget.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-weather-widget.git", "pin": "e9c0d99ffa587452ba4597160a28f1fdc9d8b00c"},
+  "install-immich-photo-frame.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-immich-photo-frame.git", "pin": "6221323be37f96bd17b18f0875bb062f9fbe66d3"},
+  "install-obsidian-tasks-widget.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-obsidian-tasks.git", "pin": "c930f029ee43043163de2946b7c780c8f995353f"},
+  "install-home-assistant.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-home-assistant.git", "pin": "1fe269a3fdff3a7c8f920c0403f069449745069b"}
+}

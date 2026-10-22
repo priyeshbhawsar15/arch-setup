@@ -7,6 +7,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
+feature_lifecycle "$0" "$@"
 
 plugin_id="priyesh.wallpaper-controller"
 plugin_url="https://github.com/priyeshbhawsar15/omawallpaper-manager.git"
@@ -31,16 +32,8 @@ plugin_is_enabled() {
 }
 
 plugin_checkout_is_current() {
-  [[ -d "$plugin_dir/.git" ]] || return 1
-
-  local installed_remote installed_commit
-  installed_remote="$(git -C "$plugin_dir" remote get-url origin 2>/dev/null || true)"
-  installed_commit="$(git -C "$plugin_dir" rev-parse HEAD 2>/dev/null || true)"
-
-  [[ "$installed_remote" == "$plugin_url" || "$installed_remote" == "$plugin_ssh_url" ]] || return 1
-  [[ "$installed_commit" == "$plugin_commit" ]] || return 1
-  git -C "$plugin_dir" diff --quiet || return 1
-  git -C "$plugin_dir" diff --cached --quiet || return 1
+  managed_plugin_checkout_current "$plugin_dir" "$plugin_url" "$plugin_commit" ||
+    managed_plugin_checkout_current "$plugin_dir" "$plugin_ssh_url" "$plugin_commit"
 }
 
 install_dependency() {
@@ -60,40 +53,59 @@ install_dependency() {
   fi
 }
 
-backup_existing_plugin() {
-  [[ -e "$plugin_dir" || -L "$plugin_dir" ]] || return 0
-
-  local backup_dir
-  backup_dir="$HOME/.local/state/arch-setups/backups/wallpaper-controller-plugin-$(date +%Y%m%d%H%M%S)"
-  mkdir -p -- "$backup_dir"
-
-  omarchy plugin disable "$plugin_id" >/dev/null 2>&1 || true
-  mv -- "$plugin_dir" "$backup_dir/plugin"
-  omarchy-shell shell rescanPlugins >/dev/null 2>&1 || true
-  log "Archived the replaced Wallpaper Controller plugin to: $backup_dir/plugin"
-}
-
-install_pinned_plugin() {
-  local plugins_dir stage staged_id
-  plugins_dir="$(dirname -- "$plugin_dir")"
-  mkdir -p -- "$plugins_dir"
-  stage="$(mktemp -d "$plugins_dir/.${plugin_id}.install.XXXXXX")"
-
-  cleanup_stage() { rm -rf -- "$stage"; }
-  trap cleanup_stage RETURN
-
-  GIT_TERMINAL_PROMPT=0 git clone --quiet --no-checkout "$plugin_url" "$stage" || fail "could not clone $plugin_url"
-  git -C "$stage" checkout --quiet --detach "$plugin_commit" || fail "could not check out pinned commit $plugin_commit"
-  git -C "$stage" submodule update --init --recursive
-  omarchy plugin validate "$stage" || fail "pinned plugin failed Omarchy validation"
-
-  staged_id="$(jq -r '.id // empty' "$stage/manifest.json")"
-  [[ "$staged_id" == "$plugin_id" ]] || fail "pinned plugin manifest has unexpected id: $staged_id"
-
-  mv -- "$stage" "$plugin_dir"
-  trap - RETURN
+# The old payload remains available until installation AND activation succeed.
+# Use the shared staging validator; never disable a working plugin to download.
+stage_replacement() {
+  local parent
+  parent="$(dirname -- "$plugin_dir")"
+  mkdir -p -- "$parent"
+  transaction="$(mktemp -d "$parent/.wallpaper-transaction.XXXXXX")"
+  trap rollback_replacement EXIT
+  install_pinned_plugin "$transaction/source" "$plugin_url" "$plugin_commit" "$plugin_id"
+  if [[ -e "$plugin_dir" || -L "$plugin_dir" ]]; then
+    [[ ! -L "$plugin_dir" && -d "$plugin_dir/.git" ]] || fail "refusing an unmanaged plugin path"
+    origin="$(git -C "$plugin_dir" remote get-url origin)"
+    [[ "$origin" == "$plugin_url" || "$origin" == "$plugin_ssh_url" ]] || fail "refusing a foreign plugin origin"
+    [[ -z "$(git -C "$plugin_dir" status --porcelain --untracked-files=all)" ]] || fail "preserving local plugin changes"
+  fi
+  replacement_backup="$(backup_feature_paths wallpaper-controller-update "$plugin_dir" "$config_file" "$menu_file" "$HOME/.config/omarchy/shell.json")"
+  plugin_is_enabled && previously_enabled=true
+  if [[ -e "$plugin_dir" ]]; then
+    omarchy plugin disable "$plugin_id"
+    mv -- "$plugin_dir" "$transaction/previous"
+  fi
+  mv -- "$transaction/source" "$plugin_dir"
+  swapped=true
   omarchy-shell shell rescanPlugins >/dev/null
 }
+
+rollback_replacement() {
+  local status="$?" path relative
+  trap - EXIT
+  if [[ "$status" != 0 && -n "$replacement_backup" ]]; then
+    if [[ -d "$transaction/previous" ]]; then
+      [[ "$swapped" != true ]] || rm -rf -- "$plugin_dir"
+      mv -- "$transaction/previous" "$plugin_dir"
+    elif [[ "$swapped" == true ]]; then
+      rm -rf -- "$plugin_dir"
+    fi
+    for path in "$config_file" "$menu_file" "$HOME/.config/omarchy/shell.json"; do
+      relative="${path#/}"
+      if [[ -e "$replacement_backup/$relative" ]]; then
+        cp -a -- "$replacement_backup/$relative" "$path"
+      elif [[ -f "$path" && ! -L "$path" ]]; then
+        rm -- "$path"
+      fi
+    done
+    omarchy-shell shell rescanPlugins >/dev/null 2>&1 || true
+    if [[ "$previously_enabled" == true ]]; then omarchy plugin enable "$plugin_id" >/dev/null 2>&1 || true; fi
+    log "Wallpaper replacement failed; restored the previous checkout. Backup: $replacement_backup"
+  fi
+  [[ -z "$transaction" ]] || rm -rf -- "$transaction"
+  exit "$status"
+}
+
+transaction="" swapped=false previously_enabled=false replacement_backup=""
 
 seed_configuration() {
   [[ -f "$config_seed" ]] || fail "missing managed configuration seed: $config_seed"
@@ -108,17 +120,7 @@ seed_configuration() {
 remove_menu_entry() {
   [[ -f "$menu_file" ]] || return 0
 
-  MENU_FILE="$menu_file" python3 - <<'PY'
-import os
-from pathlib import Path
-
-path = Path(os.environ["MENU_FILE"])
-text = path.read_text()
-filtered = [line for line in text.splitlines(keepends=True)
-            if '"style.wallpaper-controller"' not in line]
-if filtered != text.splitlines(keepends=True):
-    path.write_text("".join(filtered))
-PY
+  python3 "$SCRIPT_DIR/config/managed-config.py" remove-menu "$menu_file" style.wallpaper-controller
 }
 
 set_shortcuts_disabled() {
@@ -154,21 +156,17 @@ disable_plugin() {
 }
 
 remove_plugin() {
+  if [[ -e "$plugin_dir" || -L "$plugin_dir" ]]; then
+    plugin_checkout_is_current || fail "preserving a foreign, dirty or unpinned plugin; archive/reconcile it before removal"
+  fi
+  local backup_dir
+  local paths=("$config_file" "$HOME/.local/state/omarchy/wallpaper-controller"
+    "$HOME/.config/omarchy/backgrounds/wallpaper-controller-transparent.png"
+    "$HOME/.config/omarchy/backgrounds/wallpaper-controller-black.png")
+  # Capture the original selection/stop state before disable hooks mutate it.
+  backup_dir="$(backup_feature_paths wallpaper-controller-remove "$plugin_dir" "${paths[@]}" "$menu_file" "$HOME/.config/omarchy/shell.json")"
   disable_plugin
-
-  local backup_dir path relative_path
-  backup_dir="$HOME/.local/state/arch-setups/backups/wallpaper-controller-remove-$(date +%Y%m%d%H%M%S)"
-  mkdir -p -- "$backup_dir"
-
-  for path in "$config_file" "$HOME/.local/state/omarchy/wallpaper-controller" \
-    "$HOME/.config/omarchy/backgrounds/wallpaper-controller-transparent.png" \
-    "$HOME/.config/omarchy/backgrounds/wallpaper-controller-black.png"; do
-    if [[ -e "$path" || -L "$path" ]]; then
-      relative_path="${path#$HOME/}"
-      mkdir -p -- "$backup_dir/$(dirname -- "$relative_path")"
-      mv -- "$path" "$backup_dir/$relative_path"
-    fi
-  done
+  rm -rf -- "${paths[@]}"
 
   if [[ -e "$plugin_dir" || -L "$plugin_dir" ]]; then
     omarchy plugin remove "$plugin_id" --yes
@@ -204,8 +202,7 @@ if plugin_checkout_is_current && plugin_is_enabled && [[ -f "$config_file" ]]; t
 fi
 
 if ! plugin_checkout_is_current; then
-  backup_existing_plugin
-  install_pinned_plugin
+  stage_replacement
 fi
 
 seed_configuration

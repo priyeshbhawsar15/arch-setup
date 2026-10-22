@@ -1,5 +1,17 @@
 # Plugins
 
+## Selection, portable inputs and readiness
+
+No custom plugins are selected by the safe `features.json` default. Use `--profile personal` or a custom feature selection. Direct successful install/disable/remove commands remember choices, and `install-all.sh` honors them; skipping a feature does not itself disable an already-running installation. `--ignore-local-choices` uses only the selected profile. All lifecycle controls below operate independently; do not use a branch-tip plugin updater on these pinned sources.
+
+`--host FILE` selects display identities **and modes/scale/orientation/HDR/workspaces**. `profiles/laptop.json` supports one primary display, empty span/side groups and widget targeting on that output. The assignments below describe the existing `monitor-layout.json` desktop preset, not requirements for every host. Descriptions, connectors or a single primary selector are supported; ambiguous identities fail. Credentials/vault paths/server settings come from local `--settings FILE`, including private token-file references, not hardcoded personal values. See `profiles/settings.example.json` and `SCRIPTS.md`.
+
+`doctor.sh --acceptance` distinguishes missing/invalid deployments (exit 1), pending external prerequisites (exit 2), and local setup checks passing (exit 0). Local configuration is not proof of remote API connectivity or physical screen behavior. Fresh Wallpaper Controller state is stopped/empty; no Workshop collection or missing personal photo is assumed. Source/pin locks are also recorded in `config/plugin-sources.json` and checked against installers in CI.
+
+On a fresh ISO, the entrypoint may request an initial platform-package preparation before plugin installers: Omarchy snapshot/keyring/full system-package upgrade/migrations/hooks, with its update lock where available. Explicit automation approval is `--approve-system-update`; there is no automatic reboot or source-pin advancement. Exit 3 requests reboot/login and a rerun. This keeps built-in plugins package-managed and does not select/enable custom plugins that the feature profile omits. See `SCRIPTS.md` for recovery state and standalone prerequisites.
+
+The [safe application profile's real VM acceptance](docs/reviews/vm-acceptance.md) did not install or certify custom plugins. Their live lifecycle, hardware and authenticated-integration boundaries below remain in force.
+
 ## Current monitor assignments
 
 `monitor-layout.json` is the source of display identities and feature assignments. `main` matches the Microstep OLED, `side_left` matches the Lenovo ending in `0x01010101`, and `side_right` matches the Lenovo ending in `0x59333830`. Today these resolve to DP-6, DP-5 and DP-4 respectively; connector names are discovered, not monitor identities.
@@ -8,11 +20,11 @@
 
 After changing cables or these assignments, run `./install-monitor-layout.sh` in the active desktop session with the displays connected. It discovers connector names for plugins that require them, preserves unrelated settings, credentials, wallpaper choices, stop state and lock timeout/tint edits, and backs up changes. Missing displays leave existing plugin targets intact; reconnect them and rerun. This setup does not continuously rewrite plugin configuration on hotplug. `./install-all.sh` applies the same policy after feature installation. Change identities/assignments here rather than editing generated files under `~/.config/`; inspect identities with `hyprctl -j monitors all`. For new hardware, update the exact description including serial; ambiguous matches fail instead of selecting another screen.
 
-No feature is enabled by this policy; each plugin keeps its own enable/disable/removal controls below. System Metrics now supports a configuration file in its published source. Other plugin pins and sources are unchanged by this monitor repair. Monitor geometry remains configurable in hyprmoncfg; its generated profile rules load after the repository's description-based fallback in `hypr/monitors.lua`. A window span requires horizontally adjacent displays with matching logical heights. The monitor manager can override single-monitor rules when applying a profile; reapply the toggle after such a layout change.
+No feature is enabled by this policy; each plugin keeps its own enable/disable/removal controls below. System Metrics now supports a configuration file in its published source. Changing display policy does not itself advance plugin pins. Monitor geometry remains configurable in hyprmoncfg; its generated profile rules load after the repository's description-based fallback in `hypr/monitors.lua`. A window span requires horizontally adjacent displays with matching logical heights. The monitor manager can override single-monitor rules when applying a profile; reapply the toggle after such a layout change.
 
 ## Main-screen Bluetooth bar control
 
-Shibumi's existing `hancore.shibumi.bluetooth` widget is enabled through its supported G15 setting in `shell.json` (`hancore.shibumi.state` → `shibumi.widgets.G15.enabled: true`). It provides the Bluetooth bar control on the configured `barMain` display; the managed GroupSlot filter suppresses G15 on secondary outputs. No new plugin or shortcut is added. Depends on Shibumi and BlueZ. `install-shibumi-shell.sh` reapplies this setting idempotently, backing up changed configuration. To disable it, turn off Bluetooth's bar slot in Shibumi's layout settings; rerunning the installer re-enables the managed preference.
+Shibumi's existing `hancore.shibumi.bluetooth` widget is enabled through its supported G15 setting in `shell.json` (`hancore.shibumi.state` → `shibumi.widgets.G15.enabled: true`). It provides the Bluetooth bar control on the configured `barMain` display; the managed GroupSlot filter suppresses G15 on secondary outputs. No new plugin or shortcut is added. Depends on Shibumi and BlueZ. `install-shibumi-shell.sh` seeds this setting when absent, backing up changed configuration. To disable it, turn off Bluetooth's bar slot in Shibumi's layout settings; rerunning the installer now preserves that explicit visibility choice.
 
 ## Desktop widget screen lifecycle
 
@@ -30,15 +42,14 @@ System Metrics, Weather, Immich Photo Frame, Obsidian Tasks, and OmniRoute Quota
 
 ### Behavior
 
-Wallpaper Controller manages Steam Wallpaper Engine projects and static image wallpapers through an Omarchy overlay and a Style-menu entry. It restores the archived setup:
+Wallpaper Controller manages Steam Wallpaper Engine projects and static image wallpapers through an Omarchy overlay and a Style-menu entry. New installations start stopped with no selected assets; choose only locally available images or Workshop items. Existing personal selections and stop/rotation state remain preserved.
 
-- The active live wallpaper is `Free Fallen [4k]` (`we:3028787000`).
-- The selected rotation list rotates every 30 minutes.
-- DP-6 and DP-4 are rendered as one spanning group; other connected displays receive their own background.
+- Rotation interval defaults to 30 minutes when explicitly enabled.
+- Span groups come from the selected host policy; other connected displays receive their own background.
 - The renderer uses 30 FPS compatibility mode, disabling particles, parallax, and mouse interaction. `renderer.skipSolidFinalFor` is a narrowly scoped compatibility list for scenes whose solid final-composition pass is invalid in `linux-wallpaperengine`; it currently contains Cloudy Mountain, GreenForest [4K], Blank Stare [4K], SandBlack [4k], and Sky Line Sakura [4K 244FPS] pt.2. `renderer.objectOnlyFor` limits Cloudy Mountain to its primary scenic object (`16`) to disable its incompatible media-player overlay. `renderer.propertiesFor` disables the optional blur and camera-shake properties only for GreenForest. 3, and disables HDR only for Lonely Cat.
 - Applying, rotating, or restoring the active wallpaper synchronizes the Aether theme and automatically sets Lock Screen Explorer's lock video path if the active wallpaper is a video-based Wallpaper Engine item (`.mp4`/`.webm`), clearing it for scene wallpapers. Stopping Wallpaper Engine records a disabled state: automatic rotation checks and session restore leave it off until a wallpaper is explicitly applied or manually cycled again. The controller owns all `linux-wallpaperengine` processes so another Wallpaper Engine launcher conflicts with it.
 
-The saved configuration seed is `omarchy/wallpaper-controller.json`. It is copied to `~/.config/omarchy/wallpaper-controller.json` only when absent, then becomes plugin state so interactive changes and rotation progress are preserved. It retains an archived static-image entry at `/home/priyesh/Downloads/PXL_20250811_062224647.jpg`; that source file is currently absent, so the inactive entry appears as missing but does not affect the restored live wallpaper.
+The portable, empty/stopped seed is `omarchy/wallpaper-controller.json`. It is copied to `~/.config/omarchy/wallpaper-controller.json` only when absent, then becomes user/plugin-owned state. Updates stage and validate the replacement before stopping the working plugin; hook/activation failure restores the previous checkout, config and enabled state. Dirty/foreign checkouts are refused. Menu removal uses structural JSONC editing and preserves multiline entries/comments/siblings.
 
 ### Dependencies and shortcuts
 
@@ -53,24 +64,25 @@ The installer uses Omarchy to install missing `linux-wallpaperengine-git`, `aeth
 
 - **Install or re-enable:** `./install-wallpaper-controller.sh` — installs the exact pinned commit, seeds missing configuration, enables the plugin, restores the active wallpaper and matching Aether theme only when Wallpaper Engine is enabled in its saved state, and re-enables its shortcuts.
 - **Disable:** `./install-wallpaper-controller.sh --disable` — disables the Omarchy plugin, stops its renderer/helper, removes its menu entry, and writes a Quattro toggle that unbinds all three plugin shortcuts. Do not use `omarchy plugin disable` alone, because it does not clean the helper, menu entry, or Hyprland shortcuts.
-- **Remove:** `./install-wallpaper-controller.sh --remove` — runs the disable flow, removes the plugin, and archives its configuration, state, and generated transparent or black background under `~/.local/state/arch-setups/backups/wallpaper-controller-remove-<timestamp>/`.
+- **Remove:** `./install-wallpaper-controller.sh --remove` — privately archives the original checkout/configuration/state before disable hooks, then disables/removes the clean owned plugin and generated background data. Backups are under `~/.local/state/arch-setups/backups/wallpaper-controller-remove-<timestamp>/`.
 - **Update:** Do not run `omarchy plugin update priyesh.wallpaper-controller`; it would move to an unpinned branch tip. Request plugin maintenance instead: review and test a candidate commit in the original repository, then update `plugin_commit` in `install-wallpaper-controller.sh` and this document together.
 
 ## Shibumi Shell
 
 - **Suite ID:** `hancore.shibumi`; the selectable bar is `hancore.shibumi.bar`.
-- **Type:** Unmodified community plugin suite. It contains 24 interdependent Omarchy plugin roots and must be installed and managed only through its suite lifecycle command.
-- **Original upstream and installation source:** `https://github.com/HANCORE-linux/Shibumi-Shell.git`
-- **Pinned release:** `v0.1.1-beta.14.1` at `7a6c853b1947d303bad9a5b640c224c01b669106`.
-- **Local modifications:** None. The pinned upstream source is cloned to `~/.local/share/shibumi-shell/v0.1.1-beta.14.1/`; plugin source is not copied into this setup repository. Managed Shibumi bar overrides are stored in `shibumi/` and deployed by `install-shibumi-shell.sh`. `BarSurface.qml` clusters all top bar elements (workspaces, volume, control center, middle notch, indicators, and tools) together in the horizontal center of the screen flanked closely beside the middle notch, leaving the outer edges open. `GroupSlot.qml` and `BarSection.qml` display the workspace widget and center notch section on every monitor while keeping heavy system trays and Omarchy indicators (Stay Awake / Caffeine, Night Light, Voxtype Dictation, Do Not Disturb, Reminders, Screen Recording) focused on the primary monitor (`DP-5`). `BarPanel.qml` provides the auto-hide reveal strip without consuming clicks once the bar is shown; it yields below the surface after reveal so hover over the center notch opens the media control centre normally and keeps the entire bar exposed while the pointer remains within that media area. `VisualTokens.qml` sets the top-bar and panel background to 100% solid opacity without transparency or frost blur. `RunChrome.qml` renders the V1 center group as a centered, compact 300px-max screen-edge Apple-style notch: a broad top transitions through an organic S-curve shoulder into a subtly inward-tapering body with rounded lower corners, while preserving the floating left and right islands. `NowPlayingAlbumArt.qml`, `NowPlayingVisualizer.qml`, and `NowPlayingExpandedContent.qml` implement a Dynamic-Island-style now-playing widget over `omarchy.media`'s MPRIS state directly inside the V1 center notch: a rounded album-art thumbnail flanks the clock on the left and a 4-bar decorative visualizer flanks it on the right (both hidden with no active track), and hovering either reveals an expanded card with larger art, title/artist, a scrub bar, and previous/play-pause/next transport controls, closing on a debounce delay after the pointer leaves the card. The stock `hancore.shibumi.media` bar widget is disabled in favor of this notch-integrated presentation.
+- **Type:** Customized community suite, maintained in a separate public fork; original license/attribution retained. All 24 interdependent plugin roots remain suite-lifecycle managed.
+- **Original upstream:** `https://github.com/HANCORE-linux/Shibumi-Shell.git`
+- **Installation source:** `https://github.com/priyeshbhawsar15/Shibumi-Shell.git`
+- **Pinned commit:** `8b96105a10ef5128589adda7a4b50c4ff903a97d` (development fork based on upstream `v0.1.1-beta.14.1` / `7a6c853b1947d303bad9a5b640c224c01b669106`; not a new upstream release).
+- **Modifications:** The fork owns the centered bar, configured-main-display filtering, compact media notch, album-art/visualizer/expanded controls, opaque theme-token surfaces and non-click-consuming auto-hide reveal sensor. It adds supported `install/activate --user-layout`, `repair --keep-layout` and `presentation.mainMonitorDescription` APIs while preserving exact payload identity and transactional predecessor admission. Media presentation consumes the existing Shibumi media service; no additional player owner, username-specific helper, Jellyfin polling process or credential-bearing `/tmp` art cache is deployed. Bluetooth remains the supported G15 slot; the native media slot is visually displaced, not its required service disabled. Source/UI/tests live only in the fork; obsolete setup-repository copies were removed. Checkout path is `~/.local/share/shibumi-shell/<exact-commit>/`.
 
 ### Behavior and compatibility
 
-The default Shibumi lifecycle activates its V1/V2 full-bar host, installs its complete plugin suite transactionally, and replaces the active Omarchy bar/layout with Shibumi’s managed layout. It records the prior bar for suite-managed return to stock Omarchy. The suite owns its 24 plugin directories, the `hancore.shibumi.state` entry in `~/.config/omarchy/shell.json`, and `~/.local/state/shibumi/` transaction and recovery state. It also adds reversible Omarchy menu routing for its theme and wallpaper pickers. It does not add Hyprland keyboard shortcuts.
+The setup uses the fork's user-layout lifecycle: installs/activates the complete suite transactionally, preserves independently configured widget layout, and records the prior bar for suite-managed return to stock Omarchy. It never patches transaction-owned payload files after installation. The suite owns its 24 plugin directories, the `hancore.shibumi.state` entry in `~/.config/omarchy/shell.json`, and `~/.local/state/shibumi/` transaction and recovery state. It also adds reversible Omarchy menu routing for its theme and wallpaper pickers. It does not add Hyprland keyboard shortcuts.
 
 Do **not** run `omarchy plugin add`, `omarchy plugin update`, `omarchy plugin disable`, or `omarchy plugin remove` against individual Shibumi directories. Use the suite lifecycle only; individual changes can break its verified ownership, recovery, and inter-plugin dependencies.
 
-Upstream validates this prerelease on Omarchy 4.0.3 and explicitly has not completed multi-output acceptance. This system runs Omarchy 4.0.4-1 and uses multiple outputs, so installation remains outside upstream’s validated compatibility boundary. The initial preflight refusal was caused by this system’s disabled `omarchy.lock` service, not an API difference: Shibumi needs its lock-status IPC to prove the session is safe to mutate. The service is now enabled. Do not manually edit Shibumi state, lifecycle journals, or managed plugin files.
+The fork passed 313 Python source/lifecycle tests, its presentation JavaScript test and shared-source check before publication; its public pinned CLI contract is checked by setup CI. This does **not** establish clean-VM, physical multi-output, theme/DPMS or authenticated lock acceptance. Upstream's original host-validation boundary remains revision-specific. No upstream tag, binary package or AUR release was published by this integration. An active unlocked session and verifiable lock IPC are still required. Do not manually edit suite state, lifecycle journals, marker hashes or managed payload.
 
 ### Dependencies and lifecycle
 
@@ -80,6 +92,19 @@ Upstream validates this prerelease on Omarchy 4.0.3 and explicitly has not compl
 - **Disable:** `./install-shibumi-shell.sh --disable` — runs upstream `deactivate`, restores the stock Omarchy bar, and retains the suite payload and settings for later reactivation. Shibumi owns no Hyprland shortcuts.
 - **Remove:** `./install-shibumi-shell.sh --remove` — backs up Shibumi state plus the shell/menu configuration to `~/.local/state/arch-setups/backups/shibumi-remove-<timestamp>/`, then runs upstream’s transactional uninstall and removes the pinned checkout.
 - **Update:** Do not update from upstream `main`. Request maintenance: review a compatible tagged release, test the suite lifecycle and this host, then update the pinned tag/commit and this documentation together. The upstream release must explicitly support the installed Omarchy version before this pin is advanced.
+
+## Personal Indicators
+
+- **Plugin ID:** `priyesh.indicators`
+- **Type:** Private, independently managed adaptation of Omarchy's built-in Indicators; the original MIT license and attribution are retained. Built-in plugins stay package-managed.
+- **Original upstream:** `https://github.com/basecamp/omarchy` (`omarchy.indicators`, Omarchy 4.0.4 baseline).
+- **Installation source:** `https://github.com/priyeshbhawsar15/omarchy-indicators.git` (private; authorized HTTPS Git access required).
+- **Pinned commit:** `f159ed5d870c7b402a4885ad1c72236620819e0f`.
+- **Modifications:** Personal indicator presentation preserves clone identity and the original reminder-refresh IPC route. Its source, license and contract test live only in the independent repository, not in copied setup QML.
+- **Dependencies/conflicts:** Active Shibumi and Omarchy indicator UI/services; do not install another clone into the same owned bar slot. No new global shortcut or extra shell process.
+- **Install/re-enable:** `./install-indicators.sh`; also explicitly registered after Shibumi in `install-all.sh` and selected by the personal profile, not the safe profile. A historical unversioned clone is archived before migration.
+- **Disable/remove:** `./install-indicators.sh --disable` restores only the owned layout; `--remove` first privately archives checkout/layout/shell state, then removes the custom plugin. Successful actions remember the selection. Unrelated layout and package-managed originals remain intact.
+- **Update:** Review/retest the upstream baseline in its separate repository, publish the authorized commit, and update installer/source lock plus these docs together. Never install an unpublished placeholder pin or silently update to branch HEAD.
 
 ## Per-monitor Workspaces for Shibumi
 
@@ -230,15 +255,15 @@ Requires Hyprland Lua DPMS and Quickshell; no new package or shortcut. The exist
 ## Omaland (Hyprland Visual Look & Feel Editor)
 
 - **Plugin ID:** `bobbynicholas.omaland`
-- **Type:** Unmodified community plugin.
+- **Type:** Customized public community fork; upstream license/attribution retained.
 - **Original upstream URL:** `https://github.com/bobby-nicholas/omaland.git`
-- **Installation source:** `https://github.com/bobby-nicholas/omaland.git`
-- **Pinned commit:** `ec232b6aa2e31b2f089ad89b653cd706989865b9`
-- **Local modifications:** None.
+- **Installation source:** `https://github.com/priyeshbhawsar15/omaland.git`
+- **Pinned commit:** `796f134b98f97363290f13a5708eaf1045e11325`
+- **Modifications:** Declares and implements the personal-module contract for `hypr/looknfeel.lua`, preserving personal opacity rules rather than modifying the package entrypoint. The Hyprland installer now preserves user/Omaland appearance edits. Source tests pass with `node test/run.js`; setup CI checks the exact published manifest contract.
 
 ### Behavior and controls
 
-Provides a graphical panel for editing Hyprland's visual look and feel (gaps, borders, animations, blur, rounding) with live visual previews. Writes a managed block into `~/.config/hypr/looknfeel.lua`.
+Provides a graphical panel for editing Hyprland's visual look and feel (gaps, borders, animations, blur, rounding) with live visual previews. Writes a managed block into `~/.config/hypr/looknfeel.lua`. That appearance module is seeded once and subsequent user/Omaland edits are preserved by full setup; merge deliberate repository appearance changes explicitly rather than overwriting those edits.
 
 - **Open Omaland:** Search `Omaland` in Omarchy Menu, or run `omarchy-shell shell toggle bobbynicholas.omaland` from the terminal.
 - **Install or re-enable:** `./install-omaland.sh` — validates and installs the pinned checkout and enables the plugin in Omarchy shell.
@@ -275,7 +300,7 @@ Provides a Google Calendar integration and clock/date bar widget in the center s
 
 Provides a live AI provider quota and connection health desktop HUD on portrait display `DP-4`. It joins active connections from OmniRoute's `/api/providers` endpoint with official quota observations from `/api/usage/provider-limits`. Startup and manual refresh perform a live upstream quota sync; 30-second background reads reuse OmniRoute's provider-limit cache without repeatedly hitting provider APIs. The HUD displays Copilot premium-interaction capacity, Codex 5-hour and weekly capacity, and the active Antigravity Pro account's Gemini capacity with reset intervals. Missing telemetry is explicitly shown as unavailable instead of being inferred as 100% from the absence of a cooldown.
 
-- **Configuration:** `~/.config/omarchy/omniroute-quota.json` (endpoint, token, refresh interval, position, dimensions). Fresh installs seed an empty token; configure credentials locally before using the HUD. Existing configuration is preserved; credentials are not stored in this repository.
+- **Configuration:** `~/.config/omarchy/omniroute-quota.json` (endpoint, token, refresh interval, position, dimensions). Fresh installs seed an empty endpoint/token; supply a local endpoint plus a private `tokenFile` through `--settings`, or configure locally before using the HUD. Existing configuration is preserved; credentials are not stored in this repository.
 - **CLI helper:** `omniroute-quota {refresh|status|config}`.
 - **Controls:** Pin overlays the card above apps; Auto-Hide slides it into the right display edge, leaving the same 14px hover target and 6×80px accent handle as the task widget. Both preferences persist in `~/.local/state/omarchy/omniroute-quota/settings.json`.
 - **Toggle visibility:** `omarchy-shell shell toggle priyesh.omniroute-quota`.
@@ -405,7 +430,7 @@ A desktop-only control card on **DP-4**, directly below Weather at the right edg
 
 **Removed controls:** Good Night and Leave Home have been removed from default and current local configuration, and are filtered from legacy scene mappings. Mood Lighting and Focus Mode remain. **Intentional limitation:** Monitor (`light.window`) is unavailable in HA; no direct WLED bypass is used. Repair its HA integration separately; no substitute device actions are invented.
 
-- **Configuration:** `~/.config/omarchy/home-assistant.json`, seeded only if absent, holds HTTPS URL, token-file path, output/top margin and entity mappings. `targetScreen: "DP-4"`, `topMargin: null` computes placement from Weather's managed top (`Style.space(900)`), 165px height and `Style.space(14)` gap; a numeric margin remains an explicit override. The existing local configuration was backed up before moving it from DP-6. Re-enable after changing mappings. Personal configuration is local-only.
+- **Configuration:** `~/.config/omarchy/home-assistant.json`, seeded only if absent, holds `baseUrl`, `tokenFile`, output/top margin and entity mappings. New setup seeds a blank URL and empty entity choices before the backend runs, avoiding its historical personal defaults. Local `--settings` supports those fields and climate/sensor/weather/switch/scene/light mappings; the token remains a file reference, not an inline secret. `targetScreen: "DP-4"`, `topMargin: null` computes placement from Weather's managed top (`Style.space(900)`), 165px height and `Style.space(14)` gap; a numeric margin remains an explicit override. The existing local configuration was backed up before moving it from DP-6. Re-enable after changing mappings. Personal configuration is local-only.
 - **Credentials:** existing `~/.config/omarchy/hass/token`, mode `0600`. Python reads it without putting the token into QML, process arguments, logs or cached state. HTTPS certificates are verified and redirects rejected. The token is never published or removed by this installer.
 - **Transport:** REST states and domain/service calls plus authenticated WebSocket state-change events with reconnect. Stale/offline readings remain labelled disconnected and controls disabled. Actions are not replayed after connection loss. Only configured entities and supported values can be submitted.
 - **Controls:** persistent Pin (`󰐃` / `󰤱`) selects Overlay versus default Bottom; Auto-Hide (`󰘖` / `󱊒`) defaults on and is enabled for this deployment; it hides/reveals the full card instantly at the right edge using the 14px mask, 6×80px accent handle and 700ms departure delay. The standard slide/fade animation is deliberately omitted per this user's explicit request. Preferences and selected telemetry reside in `~/.local/state/omarchy/home-assistant/` (user-only files). Aether tokens theme the controls dynamically. Screen-keyed Variants show nothing when DP-4 is absent, rather than falling back onto excluded outputs.
@@ -419,6 +444,8 @@ A desktop-only control card on **DP-4**, directly below Weather at the right edg
 **Verification:** 11 backend tests (including preset/horizontal swing validation, removed scene defaults and an unrelated-process stop guard), manifest validation, live read-only REST/WebSocket connection, rendered compact thermostat/dropdowns, dynamic theme binding, Pin layer switch and disable/re-enable process/window cleanup passed. `/tmp/ha-clean-final.png` confirms both large room readings, no duplicate current-temperature block, aligned dropdown columns and all four switches visible without scrolling; no widget runtime errors were observed. HA remains at y=1231 beneath Weather's y=1215 bottom (16px gap), matching its 409px window width including inset. The prior right-edge reveal test passed; this revision retains that mask/handle while removing all expansion/slide animations and retaining the full card height. Pin was reset to Bottom and Auto-Hide left enabled. Physical device actions, full keyboard navigation, hotplug/sleep and fresh-machine launcher/authentication remain manual acceptance items; see the plugin's `TESTING.md`. No device-changing service calls were issued during verification.
 
 ## T3 Planner-Executor Workflow Adapter
+
+Optional: not selected by the safe profile. Provider/model names below describe the personal seed, not a universal requirement. `--planner-config FILE` on `install-all.sh` or `T3_PLANNER_EXECUTOR_SEED_CONFIG` on a direct invocation selects another validated seed. Existing explicit runtime values win; preflight derives the required executor from the current config/seed (Codex may be provisioned by its selected installer). Native Antigravity execution requires its genuine binary pair. Authentication, selected-model availability and real dispatch/review behavior remain explicit acceptance checks.
 
 - **Feature ID:** `t3-planner-executor`.
 - **Type:** Separately maintained orchestration adapter package for T3 Code.

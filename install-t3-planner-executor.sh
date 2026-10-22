@@ -17,7 +17,7 @@ SOURCE_DIR="${T3_PLANNER_EXECUTOR_SOURCE_DIR:-${XDG_DATA_HOME:-$HOME/.local/shar
 RUNTIME_DIR="${T3_PLANNER_EXECUTOR_RUNTIME_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/t3code/planner-executor}"
 SETTINGS_PATH="${T3_PLANNER_EXECUTOR_SETTINGS:-${T3CODE_HOME:-$HOME/.t3}/userdata/settings.json}"
 HELPER_LINK="${T3_PLANNER_EXECUTOR_HELPER:-$HOME/.local/bin/t3-planner-executor}"
-SEED_CONFIG="$SCRIPT_DIR/t3/planner-executor.json"
+SEED_CONFIG="${T3_PLANNER_EXECUTOR_SEED_CONFIG:-$SCRIPT_DIR/t3/planner-executor.json}"
 CONFIG_HELPER="$SCRIPT_DIR/t3/configure-planner-executor.py"
 
 mode=""
@@ -106,6 +106,9 @@ if [[ "$mode" != "enable" ]]; then
     exit 0
   fi
 fi
+
+# Validate an explicit/default seed before source or runtime mutations.
+python3 "$CONFIG_HELPER" validate-config --target "$SEED_CONFIG"
 
 # Preflight config.json if already present to fail closed on malformed files
 if [[ -f "$RUNTIME_DIR/config.json" ]]; then
@@ -225,6 +228,6 @@ elif [[ "$expected_target_enabled" == "false" ]]; then
 fi
 
 # Reconcile helper symlink
-reconcile_plugin_helper t3-planner-executor "$RUNTIME_DIR/bin/t3-planner-executor"
+reconcile_plugin_helper t3-planner-executor "$RUNTIME_DIR/bin/t3-planner-executor" "$HELPER_LINK"
 
 log "Installed and configured T3 Planner-Executor at $REPO_PIN."

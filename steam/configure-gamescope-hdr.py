@@ -119,7 +119,7 @@ def process_shortcuts_vdf(path: Path) -> tuple[bool, list[str]]:
     if changed:
         serialized = serialize_binary_vdf(tree) + b"\x08"
         backup_config(path)
-        path.write_bytes(serialized)
+        write_atomic(path, serialized)
 
     return changed, updated_shortcuts
 
@@ -167,7 +167,7 @@ def configure_halo_proton(steam_root: Path) -> bool:
         return False
     backup_config(path)
     lines[end:end] = additions
-    path.write_text("".join(lines))
+    write_atomic(path, "".join(lines).encode())
     print("Enabled Proton Experimental for Halo - Campaign Evolved.")
     return True
 
@@ -197,6 +197,21 @@ def get_installed_games(steam_root: Path) -> dict[str, str]:
     return games
 
 
+def write_atomic(path: Path, content: bytes) -> None:
+    import os
+    import tempfile
+    fd, temporary = tempfile.mkstemp(prefix='.steam-hdr-', dir=path.parent)
+    try:
+        with os.fdopen(fd, 'wb') as stream:
+            stream.write(content)
+            stream.flush()
+            os.fsync(stream.fileno())
+        shutil.copymode(path, temporary)
+        os.replace(temporary, path)
+    finally:
+        Path(temporary).unlink(missing_ok=True)
+
+
 def backup_config(path: Path) -> None:
     stamp = datetime.now().strftime("%Y%m%d%H%M%S%f")
     shutil.copy2(path, path.with_name(f"{path.name}.bak-4k-{stamp}"))
@@ -204,20 +219,10 @@ def backup_config(path: Path) -> None:
 
 def wrap_launch_options(val: str) -> str:
     val = val.strip()
-    # Preserve existing Gamescope HDR/refresh/environment flags while replacing
-    # its display dimensions, rather than nesting a second compositor.
-    match = re.search(r"(?<![\w-])gamescope\s+(.*?)\s+--\s+", val)
-    if match:
-        flags = match.group(1)
-        flags = re.sub(
-            r"(?<!\S)(?:-[whWH]|--nested-width|--nested-height|--output-width|--output-height)(?:=|\s+)\d+\b",
-            "", flags,
-        )
-        flags = re.sub(r"(?<!\S)(?:-F|--filter)(?:=|\s+)fsr\b", "", flags)
-        flags = re.sub(r"(?<!\S)--fsr-sharpness(?:=|\s+)\d+\b", "", flags)
-        flags = " ".join(flags.split())
-        dimensions = "-w 3840 -h 2160 -W 3840 -H 2160"
-        return val[:match.start(1)] + dimensions + (" " + flags if flags else "") + val[match.end(1):]
+    # Existing explicit compositor settings are user-owned. Do not silently
+    # replace resolutions, refresh rates, filters or an SDR choice.
+    if re.search(r"(?<![\w-])gamescope\s+", val):
+        return val
     if not val:
         return f"{WRAPPER} %command%"
     if WRAPPER in val:
@@ -319,7 +324,7 @@ def process_vdf(path: Path, games: dict[str, str]) -> tuple[bool, set[str]]:
     changed = bool(edits)
     if changed:
         backup_config(path)
-        path.write_text("".join(new_lines))
+        write_atomic(path, "".join(new_lines).encode())
     return changed, configured
 
 

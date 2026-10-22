@@ -1,8 +1,6 @@
 #!/bin/bash
-# Preserve mise setup, but reserve stdout for the actual GitHub CLI response.
-export MISE_MINIMUM_RELEASE_AGE=0
-mise use -g "gh" >&2 || exit 1
-executable="$(mise which gh)" || exit 1
+# Runtime resolution is read-only. Install/update explicitly with install-github-cli.sh.
+executable="$(mise which gh)" || { printf 'gh: mise backend missing; rerun install-github-cli.sh.\n' >&2; exit 1; }
 if [[ "$executable" != /* || ! -x "$executable" || "$executable" -ef "${BASH_SOURCE[0]}" ]]; then
   printf 'gh: mise did not resolve a usable backend executable (wrapper recursion refused).\n' >&2
   exit 1

@@ -72,8 +72,10 @@ def main():
         if args.action == 'disable':
             return 0
         raise ValueError('existing Omarchy shell configuration is required')
-    config = json.loads(args.shell.read_text())
-    state = json.loads(args.state.read_text()) if args.state.exists() else {}
+    original_shell = args.shell.read_bytes()
+    original_state = args.state.read_bytes() if args.state.exists() else None
+    config = json.loads(original_shell)
+    state = json.loads(original_state) if original_state is not None else {}
     changed, next_state = transform(config, state, args.action == 'enable')
     spec = importlib.util.spec_from_file_location('managed_config', Path(__file__).resolve().parents[1] / 'config/managed-config.py')
     helper = importlib.util.module_from_spec(spec)
@@ -81,9 +83,9 @@ def main():
     # Capture restoration state before altering the bar; both files are backed
     # up and atomically replaced by the shared configuration writer.
     if next_state is not None and next_state != state:
-        helper.replace_atomic(args.state, json.dumps(next_state, indent=2) + '\n')
+        helper.replace_atomic(args.state, json.dumps(next_state, indent=2) + '\n', original_state)
     if changed != config:
-        helper.replace_atomic(args.shell, json.dumps(changed, indent=2) + '\n')
+        helper.replace_atomic(args.shell, json.dumps(changed, indent=2) + '\n', original_shell)
     if next_state is None and args.state.exists():
         if args.state.is_symlink():
             raise ValueError('refusing symlinked indicator restoration state')

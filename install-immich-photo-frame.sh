@@ -6,6 +6,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
+feature_lifecycle "$0" "$@"
 
 plugin_id="priyesh.immich-photo-frame"
 plugin_url="https://github.com/priyeshbhawsar15/omarchy-immich-photo-frame.git"
@@ -59,21 +60,8 @@ update_pinned_plugin() {
 }
 
 seed_configuration() {
-  if [[ -f "$config_file" ]]; then
-    chmod 600 "$config_file"
-    return
-  fi
-
-  mkdir -p -- "$(dirname -- "$config_file")"
-  cat >"$config_file" <<'EOF'
-{
-  "serverUrl": "https://photos.example.com",
-  "apiKey": "",
-  "targetScreen": "DP-4"
-}
-EOF
-  chmod 600 "$config_file"
-  log "Created $config_file. Add your Immich server URL and API key, then run: omarchy-shell shell call $plugin_id refresh"
+  python3 "$SCRIPT_DIR/config/setup-inputs.py" widget immich-photo-frame
+  log "Immich credentials are local prerequisites; readiness is checked by doctor.sh."
 }
 
 enable_plugin() {

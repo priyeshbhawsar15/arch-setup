@@ -1,9 +1,0 @@
-[Desktop Entry]
-Version=1.0
-Name=qBittorrent Web
-Comment=qBittorrent Web
-Exec=omarchy-launch-webapp https://qbittorrent.home.priyeshbhawsar.com/
-Terminal=false
-Type=Application
-Icon=${HOME}/.local/share/applications/icons/qBittorrent.png
-StartupNotify=true

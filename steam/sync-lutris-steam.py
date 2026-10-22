@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Sync installed Steam games and non-Steam shortcuts into Lutris."""
 
+import argparse
 import copy
 from datetime import datetime, timezone
 import glob
 import json
 import os
+import re
 from pathlib import Path
 import shlex
 import shutil
@@ -15,6 +17,7 @@ import sys
 import tempfile
 
 import yaml
+from gaming_profile import load_selection, owned_shortcuts
 
 try:
     import gi
@@ -100,8 +103,8 @@ def parse_binary_vdf(data):
         nonlocal offset
         end = data.find(b"\x00", offset)
         if end == -1:
-            return ""
-        s = data[offset:end].decode("utf-8", errors="replace")
+            raise ValueError('Unterminated binary VDF string')
+        s = data[offset:end].decode("utf-8")
         offset = end + 1
         return s
 
@@ -126,6 +129,8 @@ def parse_binary_vdf(data):
                 val = struct.unpack("<Q", data[offset:offset + 8])[0]
                 offset += 8
                 res[key] = val
+            else:
+                raise ValueError('Unsupported binary VDF type')
         return res
 
     return parse_dict()
@@ -139,7 +144,7 @@ def parse_launch_options(launch_options):
         env = {}
         tokens = shlex.split(before_cmd)
         for token in tokens:
-            if "=" in token:
+            if re.match(r'^[A-Za-z_][A-Za-z0-9_]*=', token):
                 k, v = token.split("=", 1)
                 env[k] = v
         return env, after_cmd.strip()
@@ -151,6 +156,7 @@ def sync_all():
         raise RuntimeError("Close Lutris before synchronizing its database and game configurations.")
     initialize_lutris()
     changes = 0
+    managed_ids = owned_shortcuts(load_selection())
     # 1. Sync Native Steam Games
     svc = SteamService()
     runtime_appids = {"228980", "1070560", "1493710", "1628350", "3658110", "4183110"}
@@ -192,8 +198,7 @@ def sync_all():
                 with open(shortcuts_path, "rb") as f:
                     vdf_data = parse_binary_vdf(f.read())
             except Exception as ex:
-                print(f"Failed to read {shortcuts_path}: {ex}")
-                continue
+                raise ValueError(f'Failed to parse Steam shortcuts: {shortcuts_path}') from ex
 
             shortcuts = vdf_data.get("shortcuts", {})
             for idx, sc in shortcuts.items():
@@ -206,13 +211,8 @@ def sync_all():
                     continue
                 # Personal direct-Proton profiles own these entries. Importing
                 # their Steam settings here would discard OptiScaler overrides.
-                profile_file = Path(__file__).resolve().parent / "profile/games.json"
-                if profile_file.exists():
-                    profile = json.loads(profile_file.read_text())
-                    managed_ids = {g["shortcut_id"] for g in profile["games"] if g.get("shortcut_id")}
-                    managed_ids.update(profile["retired_shortcuts"])
-                    if appid_32 in managed_ids:
-                        continue
+                if appid_32 in managed_ids:
+                    continue
 
                 shortcut_id_64 = (appid_32 << 32) | 0x02000000
                 env, args = parse_launch_options(launch_options)
@@ -292,4 +292,12 @@ def sync_all():
 
 
 if __name__ == "__main__":
-    sync_all()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--initialize-only', action='store_true')
+    args = parser.parse_args()
+    if args.initialize_only:
+        if subprocess.run(['pgrep', '-x', 'lutris'], capture_output=True).returncode == 0:
+            raise RuntimeError('Close Lutris before initializing its database.')
+        initialize_lutris()
+    else:
+        sync_all()

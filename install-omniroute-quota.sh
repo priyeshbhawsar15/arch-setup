@@ -6,6 +6,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
+feature_lifecycle "$0" "$@"
 
 plugin_id="priyesh.omniroute-quota"
 plugin_url="https://github.com/priyeshbhawsar15/omarchy-omniroute-quota.git"
@@ -59,24 +60,7 @@ update_pinned_plugin() {
 }
 
 seed_configuration() {
-  if [[ -f "$config_file" ]]; then
-    chmod 600 "$config_file"
-    return
-  fi
-  mkdir -p -- "$(dirname -- "$config_file")"
-  cat >"$config_file" <<'EOF'
-{
-  "endpoint": "https://omniroute.home.priyeshbhawsar.com",
-  "token": "",
-  "refreshIntervalSeconds": 60,
-  "targetScreen": "DP-4",
-  "position": "top-right",
-  "width": 320,
-  "topMargin": 40,
-  "rightMargin": 16
-}
-EOF
-  chmod 600 "$config_file"
+  python3 "$SCRIPT_DIR/config/setup-inputs.py" widget omniroute-quota
 }
 
 enable_plugin() {

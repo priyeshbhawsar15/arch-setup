@@ -18,8 +18,9 @@ class LaunchTests(unittest.TestCase):
             self.assertEqual(result, config.wrap_launch_options(result))
             self.assertEqual(result.count('%command%'), 1)
             if 'gamescope -' in result:
-                self.assertIn('-w 3840 -h 2160 -W 3840 -H 2160', result)
-                self.assertNotIn('fsr', result)
+                self.assertEqual(result, val)
+                self.assertIn('-w 1280 -h 720 -W 1920 -H 1080', result)
+                self.assertIn('fsr', result)
                 self.assertIn('-r 120', result)
                 self.assertTrue(result.endswith('%command% -vulkan'))
 

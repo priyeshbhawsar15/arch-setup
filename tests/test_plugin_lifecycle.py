@@ -119,9 +119,10 @@ class PluginLifecycleTests(unittest.TestCase):
         self.fixture=self.base/'fixture'; self.fixture.write_text(FIXTURE);self.fixture.chmod(0o755)
         for command in ('omarchy','omarchy-shell','git','systemctl','hyprmoncfg','gws','hyprctl'):
             (self.bin/command).symlink_to(self.fixture)
-        for command in ('dirname','python3','jq','mkdir','mktemp','mv','cp','chmod','install','rm','date','sleep','cmp','cat','touch','readlink'):
+        for command in ('bash','basename','dirname','python3','jq','mkdir','mktemp','mv','cp','chmod','install','rm','date','sleep','cmp','cat','touch','readlink'):
             target=shutil.which(command)
-            if target: (self.bin/command).symlink_to(target)
+            self.assertIsNotNone(target, 'Missing lifecycle test prerequisite: ' + command)
+            (self.bin/command).symlink_to(target)
         self.state={'pins':PINS,'calls':[], 'managed':False,'active':{},'enabled':{}}
         self.write_state()
         self.shell=self.home/'.config/omarchy/shell.json';self.shell.parent.mkdir(parents=True)
@@ -162,7 +163,11 @@ class PluginLifecycleTests(unittest.TestCase):
         self.run_installer('install-hyprmoncfg.sh');self.assertTrue(self.read_state()['managed'])
 
     def test_hyprmoncfg_disable_unmanages_before_unloading_ui(self):
-        self.run_installer('install-hyprmoncfg.sh');self.run_installer('install-hyprmoncfg.sh','--disable')
+        self.run_installer('install-hyprmoncfg.sh')
+        choices = self.home / '.local/state/arch-setups/features.json'
+        self.assertTrue(json.loads(choices.read_text())['install-hyprmoncfg.sh'])
+        self.run_installer('install-hyprmoncfg.sh','--disable')
+        self.assertFalse(json.loads(choices.read_text())['install-hyprmoncfg.sh'])
         state=self.read_state();self.assertFalse(state['managed']);self.assertEqual(self.read_shell(),self.original)
         calls=state['calls'];unmanage=next(i for i,c in enumerate(calls) if c[0]=='hyprmoncfg' and 'unmanage' in c)
         disabled=next(i for i,c in enumerate(calls) if c[:3]==['omarchy','plugin','disable'])

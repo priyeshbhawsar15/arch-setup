@@ -6,6 +6,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
+feature_lifecycle "$0" "$@"
 
 plugin_id="priyesh.obsidian-tasks"
 plugin_url="https://github.com/priyeshbhawsar15/omarchy-obsidian-tasks.git"
@@ -59,19 +60,7 @@ update_pinned_plugin() {
 }
 
 seed_configuration() {
-  if [[ -f "$config_file" ]]; then
-    return
-  fi
-
-  mkdir -p -- "$(dirname -- "$config_file")"
-  cat >"$config_file" <<'EOF'
-{
-  "vaultPath": "/home/priyesh/Documents/Obsidian/pb",
-  "vaultName": "pb",
-  "dashboardPath": "00 Home/Tasks.md",
-  "targetScreen": "DP-5"
-}
-EOF
+  python3 "$SCRIPT_DIR/config/setup-inputs.py" widget obsidian-tasks
 }
 
 enable_plugin() {

@@ -10,8 +10,8 @@
       "desktop": false,
       "config": {
         "game": {
-          "exe": "${HOME}/games-links/sims4/game/The Sims 4/Game/Bin/TS4_x64.exe",
-          "working_dir": "${HOME}/games-links/sims4/game/The Sims 4/Game/Bin/",
+          "exe": "${GAME}/Game/Bin/TS4_x64.exe",
+          "working_dir": "${GAME}/Game/Bin/",
           "args": "",
           "prefix": "${HOME}/.local/share/Steam/steamapps/compatdata/3434077619/pfx",
           "arch": "win64"
@@ -36,8 +36,8 @@
       "desktop": true,
       "config": {
         "game": {
-          "exe": "${HOME}/games-links/rdr2/Launcher.exe",
-          "working_dir": "${HOME}/games-links/rdr2/",
+          "exe": "${GAME}/Launcher.exe",
+          "working_dir": "${GAME}/",
           "args": "",
           "prefix": "${HOME}/.local/share/Steam/steamapps/compatdata/3681072528/pfx",
           "arch": "win64"
@@ -75,8 +75,8 @@
       "desktop": true,
       "config": {
         "game": {
-          "exe": "/run/media/priyesh/games/Games/Ghost of Tsushima/GhostOfTsushima.exe",
-          "working_dir": "/run/media/priyesh/games/Games/Ghost of Tsushima",
+          "exe": "${GAME}/GhostOfTsushima.exe",
+          "working_dir": "${GAME}",
           "args": "",
           "prefix": "${HOME}/.local/share/wineprefixes/steam-shortcut-4217488047",
           "arch": "win64"
@@ -111,8 +111,8 @@
       "desktop": true,
       "config": {
         "game": {
-          "exe": "${HOME}/games-links/cyberpunk2077/bin/x64/Cyberpunk2077.exe",
-          "working_dir": "${HOME}/games-links/cyberpunk2077/bin/x64/",
+          "exe": "${GAME}/bin/x64/Cyberpunk2077.exe",
+          "working_dir": "${GAME}/bin/x64/",
           "args": "",
           "prefix": "${HOME}/.local/share/wineprefixes/steam-shortcut-3013353202",
           "arch": "win64"
@@ -147,8 +147,8 @@
       "desktop": true,
       "config": {
         "game": {
-          "exe": "${HOME}/games-links/deathstranding2/DS2.exe",
-          "working_dir": "${HOME}/games-links/deathstranding2/",
+          "exe": "${GAME}/DS2.exe",
+          "working_dir": "${GAME}/",
           "args": "",
           "prefix": "${HOME}/.local/share/wineprefixes/steam-shortcut-2623494187",
           "arch": "win64"
@@ -183,8 +183,8 @@
       "desktop": true,
       "config": {
         "game": {
-          "exe": "${HOME}/games-links/eldenring/Game/eldenring.exe",
-          "working_dir": "${HOME}/games-links/eldenring/Game/",
+          "exe": "${GAME}/Game/eldenring.exe",
+          "working_dir": "${GAME}/Game/",
           "args": "",
           "prefix": "${HOME}/.local/share/wineprefixes/steam-shortcut-3657607958",
           "arch": "win64"
@@ -219,9 +219,9 @@
         "game": {
           "arch": "win64",
           "args": "",
-          "exe": "${HOME}/games-links/halo/Meteorite/Binaries/Win64/HaloCampaignEvolved.exe",
+          "exe": "${GAME}/Meteorite/Binaries/Win64/HaloCampaignEvolved.exe",
           "prefix": "${HOME}/.local/share/Steam/steamapps/compatdata/3834757053/pfx",
-          "working_dir": "${HOME}/games-links/halo/Meteorite/Binaries/Win64/"
+          "working_dir": "${GAME}/Meteorite/Binaries/Win64/"
         },
         "system": {
           "disable_runtime": true,
@@ -272,8 +272,8 @@
       "desktop": true,
       "config": {
         "game": {
-          "exe": "${HOME}/games-links/escape-academy/Escape Academy.exe",
-          "working_dir": "${HOME}/games-links/escape-academy/",
+          "exe": "${GAME}/Escape Academy.exe",
+          "working_dir": "${GAME}/",
           "args": "",
           "prefix": "${HOME}/.local/share/wineprefixes/steam-shortcut-2808961219",
           "arch": "win64"
@@ -306,8 +306,8 @@
       "desktop": true,
       "config": {
         "game": {
-          "exe": "${HOME}/games-links/mixtape/Mixtape.exe",
-          "working_dir": "${HOME}/games-links/mixtape/",
+          "exe": "${GAME}/Mixtape.exe",
+          "working_dir": "${GAME}/",
           "args": "",
           "prefix": "${HOME}/.local/share/wineprefixes/steam-shortcut-2314256998",
           "arch": "win64"
@@ -340,8 +340,8 @@
       "desktop": true,
       "config": {
         "game": {
-          "exe": "${HOME}/games-links/overcooked2/Overcooked2.exe",
-          "working_dir": "${HOME}/games-links/overcooked2/",
+          "exe": "${GAME}/Overcooked2.exe",
+          "working_dir": "${GAME}/",
           "args": "",
           "prefix": "${HOME}/.local/share/wineprefixes/steam-shortcut-2788472094",
           "arch": "win64"
@@ -375,8 +375,8 @@
       "config": {
         "game": {
           "args": "",
-          "exe": "${HOME}/.local/bin/launch-f1-25-4k",
-          "working_dir": "${HOME}/.local/share/f1-25-shaderfix.RfimSS/steam-4k.ZefBvE"
+          "exe": "${GAME}/launch-f1-25-4k",
+          "working_dir": "${GAME}"
         },
         "system": {
           "disable_runtime": true
@@ -401,9 +401,9 @@
         "game": {
           "arch": "win64",
           "args": "-screen-width 3840 -screen-height 2160 -screen-fullscreen 1",
-          "exe": "/run/media/priyesh/F1F5227BC4FE0E49/etc/[ScrewThisNoise] HoneySelect 2 DX BetterRepack R16/HoneySelect2.exe",
+          "exe": "${GAME}/HoneySelect2.exe",
           "prefix": "${HOME}/.local/share/wineprefixes/hs2",
-          "working_dir": "/run/media/priyesh/F1F5227BC4FE0E49/etc/[ScrewThisNoise] HoneySelect 2 DX BetterRepack R16"
+          "working_dir": "${GAME}"
         },
         "system": {
           "disable_runtime": true,
@@ -415,7 +415,7 @@
           "version": "GE-Proton11-7-x86_64"
         }
       },
-      "setup_xml": "/run/media/priyesh/F1F5227BC4FE0E49/etc/[ScrewThisNoise] HoneySelect 2 DX BetterRepack R16/UserData/setup.xml"
+      "setup_xml": "${GAME}/UserData/setup.xml"
     },
     {
       "key": "local-ks",
@@ -427,8 +427,8 @@
       "desktop": false,
       "config": {
         "game": {
-          "exe": "/run/media/priyesh/F1F5227BC4FE0E49/etc/[ScrewThisNoise] Koikatsu Sunshine EX BetterRepack R12/KoikatsuSunshine.exe",
-          "working_dir": "/run/media/priyesh/F1F5227BC4FE0E49/etc/[ScrewThisNoise] Koikatsu Sunshine EX BetterRepack R12",
+          "exe": "${GAME}/KoikatsuSunshine.exe",
+          "working_dir": "${GAME}",
           "prefix": "${HOME}/.local/share/wineprefixes/ks",
           "arch": "win64",
           "args": "-screen-width 3840 -screen-height 2160 -screen-fullscreen 1"
@@ -443,13 +443,10 @@
           }
         }
       },
-      "setup_xml": "/run/media/priyesh/F1F5227BC4FE0E49/etc/[ScrewThisNoise] Koikatsu Sunshine EX BetterRepack R12/UserData/setup.xml"
+      "setup_xml": "${GAME}/UserData/setup.xml"
     }
   ],
-  "retired_shortcuts": [
-    3425461811,
-    2395607006
-  ],
+  "retired_shortcuts": [],
   "assets": [
     {
       "name": "Optiscaler_0.9.4-final.20260718._MM.7z",
@@ -466,19 +463,5 @@
       "url": "https://github.com/optiscaler/OptiScaler-nightly/releases/download/nightly-20261020/OptiScaler_v10.0.0-pre1_20261020.7z",
       "sha256": "dae01c74f2637d5940e1b5110503e1ed9706cd21ef876ff51099f1b3801ac401"
     }
-  ],
-  "symlinks": {
-    "${HOME}/games-links/F1-25": "/run/media/priyesh/F1F5227BC4FE0E49/Games/F1 25",
-    "${HOME}/games-links/cyberpunk2077": "/run/media/priyesh/games/Games/Cyberpunk 2077",
-    "${HOME}/games-links/deathstranding2": "/run/media/priyesh/games/Games/DEATH STRANDING 2",
-    "${HOME}/games-links/eldenring": "/run/media/priyesh/games/Games/ELDEN RING",
-    "${HOME}/games-links/escape-academy": "/run/media/priyesh/games/Games/Escape Academy",
-    "${HOME}/games-links/ghost-of-tsushima": "/run/media/priyesh/games/Games/Ghost of Tsushima",
-    "${HOME}/games-links/halo": "/run/media/priyesh/games/Games/Halo - Campaign Evolved",
-    "${HOME}/games-links/launch-f1-25.sh": "${HOME}/.local/bin/launch-f1-25.sh",
-    "${HOME}/games-links/mixtape": "/run/media/priyesh/games/Games/Mixtape",
-    "${HOME}/games-links/overcooked2": "/run/media/priyesh/games/Games/Overcooked! 2",
-    "${HOME}/games-links/rdr2": "/run/media/priyesh/games/Games/Red Dead Redemption 2",
-    "${HOME}/games-links/sims4": "/run/media/priyesh/games/etc/Sims 4"
-  }
+  ]
 }

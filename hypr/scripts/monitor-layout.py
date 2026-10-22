@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Resolve personal display roles without depending on connector numbering."""
 import argparse
+import fcntl
 import json
 import math
 import os
@@ -14,31 +15,65 @@ import time
 
 def load_config(path):
     config = json.loads(Path(path).read_text())
+    if not isinstance(config, dict):
+        raise ValueError('monitor policy must be an object')
     roles = config['monitors']
-    if not {'main', 'side_left', 'side_right'}.issubset(roles):
-        raise ValueError('keep the main/side_left/side_right role names; edit their descriptions to replace displays')
-    descriptions = [entry['description'] for entry in roles.values()]
-    if not descriptions or any(not isinstance(d, str) or not d.strip() for d in descriptions):
-        raise ValueError('monitor descriptions must be nonempty strings')
-    if len(set(descriptions)) != len(descriptions):
-        raise ValueError('monitor descriptions must be unique; include serials for identical models')
+    allowed = {'monitors', 'toolkitScale', 'windowSpan', 'singleMonitorKeep', 'singleMonitorDisable', 'wallpaperSpan', 'lockMain', 'lockSides', 'barMain', 'widgetTargets'}
+    if set(config) - allowed or not isinstance(roles, dict) or not roles:
+        raise ValueError('monitor policy must have roles and no unknown fields')
+    identities = []
+    for entry in roles.values():
+        if not isinstance(entry, dict) or set(entry) - {'description', 'connector', 'selector', 'mode', 'position', 'scale', 'transform', 'bitdepth', 'cm', 'sdrbrightness', 'sdrsaturation', 'workspaces'}:
+            raise ValueError('unknown monitor setting')
+        selectors = [key for key in ('description', 'connector', 'selector') if key in entry]
+        if len(selectors) != 1 or not isinstance(entry[selectors[0]], str) or not entry[selectors[0]].strip() or any(ord(c) < 32 for c in entry[selectors[0]]):
+            raise ValueError('each monitor needs one nonempty description, connector or primary selector')
+        if 'selector' in entry and entry['selector'] != 'primary':
+            raise ValueError('only primary is supported as a dynamic selector')
+        if any(not isinstance(entry.get(key, ''), str) for key in ('mode', 'position', 'cm')):
+            raise ValueError('mode/position/cm must be strings')
+        scale = entry.get('scale', 'auto')
+        if scale != 'auto' and (type(scale) not in (int, float) or not math.isfinite(scale) or scale <= 0):
+            raise ValueError('scale must be auto or a positive finite number')
+        if type(entry.get('transform', 0)) is not int or not 0 <= entry.get('transform', 0) <= 7:
+            raise ValueError('invalid monitor transform')
+        if entry.get('bitdepth', 8) not in (8, 10):
+            raise ValueError('bitdepth must be 8 or 10')
+        for key in ('sdrbrightness', 'sdrsaturation'):
+            if key in entry and (type(entry[key]) not in (int, float) or not math.isfinite(entry[key]) or entry[key] < 0):
+                raise ValueError('invalid HDR numeric setting')
+        workspaces = entry.get('workspaces', [])
+        if not isinstance(workspaces, list) or any(type(n) is not int or n < 1 for n in workspaces):
+            raise ValueError('workspaces must be positive integers')
+        identities.append((selectors[0], entry[selectors[0]]))
+    if len(set(identities)) != len(identities):
+        raise ValueError('monitor identities must be unique; include serials for identical models')
     for key in ('windowSpan', 'singleMonitorDisable', 'wallpaperSpan', 'lockSides'):
-        if not config[key] or len(set(config[key])) != len(config[key]):
+        if not isinstance(config[key], list) or len(set(config[key])) != len(config[key]):
             raise ValueError(f'{key} must contain distinct monitor roles')
         for role in config[key]:
             if role not in roles:
                 raise ValueError(f'unknown role {role} in {key}')
+    if not isinstance(config['widgetTargets'], dict):
+        raise ValueError('widgetTargets must be an object')
+    known_widgets = {'.config/omarchy/' + name + '.json' for name in ('obsidian-tasks', 'omniroute-quota', 'system-metrics', 'weather-widget', 'immich-photo-frame', 'home-assistant')}
+    if set(config['widgetTargets']) - known_widgets:
+        raise ValueError('widgetTargets may only manage supported widget configuration files')
     for role in [config['singleMonitorKeep'], config['lockMain'], config['barMain'],
                  *config['widgetTargets'].values()]:
         if role not in roles:
             raise ValueError(f'unknown monitor role: {role}')
     if config['singleMonitorKeep'] in config['singleMonitorDisable']:
         raise ValueError('single-monitor mode must keep its main display enabled')
-    if len(config['windowSpan']) != 2:
-        raise ValueError('windowSpan must select exactly two displays')
+    if len(config['windowSpan']) not in (0, 2):
+        raise ValueError('windowSpan must select zero or two displays')
     for path in config['widgetTargets']:
         if Path(path).is_absolute() or '..' in Path(path).parts:
             raise ValueError('widget configuration paths must be relative to HOME')
+    if any(roles[role].get('selector') == 'primary' for role in config['singleMonitorDisable']):
+        raise ValueError('cannot disable the wildcard primary selector')
+    if 'toolkitScale' in config and (type(config['toolkitScale']) is not int or not 1 <= config['toolkitScale'] <= 4):
+        raise ValueError('toolkitScale must be an integer from 1 to 4')
     return config
 
 
@@ -49,16 +84,24 @@ def live_monitors():
 def resolve(config, outputs, required=()):
     result = {}
     for role, entry in config['monitors'].items():
-        matches = [m for m in outputs if m.get('description') == entry['description']]
+        if entry.get('selector') == 'primary':
+            active = [m for m in outputs if not m.get('disabled')]
+            matches = ([m for m in active if m.get('focused')] or active)[:1]
+        elif 'connector' in entry:
+            matches = [m for m in outputs if m.get('name') == entry['connector']]
+        else:
+            matches = [m for m in outputs if m.get('description') == entry['description']]
         if len(matches) > 1:
-            raise ValueError(f'{role}: display identity is ambiguous ({entry["description"]})')
+            raise ValueError(f'{role}: display identity is ambiguous')
         result[role] = matches[0] if matches else None
         if role in required and (not result[role] or result[role].get('disabled')):
-            raise ValueError(f'{role}: display is disconnected or disabled ({entry["description"]})')
+            raise ValueError(f'{role}: display is disconnected or disabled')
     return result
 
 
 def canvas(config, outputs):
+    if len(config['windowSpan']) != 2:
+        raise ValueError('Window spanning is not configured for this host')
     selected = resolve(config, outputs, config['windowSpan'])
     pair = sorted([selected[role] for role in config['windowSpan']], key=lambda m: m['x'])
     dimensions = []
@@ -76,17 +119,37 @@ def canvas(config, outputs):
     return dict(x=left['x'], y=left['y'], width=lw + rw, height=lh)
 
 
+def selector(entry):
+    return 'desc:' + entry['description'] if 'description' in entry else entry.get('connector', '')
+
+
+def lua(value):
+    # JSON's ASCII-only \\u escapes are not valid Lua escapes. UTF-8 strings are.
+    return json.dumps(value, ensure_ascii=False, allow_nan=False)
+
+
 def render(config, path):
     text = Path(path).read_text()
+    rules, workspaces = [], []
+    if config.get('toolkitScale') is not None:
+        if type(config['toolkitScale']) is not int or not 1 <= config['toolkitScale'] <= 4:
+            raise ValueError('toolkitScale must be an integer from 1 to 4')
+        rules.append('hl.env("GDK_SCALE", ' + json.dumps(str(config['toolkitScale'])) + ')')
+    rules.append('hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "auto" })')
     for role, entry in config['monitors'].items():
-        text = text.replace(json.dumps('@monitor:' + role + '@'), json.dumps('desc:' + entry['description']))
-    main_description = config['monitors'][config['barMain']]['description']
-    return text.replace(json.dumps('@bar-main-description@'), json.dumps(main_description))
+        text = text.replace(json.dumps('@monitor:' + role + '@'), lua(selector(entry)))
+        fields = dict(output=selector(entry), **{k: v for k, v in entry.items() if k not in ('description', 'connector', 'selector', 'workspaces')})
+        rules.append('hl.monitor({ ' + ', '.join(key + ' = ' + lua(value) for key, value in fields.items()) + ' })')
+        for number in entry.get('workspaces', []):
+            if selector(entry):
+                workspaces.append('hl.workspace_rule({ workspace = ' + json.dumps(str(number)) + ', monitor = ' + lua(selector(entry)) + ', default = ' + ('true' if number == entry['workspaces'][0] else 'false') + ', persistent = true })')
+    main_description = config['monitors'][config['barMain']].get('description', '')
+    return text.replace('-- @monitor-rules@', '\n'.join(rules)).replace('-- @workspace-rules@', '\n'.join(workspaces)).replace(json.dumps('@bar-main-description@'), json.dumps(main_description))
 
 
 def single_monitor_lua(config, outputs):
     resolve(config, outputs, [config['singleMonitorKeep']])
-    return ''.join('hl.monitor({ output = ' + json.dumps('desc:' + config['monitors'][role]['description'])
+    return ''.join('hl.monitor({ output = ' + lua(selector(config['monitors'][role]))
                    + ', disabled = true })\n' for role in config['singleMonitorDisable'])
 
 
@@ -96,7 +159,12 @@ def private_backup_directory(label):
     return Path(tempfile.mkdtemp(prefix=label + '-', dir=root))
 
 
-def write_atomic(path, content, mode=None):
+ANY_CONTENT = object()
+
+
+def write_atomic(path, content, mode=None, expected=ANY_CONTENT):
+    if path.is_symlink():
+        raise ValueError('refusing symlinked managed configuration: ' + str(path))
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, temporary_name = tempfile.mkstemp(prefix='.' + path.name + '.', dir=path.parent)
     temporary = Path(temporary_name)
@@ -106,6 +174,8 @@ def write_atomic(path, content, mode=None):
             stream.flush()
             os.fsync(stream.fileno())
         temporary.chmod(mode if mode is not None else (path.stat().st_mode & 0o777 if path.exists() else 0o644))
+        if expected is not ANY_CONTENT and (path.read_bytes() if path.exists() else None) != expected:
+            raise ValueError('configuration changed concurrently; retry: ' + str(path))
         temporary.replace(path)
     finally:
         temporary.unlink(missing_ok=True)
@@ -155,9 +225,12 @@ def migrate_entrypoint(package_path):
 
 def configure_widget(config, relative):
     role = config['widgetTargets'][relative]
-    monitor = resolve(config, live_monitors())[role]
+    outputs = live_monitors()
+    monitor = resolve(config, outputs)[role]
+    if not monitor or monitor.get('disabled'):
+        monitor = next((m for m in outputs if m.get('focused') and not m.get('disabled')), None) or next((m for m in outputs if not m.get('disabled')), None)
     if not monitor:
-        raise ValueError(f'{role}: connect the configured widget display before installing')
+        raise ValueError('connect an active display before installing the widget')
     home = Path.home()
     path = home / relative
     data = json.loads(path.read_text()) if path.exists() else {}
@@ -182,7 +255,8 @@ def install(config, config_path, repo, hypr_only=False):
 
     def save(path, content, executable=False):
         nonlocal changed, backup
-        if path.exists() and path.read_bytes() == content:
+        original = path.read_bytes() if path.exists() else None
+        if original == content:
             if executable and not os.access(path, os.X_OK):
                 path.chmod((path.stat().st_mode & 0o777) | 0o100)
                 changed = True
@@ -195,7 +269,7 @@ def install(config, config_path, repo, hypr_only=False):
         path.parent.mkdir(parents=True, exist_ok=True)
         mode = path.stat().st_mode & 0o777 if path.exists() else (0o755 if executable else 0o644)
         if executable: mode |= 0o100
-        write_atomic(path, content, mode)
+        write_atomic(path, content, mode, original)
         changed = True
 
     save(home / '.config/omarchy/monitor-layout.json', Path(config_path).read_bytes())
@@ -205,7 +279,7 @@ def install(config, config_path, repo, hypr_only=False):
     # Replace a stale connector-based toggle while preserving single-monitor mode.
     toggle = home / '.local/state/omarchy/toggles/hypr/desktop-single-monitor.lua'
     if toggle.exists():
-        text = ''.join('hl.monitor({ output = ' + json.dumps('desc:' + config['monitors'][r]['description'])
+        text = ''.join('hl.monitor({ output = ' + lua(selector(config['monitors'][r]))
                        + ', disabled = true })\n' for r in config['singleMonitorDisable'])
         save(toggle, text.encode())
 
@@ -224,9 +298,9 @@ def install(config, config_path, repo, hypr_only=False):
 
         for relative, role in config['widgetTargets'].items():
             path = home / relative
-            metrics_config = relative == '.config/omarchy/system-metrics.json'
-            if not selected[role] or (not path.exists() and not (metrics_config and
-                    (home / '.config/omarchy/plugins/priyesh.system-metrics').exists())):
+            plugin = 'priyesh.' + Path(relative).stem
+            if not selected[role] or (not path.exists() and not
+                    (home / '.config/omarchy/plugins' / plugin).exists()):
                 continue
             data = json.loads(path.read_text()) if path.exists() else {}
             if data.get('targetScreen') != selected[role]['name']:
@@ -234,10 +308,11 @@ def install(config, config_path, repo, hypr_only=False):
                 save(path, (json.dumps(data, indent=2) + '\n').encode())
         span = names(config['wallpaperSpan'])
         path = home / '.config/omarchy/wallpaper-controller.json'
-        if span and path.exists():
+        if span is not None and path.exists():
             data = json.loads(path.read_text())
-            if data.get('spanGroups') != [span]:
-                data['spanGroups'] = [span]
+            groups = [span] if span else []
+            if data.get('spanGroups') != groups:
+                data['spanGroups'] = groups
                 save(path, (json.dumps(data, indent=2) + '\n').encode())
                 wallpaper_changed = True
         path = home / '.config/omarchy/shell.json'
@@ -249,12 +324,12 @@ def install(config, config_path, repo, hypr_only=False):
             for plugin in data.get('plugins', []):
                 if plugin.get('id') == 'hancore.shibumi.state':
                     presentation = plugin.setdefault('shibumi', {}).setdefault('presentation', {})
-                    presentation['mainMonitorDescription'] = config['monitors'][config['barMain']]['description']
-                if plugin.get('id') == 'io.github.sirjul1337.lock-explorer' and main and sides and span:
+                    presentation['mainMonitorDescription'] = config['monitors'][config['barMain']].get('description', '')
+                if plugin.get('id') == 'io.github.sirjul1337.lock-explorer' and main and sides is not None and span is not None:
                     power = plugin.get('phasedPower')
                     if power:
                         power.update(main=main[0], sides=sides, ddcPowerOffMonitors=sides)
-                    plugin['wallpaperSpanGroups'] = [span]
+                    plugin['wallpaperSpanGroups'] = [span] if span else []
             if json.dumps(data) != original:
                 save(path, (json.dumps(data, indent=2) + '\n').encode())
     if backup is not None:
@@ -277,6 +352,12 @@ def main():
     apply.add_argument('--hypr-only', action='store_true')
     args = parser.parse_args()
     try:
+        if args.command in ('install', 'configure-widget', 'migrate-entrypoint'):
+            lock_root = Path(os.environ.get('XDG_STATE_HOME') or str(Path.home() / '.local/state')) / 'arch-setups'
+            lock_root.mkdir(mode=0o700, parents=True, exist_ok=True)
+            configuration_lock = (lock_root / 'configuration.lock').open('a')
+            os.chmod(configuration_lock.name, 0o600)
+            fcntl.flock(configuration_lock, fcntl.LOCK_EX)
         config = load_config(args.config)
         if args.command == 'migrate-entrypoint':
             print(json.dumps({'changed': migrate_entrypoint(args.package)}))

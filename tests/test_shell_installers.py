@@ -97,6 +97,14 @@ class ShibumiSettingsTests(OmalandMenuTests):
         self.assertEqual(state['presentation']['mainMonitorDescription'], 'Fixture main')
         self.assertEqual(state['presentation']['radius'], 'small')
         self.assertTrue(state['widgets']['G15']['enabled'])
+        # Interactive visibility choices are seed-only, not reset on rerun.
+        updated['plugins'][0]['shibumi']['widgets']['G15']['enabled'] = False
+        updated['plugins'][0]['shibumi']['widgets']['G9']['enabled'] = True
+        shell.write_text(json.dumps(updated))
+        self.call('deploy_overrides')
+        state = json.loads(shell.read_text())['plugins'][0]['shibumi']
+        self.assertFalse(state['widgets']['G15']['enabled'])
+        self.assertTrue(state['widgets']['G9']['enabled'])
 
 if __name__ == '__main__':
     unittest.main()

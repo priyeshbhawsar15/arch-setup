@@ -3,7 +3,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-DOTFILES_DIR="$SCRIPT_DIR/../dotfiles"
+DOTFILES_DIR="${ARCH_SETUPS_DOTFILES_DIR:-$SCRIPT_DIR/../dotfiles}"
 
 stow_packages=(
   nvim

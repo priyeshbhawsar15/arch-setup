@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
 command -v python3 >/dev/null || { log 'Python 3 is required.'; exit 1; }
 result="$(python3 "$SCRIPT_DIR/hypr/scripts/monitor-layout.py" \
-  --config "$SCRIPT_DIR/monitor-layout.json" install --repo "$SCRIPT_DIR")"
+  --config "${ARCH_SETUPS_MONITOR_LAYOUT:-$SCRIPT_DIR/monitor-layout.json}" install --repo "$SCRIPT_DIR")"
 if [[ "$result" == *'"changed": false'* ]]; then
   log 'Monitor layout is already installed.'
   exit 0

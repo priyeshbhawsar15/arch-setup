@@ -1,0 +1,18 @@
+{
+  "monitors": {"main": {"selector": "primary", "mode": "preferred", "position": "auto", "scale": "auto"}},
+  "windowSpan": [],
+  "singleMonitorKeep": "main",
+  "singleMonitorDisable": [],
+  "wallpaperSpan": [],
+  "lockMain": "main",
+  "lockSides": [],
+  "barMain": "main",
+  "widgetTargets": {
+    ".config/omarchy/obsidian-tasks.json": "main",
+    ".config/omarchy/omniroute-quota.json": "main",
+    ".config/omarchy/system-metrics.json": "main",
+    ".config/omarchy/weather-widget.json": "main",
+    ".config/omarchy/immich-photo-frame.json": "main",
+    ".config/omarchy/home-assistant.json": "main"
+  }
+}

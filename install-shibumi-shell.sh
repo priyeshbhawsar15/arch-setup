@@ -8,10 +8,11 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
+feature_lifecycle "$0" "$@"
 
-suite_url="https://github.com/HANCORE-linux/Shibumi-Shell.git"
+suite_url="https://github.com/priyeshbhawsar15/Shibumi-Shell.git"
 suite_tag="v0.1.1-beta.14.1"
-suite_commit="7a6c853b1947d303bad9a5b640c224c01b669106"
+suite_commit="8b96105a10ef5128589adda7a4b50c4ff903a97d"
 suite_dir="$HOME/.local/share/shibumi-shell/$suite_commit"
 suite_state="$HOME/.local/state/shibumi/install.json"
 shell_config="$HOME/.config/omarchy/shell.json"
@@ -101,13 +102,13 @@ backup_shibumi_data() {
     [[ "$plugin" =~ ^hancore\.shibumi\.[a-z0-9-]+$ ]] || fail "unsafe suite plugin identity in install state"
     paths+=("$HOME/.config/omarchy/plugins/$plugin")
   done < <(jq -r '.plugins[]' "$suite_state")
-  backup_paths shibumi-lifecycle "${paths[@]}"
+  backup_feature_paths shibumi-lifecycle "${paths[@]}"
 }
 
 deploy_overrides() {
   # Configuration is supported by the pinned fork. Never rewrite the managed
   # payload: upstream admission verifies each plugin's exact transaction digest.
-  python3 "$SCRIPT_DIR/config/shibumi-settings.py" "$shell_config" "$SCRIPT_DIR/monitor-layout.json"
+  python3 "$SCRIPT_DIR/config/shibumi-settings.py" "$shell_config" "${ARCH_SETUPS_MONITOR_LAYOUT:-$SCRIPT_DIR/monitor-layout.json}"
 }
 
 disable_suite() {
@@ -174,4 +175,4 @@ run_suite install --dry-run --user-layout
 run_suite install --yes --user-layout
 deploy_overrides
 run_suite status
-log "Installed and activated Shibumi Shell at $suite_tag ($suite_commit)."
+log "Installed and activated the Shibumi fork based on $suite_tag ($suite_commit)."

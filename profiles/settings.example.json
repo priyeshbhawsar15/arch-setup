@@ -1,0 +1,21 @@
+{
+  "omniroute-quota": {
+    "endpoint": "https://your-quota-server.example.net",
+    "tokenFile": "${HOME}/.config/secrets/omniroute-token"
+  },
+  "immich-photo-frame": {
+    "serverUrl": "https://your-photos-server.example.net",
+    "apiKeyFile": "${HOME}/.config/secrets/immich-api-key"
+  },
+  "home-assistant": {
+    "baseUrl": "https://your-home-assistant.example.net",
+    "tokenFile": "${HOME}/.config/secrets/ha-token",
+    "climate": "climate.your_thermostat",
+    "switches": {"Desk": "switch.your_desk"}
+  },
+  "obsidian-tasks": {
+    "vaultPath": "${HOME}/Documents/YourVault",
+    "vaultName": "YourVault",
+    "dashboardPath": "00 Home/Tasks.md"
+  }
+}
