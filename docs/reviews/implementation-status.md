@@ -50,7 +50,7 @@ Per-feature backups and guarded writes are not a global transaction. In particul
 - Omaland's `node test/run.js`: all passing. Indicators clone-contract test: passed.
 - Exact public source contract check, all repository shell syntax checks and `git diff --check`: passed.
 - Fresh safe-profile Omarchy 4.0.6 VM: all 10 selected applications installed, readiness passed, password login/reboot/repeat convergence passed, and seven graphical apps passed limited startup/normal-close smoke. This does not certify the personal plugin profile or physical hardware. The CI-equivalent error-level ShellCheck command passed inside the VM.
-- CI workflow is configured with GNU Stow among its required test dependencies; the original acceptance evidence does not claim a hosted CI run.
+- The first hosted CI run exposed missing `diffutils/cmp` in the minimal Arch test image and omitted `basename`/`bash` in the isolated lifecycle fixture. Dependencies/tool exposure were corrected; the fixture now fails clearly for missing prerequisites and explicitly checks remembered enable/disable choices, preventing silent hook bypass. Hosted results are tracked on the PR separately from the earlier VM evidence.
 
 Temporary logs: `/tmp/arch-setups-acceptance-tests.log`, `/tmp/shibumi-clean-commit-tests.log`, and associated `/tmp/*setup-fix-tests*` logs. These are local evidence, not a project dependency or durable release archive.
 

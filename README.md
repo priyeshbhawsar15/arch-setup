@@ -9,7 +9,7 @@ Install a **selected** setup, not every historical customization from another ma
 ./install-all.sh
 ```
 
-Run as your normal desktop user, not root. Supported baseline: Omarchy 4.0.4+ with Bash, Python 3, Git, coreutils, util-linux/flock and mise. Missing applications use Omarchy package/browser commands. Pins freeze plugin source, not the rolling Arch package universe; new platform versions still need compatibility testing.
+Run as your normal desktop user, not root. Supported baseline: Omarchy 4.0.4+ with Bash, Python 3, Git, coreutils, diffutils/cmp, util-linux/flock and mise. Missing applications use Omarchy package/browser commands. Pins freeze plugin source, not the rolling Arch package universe; new platform versions still need compatibility testing.
 
 The first command validates inputs and shows the selected/skipped installers and game changes **without writing state, downloading, or running installers**. Apply runs read-only preflight first, stops on an installer failure, and finishes with readiness checks. Exit 1 means an error; exit 2 means pending external integration/game prerequisites at final acceptance. Neither is success.
 

@@ -2,7 +2,7 @@
 
 ## Setup contract and quick start
 
-Run as the normal desktop user on Omarchy 4.0.4+ (not root). Bash, Python 3, Git, coreutils, util-linux/flock and network access for missing packages/sources are prerequisites. Desktop features additionally require a live, **unlocked** Omarchy/Hyprland session. Package and source compatibility is revision-bound; a version minimum alone is not runtime acceptance.
+Run as the normal desktop user on Omarchy 4.0.4+ (not root). Bash, Python 3, Git, coreutils, diffutils/cmp, util-linux/flock and network access for missing packages/sources are prerequisites. Desktop features additionally require a live, **unlocked** Omarchy/Hyprland session. Package and source compatibility is revision-bound; a version minimum alone is not runtime acceptance.
 
 ```bash
 ./install-all.sh --plan                           # strictly read-only
@@ -32,7 +32,7 @@ No script invents credentials, enrolls accounts, formats/mounts game drives, dow
 - **`config/bar-layout.py`** and **`indicators/layout.py`** — Reversible owned bar-layout changes; preserve unrelated layout/settings and restore only still-owned values on disable. The common bar helper coordinates setup writes through the configuration lock.
 - **`config/shibumi-settings.py`** — Changes supported Shibumi State settings only: main-display identity, Bluetooth slot and native media-slot presentation. Preserves layout/payload and uses guarded atomic configuration writes. It does not copy QML into the suite.
 - **`config/check-source-contracts.py`** — Bounded network check of the exact public Shibumi CLI and Omaland manifest APIs required by the installers. Reads source as data, never executes it or advances pins. Private source/API, live runtime and physical compatibility checks remain separate.
-- **`tests/run.py`** — Clean-checkout test runner. Core tests are independent of the private Planner-Executor source. `--require-integration --integration-source DIR` requires its exact clean pinned Git checkout and runs those tests too; a missing/mismatched source fails explicitly. `--require-system-tests` fails on skipped system-library tests. CI installs Arch test dependencies (including GNU Stow) and runs unprivileged; private release integration must be run separately with authorized source access.
+- **`tests/run.py`** — Clean-checkout test runner. Core tests are independent of the private Planner-Executor source. `--require-integration --integration-source DIR` requires its exact clean pinned Git checkout and runs those tests too; a missing/mismatched source fails explicitly. `--require-system-tests` fails on skipped system-library tests. CI installs Arch test dependencies (including GNU Stow and diffutils/cmp) and runs unprivileged; private release integration must be run separately with authorized source access.
 
 ## Application installers
 
