@@ -237,6 +237,28 @@ def apply(profile, home, upscalers):
             if not exe.is_file():
                 print(f'Skipped {game["name"]}: mount/install game first: {exe}')
                 continue
+            # Halo owns resolution/HDR directly, without a nested Gamescope display.
+            if game.get('display_settings'):
+                settings = Path(game['config']['game']['prefix']) / 'drive_c/users/steamuser/AppData/Local/Meteorite/Saved/Config/Windows/GameUserSettings.ini'
+                if settings.exists():
+                    text = settings.read_text()
+                    section = '[/Script/Meteorite.MeteoriteGameUserSettings]'
+                    start = text.index(section) + len(section)
+                    end = text.find('\n[', start)
+                    if end == -1:
+                        end = len(text)
+                    body = text[start:end]
+                    for key, value in game['display_settings'].items():
+                        pattern = r'(?m)^' + re.escape(key) + r'=.*$'
+                        if re.search(pattern, body):
+                            body = re.sub(pattern, key + '=' + value, body)
+                        else:
+                            body += '\n' + key + '=' + value + '\n'
+                    updated = text[:start] + body + text[end:]
+                    if updated != text:
+                        installer.save(settings, updated.encode())
+                else:
+                    print('Launch Halo once, then rerun to apply its 4K/HDR settings.')
             rows = con.execute('SELECT * FROM games WHERE installer_slug=? OR slug=?', (game['key'], game['slug'])).fetchall()
             if len(rows) > 1:
                 raise RuntimeError('Ambiguous Lutris entries for ' + game['name'])

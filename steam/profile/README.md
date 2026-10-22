@@ -92,7 +92,16 @@ packages retain their upstream license files in the archive/cache.
   watermark/logging on. Existing `OptiScaler.ini` files are **not overwritten**:
   tuning saved from the in-game menu remains user-owned. To reseed defaults,
   close the game and move its INI aside, then rerun with `--upscalers`.
-- Existing Gamescope/HDR wrappers remain enabled. If an overlay fails, test
+- Halo uses `steam-gamescope-hdr` with `HALO_GAMESCOPE_CAPTURE=1` to force relative
+  capture, `PROTON_ENABLE_WAYLAND=0` for XWayland inside Gamescope, and HDR
+  (`PROTON_ENABLE_HDR`, `ENABLE_HDR_WSI`, `DXVK_HDR`). No extra Hyprland
+  confinement rule is used: it was removed while diagnosing mouse loss after
+  wallpaper changes. Recovery remains unverified; Alt+Tab switches away.
+  Existing Meteorite settings are backed up and set to 3840×2160,
+  borderless fullscreen and HDR output. Restart Halo to apply; verify HDR in-game.
+  If settings do not yet exist, launch once and rerun the profile. To undo, restore
+  the backed-up YAML/INI and previous profile settings before rerunning installers.
+- Other existing Gamescope/HDR wrappers remain enabled. If an overlay fails, test
   without Gamescope; its menu visibility is not proof of FSR4 execution.
 - These are unsupported experiments on RDNA2. Halo was user-confirmed working;
   installation of the other games is not a claim of runtime validation. Enable

@@ -12,9 +12,16 @@ fi
 export ENABLE_HDR_WSI=1
 export DXVK_HDR=1
 
+# Opt-in for Halo: XWayland game input plus Gamescope relative capture.
+# Do not combine with host confine_pointer: it may conflict with relative locks.
+capture_args=()
+if [[ "${HALO_GAMESCOPE_CAPTURE:-0}" == 1 ]]; then
+  capture_args=(--force-grab-cursor)
+fi
+
 # Specify both the game-visible display and output; otherwise nested
 # Gamescope defaults can expose only 1280x720, regardless of monitor size.
-exec gamescope \
+exec gamescope "${capture_args[@]}" \
   --nested-width 3840 \
   --nested-height 2160 \
   --output-width 3840 \

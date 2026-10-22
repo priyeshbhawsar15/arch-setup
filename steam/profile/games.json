@@ -227,7 +227,12 @@
           "disable_runtime": true,
           "env": {
             "PROTON_LOG": "1",
-            "WINEDLLOVERRIDES": "dxgi=n,b"
+            "WINEDLLOVERRIDES": "dxgi=n,b",
+            "PROTON_ENABLE_WAYLAND": "0",
+            "PROTON_ENABLE_HDR": "1",
+            "ENABLE_HDR_WSI": "1",
+            "DXVK_HDR": "1",
+            "HALO_GAMESCOPE_CAPTURE": "1"
           },
           "prefix_command": "steam-gamescope-hdr"
         },
@@ -241,7 +246,21 @@
         "icon": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/2806050/abe495b3c48b435e4ed7229fe9f50417c14381ba.jpg"
       },
       "store_url": "https://store.steampowered.com/app/2806050/",
-      "upscaler": "optiscaler-094"
+      "upscaler": "optiscaler-094",
+      "display_settings": {
+        "ResolutionSizeX": "3840",
+        "ResolutionSizeY": "2160",
+        "LastUserConfirmedResolutionSizeX": "3840",
+        "LastUserConfirmedResolutionSizeY": "2160",
+        "DesiredScreenWidth": "3840",
+        "DesiredScreenHeight": "2160",
+        "LastUserConfirmedDesiredScreenWidth": "3840",
+        "LastUserConfirmedDesiredScreenHeight": "2160",
+        "FullscreenMode": "1",
+        "LastConfirmedFullscreenMode": "1",
+        "PreferredFullscreenMode": "1",
+        "bUseHDRDisplayOutput": "True"
+      }
     },
     {
       "key": "steam-shortcut-2808961219",
