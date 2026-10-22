@@ -51,7 +51,7 @@ class T3PlannerExecutorTest(unittest.TestCase):
             "mkdir", "cp", "mv", "chmod", "readlink", "ln", "date", "mktemp",
             "basename", "dirname", "head", "tail", "grep", "sed", "awk",
             "cut", "tr", "sort", "uniq", "find", "uname", "which", "env",
-            "flock"
+            "flock", "sha256sum"
         ):
             p = shutil.which(tool)
             if p:
@@ -146,6 +146,7 @@ class T3PlannerExecutorTest(unittest.TestCase):
             "T3CODE_HOME": str(self.fake_home / ".t3"),
             "PATH": f"{self.fake_bin}:{self.sys_bin}",
             "OMARCHY_LOG": str(self.omarchy_log),
+            "ARCH_SETUPS_PROFILE": str(ROOT / 'profiles/personal.json'),
         }
 
     def git(self, *args, cwd=None):

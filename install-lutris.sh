@@ -15,13 +15,19 @@ else
   omarchy pkg add lutris
 fi
 
-# Sync Steam library and non-Steam games into Lutris with full launch options
-# Lutris and PyGObject are Arch's Python modules, not a mise Python environment.
-/usr/bin/python3 "$SCRIPT_DIR/steam/sync-lutris-steam.py"
-
-# Personal direct-Proton profiles run after generic Steam imports. Third-party
-# upscalers are pinned/verified; no game files, saves or Steam tokens are stored.
-if ! is_command_available 7z; then
+# Package installation is independent of library import and game-file changes.
+# Only an explicit selection can request imports, profiles or experimental DLLs.
+selection="$(python3 "$SCRIPT_DIR/config/setup-inputs.py" gaming | python3 -c 'import json,sys; p=json.load(sys.stdin); print(json.dumps(dict(games=len(p["games"]), importSteam=p["importSteam"], upscalers=any(g.get("upscaler") for g in p["games"]))))')"
+if [[ "$(python3 -c 'import json,sys; p=json.loads(sys.argv[1]); print(p["games"] == 0 and not p["importSteam"])' "$selection")" == True ]]; then
+  log "Lutris is installed; no library import or game modifications selected."
+  exit 0
+fi
+if [[ "$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["importSteam"])' "$selection")" == True ]]; then
+  /usr/bin/python3 "$SCRIPT_DIR/steam/sync-lutris-steam.py"
+elif [[ "$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["games"])' "$selection")" != 0 ]]; then
+  /usr/bin/python3 "$SCRIPT_DIR/steam/sync-lutris-steam.py" --initialize-only
+fi
+if [[ "$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["upscalers"])' "$selection")" == True ]] && ! is_command_available 7z; then
   require_omarchy
   omarchy pkg add 7zip
 fi

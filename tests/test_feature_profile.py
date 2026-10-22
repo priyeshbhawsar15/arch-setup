@@ -41,6 +41,13 @@ class FeaturePreferencesTest(unittest.TestCase):
         self.profile.write_text('{"disabledInstallers":["install-shibumi-shell.sh"]}')
         self.assertEqual(self.run_profile('enabled', 'install-per-monitor-workspaces.sh').returncode, 1)
 
+    def test_explicit_selection_cannot_omit_required_installers(self):
+        self.profile.write_text('{"enabledInstallers":["install-dotfiles.sh"]}')
+        result = self.run_profile('plan')
+        self.assertEqual(result.returncode, 2)
+        self.assertIn('required installer', result.stderr)
+        self.assertFalse((self.base / 'state').exists())
+
     def test_corrupt_preferences_do_not_get_overwritten(self):
         state = self.base / 'state/arch-setups/features.json'
         state.parent.mkdir(parents=True)

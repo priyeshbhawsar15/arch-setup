@@ -6,11 +6,12 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
+feature_lifecycle "$0" "$@"
 
 plugin_id="bobbynicholas.omaland"
-plugin_url="https://github.com/bobby-nicholas/omaland.git"
+plugin_url="https://github.com/priyeshbhawsar15/omaland.git"
 upstream_url="https://github.com/bobby-nicholas/omaland.git"
-plugin_commit="ec232b6aa2e31b2f089ad89b653cd706989865b9"
+plugin_commit="796f134b98f97363290f13a5708eaf1045e11325"
 plugin_dir="$HOME/.config/omarchy/plugins/$plugin_id"
 
 menu_file="$HOME/.config/omarchy/extensions/omarchy-menu.jsonc"
@@ -86,7 +87,7 @@ install_desktop_entry() {
     rm -- "$stage"
     return 0
   fi
-  if [[ -f "$desktop_file" ]]; then backup_paths omaland-desktop "$desktop_file" >/dev/null; fi
+  if [[ -f "$desktop_file" ]]; then backup_feature_paths omaland-desktop "$desktop_file" >/dev/null; fi
   mv -- "$stage" "$desktop_file"
   update-desktop-database "$(dirname -- "$desktop_file")" >/dev/null 2>&1 || true
 }

@@ -52,6 +52,14 @@ as_root() {
   fi
 }
 
+# Appearance is seeded once, then belongs to the user/Omaland. Never undo
+# GUI edits on a setup rerun; explicit repository updates can be merged manually.
+personal_file_is_user_owned() {
+  [[ "$1" == looknfeel.lua && -f "$config_dir/$1" ]] &&
+    ! cmp -s "$SCRIPT_DIR/hypr/$1" "$config_dir/$1" &&
+    ! cmp -s "/usr/share/omarchy/config/hypr/$1" "$config_dir/$1"
+}
+
 configuration_is_current() {
   local relative_path
 
@@ -59,6 +67,7 @@ configuration_is_current() {
     if [[ "$relative_path" == monitors.lua || "$relative_path" == scripts/monitor-mode-toggle.sh || "$relative_path" == scripts/window-span-dp6-dp4-toggle.sh ]]; then
       continue # Deployed and checked by the shared monitor installer below.
     fi
+    if personal_file_is_user_owned "$relative_path"; then continue; fi
     cmp -s "$SCRIPT_DIR/hypr/$relative_path" "$config_dir/$relative_path" || return 1
     if [[ "$relative_path" == scripts/* && ! -x "$config_dir/$relative_path" ]]; then return 1; fi
   done
@@ -73,11 +82,11 @@ configuration_is_current() {
 
 # Reject unknown entrypoint edits before replacing any personal modules.
 entrypoint_result="$(python3 "$SCRIPT_DIR/hypr/scripts/monitor-layout.py" \
-  --config "$SCRIPT_DIR/monitor-layout.json" migrate-entrypoint \
+  --config "${ARCH_SETUPS_MONITOR_LAYOUT:-$SCRIPT_DIR/monitor-layout.json}" migrate-entrypoint \
   --package /usr/share/omarchy/config/hypr/hyprland.lua)"
 
 monitor_result="$(python3 "$SCRIPT_DIR/hypr/scripts/monitor-layout.py" \
-  --config "$SCRIPT_DIR/monitor-layout.json" install --repo "$SCRIPT_DIR" --hypr-only)"
+  --config "${ARCH_SETUPS_MONITOR_LAYOUT:-$SCRIPT_DIR/monitor-layout.json}" install --repo "$SCRIPT_DIR" --hypr-only)"
 if configuration_is_current && [[ "$monitor_result" == *'"changed": false'* && "$entrypoint_result" == *'"changed": false'* ]]; then
   log "Hyprland Quattro configuration is already installed."
   exit 0
@@ -115,6 +124,10 @@ fi
 
 for relative_path in "${managed_files[@]}"; do
   [[ "$relative_path" == monitors.lua || "$relative_path" == scripts/monitor-mode-toggle.sh || "$relative_path" == scripts/window-span-dp6-dp4-toggle.sh ]] && continue
+  if personal_file_is_user_owned "$relative_path"; then
+    log "Preserving user/Omaland appearance settings: $config_dir/$relative_path"
+    continue
+  fi
   source_file="$SCRIPT_DIR/hypr/$relative_path"
   destination_file="$config_dir/$relative_path"
   destination_dir="$(dirname -- "$destination_file")"

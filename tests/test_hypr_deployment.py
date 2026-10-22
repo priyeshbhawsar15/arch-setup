@@ -12,7 +12,7 @@ from unittest.mock import patch
 REPO=Path(__file__).resolve().parents[1]
 spec=importlib.util.spec_from_file_location('deployment_monitor_layout',REPO/'hypr/scripts/monitor-layout.py')
 layout=importlib.util.module_from_spec(spec);spec.loader.exec_module(layout)
-PACKAGE=Path('/usr/share/omarchy/config/hypr/hyprland.lua').read_bytes()
+PACKAGE=b'-- isolated package-entrypoint fixture, never deployed to the real host\n'
 CUSTOM_BLOCK=b'''\ndo
   local path = os.getenv("HOME") .. "/.config/hypr/hyprmoncfg-monitors.lua"
   local file = io.open(path, "r")
@@ -43,6 +43,8 @@ class DeploymentTests(unittest.TestCase):
             path=self.bin/command;path.write_text('#!/bin/bash\n'+content+'\n');path.chmod(0o755)
         self.env=dict(os.environ,HOME=str(self.home),PATH=str(self.bin)+':'+os.environ['PATH'],XDG_STATE_HOME=str(self.home/'.local/state'))
         self.env.pop('HYPRLAND_INSTANCE_SIGNATURE',None)
+        self.state_patch=patch.dict(os.environ, {'XDG_STATE_HOME': str(self.home/'.local/state')})
+        self.state_patch.start(); self.addCleanup(self.state_patch.stop)
         (self.config/'hyprland.lua').write_bytes(PACKAGE)
         (self.sddm/'10-wayland.conf').write_bytes((REPO/'sddm/10-wayland.conf').read_bytes())
 

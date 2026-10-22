@@ -3,10 +3,11 @@
 set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
+feature_lifecycle "$0" "$@"
 
 plugin_id="priyesh.indicators"
-plugin_url="git@github.com:priyeshbhawsar15/omarchy-indicators.git"
-plugin_commit="PENDING_APPROVED_PUBLICATION"
+plugin_url="https://github.com/priyeshbhawsar15/omarchy-indicators.git"
+plugin_commit="f159ed5d870c7b402a4885ad1c72236620819e0f"
 plugin_dir="$HOME/.config/omarchy/plugins/$plugin_id"
 shell_config="$HOME/.config/omarchy/shell.json"
 layout_state="${XDG_STATE_HOME:-$HOME/.local/state}/arch-setups/indicators-layout.json"
@@ -31,7 +32,7 @@ disable_plugin() {
 case "${1:-}" in
   --disable) disable_plugin; exit 0 ;;
   --remove)
-    backup="$(backup_paths indicators-remove "$layout_state" "$shell_config" "$plugin_dir")"
+    backup="$(backup_feature_paths indicators-remove "$layout_state" "$shell_config" "$plugin_dir")"
     disable_plugin
     if [[ -e "$plugin_dir" ]]; then omarchy plugin remove "$plugin_id" --yes; fi
     log "Removed personal indicators. Backup: $backup"
@@ -59,7 +60,7 @@ if [[ "$checkout_current" == false && -e "$plugin_dir" && ! -d "$plugin_dir/.git
   # The historical copied clone has no revision identity. Preserve it in full
   # and let the staged helper install at the original path, with rollback.
   original="$plugin_dir"
-  legacy="$(backup_paths indicators-legacy "$plugin_dir")"
+  legacy="$(backup_feature_paths indicators-legacy "$plugin_dir")"
   temporary="$(mktemp -d "$(dirname -- "$plugin_dir")/.indicators-legacy.XXXXXX")"
   rmdir -- "$temporary"
   mv -- "$plugin_dir" "$temporary"

@@ -1,9 +1,10 @@
 {
   "monitors": {
-    "main": {"description": "Microstep MAG321UP OLED"},
-    "side_left": {"description": "Lenovo Group Limited LEN S22e-19 0x01010101"},
-    "side_right": {"description": "Lenovo Group Limited LEN S22e-19 0x59333830"}
+    "main": {"description": "Microstep MAG321UP OLED", "mode": "3840x2160@120", "position": "0x0", "scale": 1.5, "bitdepth": 10, "cm": "hdr", "sdrbrightness": 1.0, "sdrsaturation": 1.0, "workspaces": [1, 2]},
+    "side_left": {"description": "Lenovo Group Limited LEN S22e-19 0x01010101", "mode": "1920x1080@60", "position": "2560x0", "scale": 1, "transform": 1, "workspaces": [3, 4]},
+    "side_right": {"description": "Lenovo Group Limited LEN S22e-19 0x59333830", "mode": "1920x1080@60", "position": "3640x0", "scale": 1, "transform": 3, "workspaces": [5, 6]}
   },
+  "toolkitScale": 2,
   "windowSpan": ["side_left", "side_right"],
   "singleMonitorKeep": "main",
   "singleMonitorDisable": ["side_left", "side_right"],

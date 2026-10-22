@@ -4,11 +4,19 @@
 Arguments: SHELL_CONFIG STATE_FILE PLUGIN_ID ROLE ACTION.
 Roles: calendar, brightness, workspaces. Actions: enable, disable, check.
 """
-import copy, json, os, pathlib, shutil, sys, tempfile, time
+import copy, fcntl, json, os, pathlib, shutil, sys, tempfile, time
 path, state_path = map(pathlib.Path, sys.argv[1:3])
 plugin_id, role, action = sys.argv[3:]
 if not path.exists():
     raise SystemExit(1 if action in ('enable', 'check') else 0)
+# Serializes cooperating setup helpers; the final byte comparison also detects
+# intervening shell/GUI edits which do not participate in this lock.
+lock_root = pathlib.Path(os.environ.get('XDG_STATE_HOME') or str(pathlib.Path.home() / '.local/state')) / 'arch-setups'
+if action != 'check':
+    lock_root.mkdir(mode=0o700, parents=True, exist_ok=True)
+    configuration_lock = (lock_root / 'configuration.lock').open('a')
+    os.chmod(configuration_lock.name, 0o600)
+    fcntl.flock(configuration_lock, fcntl.LOCK_EX)
 original_bytes = path.read_bytes()
 data = json.loads(original_bytes)
 bar = data.get('bar', {})

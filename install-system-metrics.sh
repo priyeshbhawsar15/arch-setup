@@ -6,6 +6,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
+feature_lifecycle "$0" "$@"
 
 plugin_id="priyesh.system-metrics"
 plugin_url="https://github.com/priyeshbhawsar15/omarchy-system-metrics.git"
@@ -97,7 +98,7 @@ ensure_command git git
 ensure_command jq jq
 ensure_command python3 python
 
-python3 "$SCRIPT_DIR/hypr/scripts/monitor-layout.py" --config "$SCRIPT_DIR/monitor-layout.json" \
+python3 "$SCRIPT_DIR/hypr/scripts/monitor-layout.py" --config "${ARCH_SETUPS_MONITOR_LAYOUT:-$SCRIPT_DIR/monitor-layout.json}" \
   configure-widget .config/omarchy/system-metrics.json || fail "cannot configure the System Metrics display"
 
 checkout_changed=false

@@ -1,146 +1,61 @@
-# Personal gaming profile
+# Opt-in gaming profiles
 
-`../configure-gaming-profile.py` is the declarative restore step invoked by
-`install-lutris.sh` (already registered in `install-all.sh`). Generic Steam sync
-skips this profile's shortcut IDs, so it cannot turn direct Proton entries back
-into Steam launchers or overwrite their DLL overrides.
+This directory is a **catalog of launch templates**, not the desired game list. Installing Steam or Lutris does not imply installing these games, importing a library, changing account sessions, forcing 4K/HDR or replacing DLLs.
 
-## Restore / inspect
+## Selection and paths
 
-Close Lutris and all affected games before applying. The Steam installer also
-requires Steam closed before its separate VDF configuration step.
+The default `../../gaming/selection.json` selects nothing. Copy `../../profiles/gaming.example.json` to a local file, configure library roots and select only the games you want:
 
 ```bash
-# Read-only availability report: no downloads, writes, or game launches.
-/usr/bin/python3 steam/configure-gaming-profile.py
-
-# Restore launchers/settings only; no third-party DLL downloads.
-/usr/bin/python3 steam/configure-gaming-profile.py --apply
-
-# Full profile, including pinned experimental upscalers (install-lutris default).
-/usr/bin/python3 steam/configure-gaming-profile.py --apply --upscalers
-
-# Full machine entrypoint:
-./install-all.sh
+./install-all.sh --games /path/to/games.local.json --plan
+# Or, for a direct read-only game plan:
+ARCH_SETUPS_GAMING_PROFILE=/path/to/games.local.json \
+  /usr/bin/python3 steam/configure-gaming-profile.py
 ```
 
-Dependencies: Lutris, Arch system Python/PyYAML/Pillow, desktop-file-utils and
-7zip. `install-lutris.sh` ensures Lutris/7zip; the Lutris package supplies its
-Python dependencies. Steam/Gamescope and `steam-gamescope-hdr` are managed by
-`install-steam.sh` earlier in the entrypoint.
+The feature profile must also select Steam/Lutris if you want the entrypoint to install/configure them. No installer formats or mounts drives. `libraries` maps an arbitrary logical name to an absolute path (or `${HOME}/...`); each selected game uses a relative `path`. Changing username/mount location does not require modifying installer code or the catalog. Omitted/disabled games stay unmanaged; an absent game is not excluded from generic Steam import simply because its ID appears in the catalog.
 
-## Managed state
+Catalog IDs are each entry's `slug` in `games.json`. Existing numeric shortcut IDs are legacy matching hints, not library roots or the default Wine prefix identity. New prefixes default to `${HOME}/.local/share/wineprefixes/arch-setups/<slug>`; use `prefix` explicitly if an existing prefix/saves should be reused. Review this before migrating a game with existing local saves. A different Steam shortcut ID remains a separate import until deliberately associated; setup does not guess across accounts.
 
-- `games.json` records thirteen local games, direct `wine`/`linux` runners,
-  executable/working-directory paths, separate or reused Proton prefixes,
-  environment variables, Gamescope/HDR wrappers, titles and existing release
-  years. `${HOME}` expands for the installing user. External mount paths remain
-  explicit: edit this file if disks move. Recorded `games-links` symlinks are
-  restored only when their targets exist; conflicting local paths are preserved.
-  Missing executables are reported and skipped, never replaced with broken launchers.
-- Ten Lutris desktop entries (the remaining games other than Sims/HS2/KS) use
-  IDs resolved from the destination database, not this machine's numeric IDs.
-- Sims keeps `TS4_x64.exe` and gets no new desktop entry/artwork. HS2/KS retain
-  their short names, no artwork/extra metadata, separate GE-Proton prefixes,
-  `winhttp=n,b`, and 3840x2160 fullscreen in launch arguments and UTF-16-safe
-  `UserData/setup.xml` edits.
-- Existing official artwork is preserved. Missing artwork is fetched from the
-  recorded official Steam image URLs; outages are reported, not fatal. Only
-  title/year/artwork are managed, not descriptions, achievements or save data.
-- AoE II launchers are `pbtrooper15 — Age of Empires II` and
-  `The_Gremlin15 — Age of Empires II`. Their helper requires Steam to remember
-  both accounts locally. It asks before gracefully restarting Steam to switch,
-  waits for shutdown and backs up account-selection files privately. It never
-  stores passwords in this repository, never imports sessions and never
-  switches accounts as part of installing. Steam Guard may still be required.
-- An existing `qBittorrent.desktop` is renamed to `qBittorrent Web`; its browser,
-  URL and icon stay untouched. When absent, the recorded Omarchy webapp entry is
-  restored; a generic browser icon is used if its original icon is unavailable.
-- FC26/FC27 IDs are excluded from generic import, their Lutris rows retired and
-  their three known desktop entries archived. This installer **never deletes
-  game folders, prefixes, saves, or Steam shortcuts**. The original user-approved
-  deletion was a one-time operation, not an action to replay on every install.
+Per-game fields:
 
-## Upscalers and provenance
+- `enabled` (boolean, default true when listed); disabled entries need no library.
+- `library` and relative `path` (required for selected games).
+- `required` (default false): missing required executable blocks preflight; an absent optional game is deferred and final acceptance reports pending.
+- `prefix`: optional absolute Wine-prefix override; `wineVersion`: optional Lutris runner name. Install that Proton/GE-Proton runner separately. Doctor checks availability without choosing a fallback runner.
+- `desktop`: override the template's launcher preference. No personal AoE2-account or qBittorrent launchers are generated.
+- `hdr` (default false): requests the managed HDR Gamescope wrapper. Requires `resolution: [width, height]`; e.g. `[2560, 1440]`. No universal 4K/120Hz assumption.
+- `artwork` (default false): allows missing official artwork downloads from the template URLs.
+- `upscaler` (default `none`): explicit compatible template choice, currently `optiscaler-094` or `fsr4vk-043` where supported.
+- `allowModReplacement` (default false): separately authorizes adoption/replacement of foreign/modified mod files. Inspect the game's files first; a backup is not evidence that replacement is safe.
 
-Binaries are not committed. Explicit `--upscalers`/`install-lutris.sh` downloads
-these exact GitHub assets into `~/.cache/arch-setups/gaming`, verifies SHA256
-against `games.json`, then extracts without running upstream installers:
+Global `importSteam: true` opts into generic installed Steam games/shortcuts import; it does not select catalog games. Global `steamHdr: true` opts into broad Steam launch wrapping; it is independent of per-game HDR and requires Steam to be closed for VDF edits. Existing explicit Gamescope settings are user-owned and remain unchanged. The owned HDR helper uses per-game dimensions or the focused output for direct Steam launches.
 
-- OptiScaler v0.9.4, asset `Optiscaler_0.9.4-final.20260718._MM.7z`:
-  https://github.com/optiscaler/OptiScaler/releases/tag/v0.9.4
-- FSR4VK v0.4.3, asset `fsr4vk-v0.4.3.zip`:
-  https://github.com/dvj5411/fsr4vk/releases/tag/v0.4.3
-- FSR4VK's base dependency package, OptiScaler nightly-20261020, asset
-  `OptiScaler_v10.0.0-pre1_20261020.7z`:
-  https://github.com/optiscaler/OptiScaler-nightly/releases/tag/nightly-20261020
+## Halo capture and engine settings
 
-The INI templates are upstream configuration, not plugin source forks:
-`OptiScaler-0.9.4.ini` comes from the v0.9.4 archive; the FSR4VK template is
-from `dvj5411/OptiScaler` commit
-`613492a8909929dfd618b03df08e47b07055c0b0`.
-Upstream licensing/attribution: OptiScaler is GPL-3.0; FSR4VK's mixed licensing
-is documented in its repository and release `LICENSES` directory. Downloaded
-packages retain their upstream license files in the archive/cache.
+The incoming Halo profile is retained as an opt-in: selecting `halo-campaign-evolved` with `hdr: true` and `resolution: [3840, 2160]` requests its original 4K/HDR preset. Other resolutions work too. The Gamescope helper honors `HALO_GAMESCOPE_CAPTURE=1` for relative cursor capture (use `0` in its launch environment to disable); Halo uses XWayland inside Gamescope, without another host `confine_pointer` rule. Mouse recovery after wallpaper changes remains unverified.
 
-- Halo, Cyberpunk 2077, Ghost of Tsushima and Death Stranding 2: upstream
-  v0.9.4 FSR 4.1.1 INT8 workaround, native `dxgi` override.
-- RDR2: FSR4VK custom host and Vulkan INT8 provider, existing native overrides
-  preserved, Vulkan FSR inputs enabled. Keep Vulkan selected in-game; choose
-  FSR 3.X / FSR 4.1.1 VK INT8 in the overlay.
-- Defaults: Backspace overlay, explicit overlay enable, high-quality fonts off,
-  watermark/logging on. Existing `OptiScaler.ini` files are **not overwritten**:
-  tuning saved from the in-game menu remains user-owned. To reseed defaults,
-  close the game and move its INI aside, then rerun with `--upscalers`.
-- Halo uses `steam-gamescope-hdr` with `HALO_GAMESCOPE_CAPTURE=1` to force relative
-  capture, `PROTON_ENABLE_WAYLAND=0` for XWayland inside Gamescope, and HDR
-  (`PROTON_ENABLE_HDR`, `ENABLE_HDR_WSI`, `DXVK_HDR`). No extra Hyprland
-  confinement rule is used: it was removed while diagnosing mouse loss after
-  wallpaper changes. Recovery remains unverified; Alt+Tab switches away.
-  Existing Meteorite settings are backed up and set to 3840×2160,
-  borderless fullscreen and HDR output. Restart Halo to apply; verify HDR in-game.
-  If settings do not yet exist, launch once and rerun the profile. To undo, restore
-  the backed-up YAML/INI and previous profile settings before rerunning installers.
-- Other existing Gamescope/HDR wrappers remain enabled. If an overlay fails, test
-  without Gamescope; its menu visibility is not proof of FSR4 execution.
-- These are unsupported experiments on RDNA2. Halo was user-confirmed working;
-  installation of the other games is not a claim of runtime validation. Enable
-  an in-game upscaler and verify the FSR4-i8/provider indication rather than an
-  internal FSR3 fallback. Frame generation is not newly enabled by this setup.
-- Offline/single-player only where DLL injection is permitted. Do not use these
-  mods with anti-cheat-protected online play.
+An explicit Halo `resolution` also manages dimensions and borderless mode in the existing prefix's `drive_c/users/steamuser/AppData/Local/Meteorite/Saved/Config/Windows/GameUserSettings.ini`. Only `hdr: true` requests `bUseHDRDisplayOutput=True` and Proton HDR. Selecting Halo alone does not alter that INI or enable HDR. Launch once if the INI is absent, then rerun; malformed/ambiguous sections and symlinked files are refused. Encoding, line endings and unrelated settings are preserved. Restart the game and verify actual HDR/input behavior on hardware. To undo engine preferences already applied, restore the private original backup; removing HDR from the selection removes still-owned launcher/env settings, not arbitrary engine preferences.
 
-## Prerequisites this repo cannot recreate
-
-Supply legally obtained game installations and their expected mounts,
-Steam-owned Proton Experimental/Proton 10, and GE-Proton11-7-x86_64 separately.
-The installer does not copy commercial game files, distribution-specific game
-patches, Steam tokens, prefixes, saves, or NVIDIA model DLLs into Git.
-
-F1's existing custom `~/.local/bin/launch-f1-25-4k` and its shader-fix/private
-runtime are external prerequisites, not something this conversation added or
-an OptiScaler target. The profile restores its Lutris entry/artwork only when
-that launcher exists. The manual [F1 25 recovery runbook](../../docs/gaming/f1-25-recovery.md)
-records backup/restore, the final launch chain, CPU/graphics checks, shader-source
-pins and rebuild guidance, troubleshooting and known recovery limitations. This
-profile does not apply that runbook or vendor private runtime binaries.
-
-## Backups, updates and checks
-
-Changed files/database rows are backed up under
-`~/.local/state/arch-setups/backups/gaming-<timestamp>/`; existing modes and
-unmanaged YAML/environment settings are preserved. Unchanged reruns do not
-rewrite files. Backups of an already-modded installation reflect that state,
-not pristine game files. Keep the original one-time test backups under
-`~/.local/share/lutris-backups/` and the existing `restore-*-upscaler` helpers
-if you need to undo the original manual installations. No installer is run on
-the live machine merely by editing this repository.
-
-To update, explicitly change the version, asset URL and verified SHA256
-together, review upstream compatibility, and test offline before changing the
-profile. Never substitute a `latest` URL or disable checksum verification.
+## Apply and recovery
 
 ```bash
-/usr/bin/python3 -m unittest discover -s steam -p 'test_*.py'
-bash -n install-lutris.sh
+ARCH_SETUPS_GAMING_PROFILE=/path/to/games.local.json ./install-lutris.sh
+# Manual lower-level apply (Lutris database must already be initialized):
+/usr/bin/python3 steam/configure-gaming-profile.py --profile /path/to/games.local.json --apply
+# Add --upscalers only to apply the mods already explicitly selected in that file.
 ```
+
+Close Lutris and affected games first. The installer uses Arch's `/usr/bin/python3` for system Lutris/GI/YAML modules. Actual Lutris settings determine the database and config directory: both legacy `.config/lutris` and newer `.local/share/lutris` layouts, XDG locations and configured database overrides are supported. A positively selected misplaced historical YAML is archived only after a correct configuration is written. Existing unrelated YAML settings are merged/preserved; unknown configpath traversal is refused. Private ownership snapshots in the selected state home's `arch-setups/games/` track the managed fields. Opting out of HDR removes still-owned launcher/environment values rather than leaving them stuck through merging; intervening user changes to removed fields are preserved.
+
+No games, saved games, Steam login tokens, account credentials or private runtime binaries are stored here. No game/account is retired merely by installing Lutris. Existing personal launchers previously created are left alone rather than removed without explicit ownership/adoption.
+
+Modified files and database originals are backed up under `~/.local/state/arch-setups/backups/gaming-*` (using the selected state home for normal deployment). Files are atomically replaced, but the database, launchers and game directory are **not one global transaction**. Review the backup if a multi-file operation fails. Upscaler ownership hashes are private under `~/.local/state/arch-setups/mods/`; preserve those when rebuilding if you want managed-update recognition. Upscaler tuning INI files remain user-owned after initial creation; explicitly selected Halo engine-display fields are managed while configured. Omitting a game or choosing `upscaler: "none"` does not automatically uninstall previously deployed DLLs or undo engine settings; review and restore the recorded backups deliberately. Never delete foreign mods, prefixes or saves as an implicit side effect of deselection.
+
+## Third-party assets and boundaries
+
+`games.json` records exact versioned URLs and SHA256 values for the OptiScaler/FSR4VK assets; the checked-in INIs are templates. No mutable latest URL is used. The checks establish artifact identity, not compatibility, legitimacy of a game installation, anti-cheat safety or online-game support. These are explicit offline/single-player experiments. Foreign mods are refused by default, and existing user tuning is not blindly replaced. A direct manual `--apply` without `--upscalers` avoids DLL downloads.
+
+The F1 template references an explicitly supplied external launcher directory; it does not fabricate the private optimized runtime. The [F1 recovery runbook](../../docs/gaming/f1-25-recovery.md) remains manual reference material. Shared LinUwUx support is independent: see [DenuvOwO runtime](../../gaming/denuvowo/README.md).
+
+Tests include empty selection/no side effects, library paths with spaces, unavailable-game import ownership, explicit HDR/mod choices, foreign-mod refusal, dynamic desktop IDs, checksum failure, idempotency, and loading generated configuration through Lutris in both directory layouts. Run `/usr/bin/python3 tests/run.py` from the repository root. Launching real games and validating HDR/Proton/upscalers on hardware remain user acceptance, not unit-test claims.

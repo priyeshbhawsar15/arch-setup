@@ -1,33 +1,27 @@
 #!/bin/bash
-
+# Managed by arch-setups: explicit HDR launcher, dimensions come from the profile
+# or the focused output, never a hardcoded 4K/120Hz hardware assumption.
 set -euo pipefail
-
-if ! command -v gamescope >/dev/null 2>&1; then
-  printf 'gamescope-hdr: gamescope is not installed\n' >&2
-  exit 127
+command -v gamescope >/dev/null 2>&1 || { printf 'gamescope-hdr: gamescope is not installed\n' >&2; exit 127; }
+width="${ARCH_SETUPS_GAME_WIDTH:-}"
+height="${ARCH_SETUPS_GAME_HEIGHT:-}"
+if [[ -z "$width" && -z "$height" ]] && command -v hyprctl >/dev/null && command -v jq >/dev/null; then
+  dimensions="$(hyprctl -j monitors | jq -r '((map(select(.focused)) + .)[0]) | if ((.transform // 0) % 2) == 1 then "\(.height) \(.width)" else "\(.width) \(.height)" end')"
+  read -r width height <<<"$dimensions"
 fi
-
-# ENABLE_HDR_WSI covers Vulkan/Proton HDR signaling. DXVK_HDR keeps HDR enabled
-# for older DXVK titles that still use the legacy switch.
-export ENABLE_HDR_WSI=1
-export DXVK_HDR=1
-
-# Opt-in for Halo: XWayland game input plus Gamescope relative capture.
-# Do not combine with host confine_pointer: it may conflict with relative locks.
+[[ "$width" =~ ^[0-9]+$ && "$height" =~ ^[0-9]+$ ]] || {
+  printf 'gamescope-hdr: set ARCH_SETUPS_GAME_WIDTH/HEIGHT or launch on an active Hyprland output\n' >&2; exit 1;
+}
+((${#width} <= 5 && ${#height} <= 5)) || exit 1
+width=$((10#$width)); height=$((10#$height))
+((width >= 320 && width <= 16384 && height >= 320 && height <= 16384)) || exit 1
+export ENABLE_HDR_WSI=1 DXVK_HDR=1
+# Halo opts into relative capture; do not add host-side pointer confinement.
 capture_args=()
 if [[ "${HALO_GAMESCOPE_CAPTURE:-0}" == 1 ]]; then
   capture_args=(--force-grab-cursor)
 fi
-
-# Specify both the game-visible display and output; otherwise nested
-# Gamescope defaults can expose only 1280x720, regardless of monitor size.
-exec gamescope "${capture_args[@]}" \
-  --nested-width 3840 \
-  --nested-height 2160 \
-  --output-width 3840 \
-  --output-height 2160 \
-  --force-windows-fullscreen \
-  --fullscreen \
-  --hdr-enabled \
-  --hdr-sdr-content-nits 203 \
-  -- "$@"
+exec gamescope "${capture_args[@]}" --nested-width "$width" --nested-height "$height" \
+  --output-width "$width" --output-height "$height" \
+  --force-windows-fullscreen --fullscreen --hdr-enabled \
+  --hdr-sdr-content-nits "${ARCH_SETUPS_HDR_SDR_NITS:-203}" -- "$@"

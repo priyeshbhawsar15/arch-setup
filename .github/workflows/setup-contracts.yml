@@ -1,0 +1,26 @@
+name: Setup contracts
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  clean-checkout:
+    runs-on: ubuntu-latest
+    container: archlinux:base
+    steps:
+      - name: Install test dependencies
+        run: pacman -Syu --noconfirm --needed git python python-yaml python-pillow lutris nodejs jq lua shellcheck stow
+      - uses: actions/checkout@v4
+      - name: Run isolated core and system-library tests as an unprivileged user
+        run: |
+          useradd --create-home setup-test
+          chown -R setup-test:setup-test "$GITHUB_WORKSPACE"
+          runuser -u setup-test -- env PYTHONDONTWRITEBYTECODE=1 python3 tests/run.py --require-system-tests
+      - name: Shell syntax and error-level lint
+        run: |
+          find . -name '*.sh' -not -path './.git/*' -print0 | xargs -0 -n1 bash -n
+          shellcheck --severity=error ./*.sh hypr/scripts/*.sh steam/gamescope-hdr github/gh t3/codex
+      - name: Check public pinned plugin capability contracts
+        run: python3 config/check-source-contracts.py
+# Private Planner-Executor integration is intentionally not silently skipped as
+# release evidence. Run tests/run.py --require-integration --integration-source
+# with a clean authorized checkout at config/features.json's exact pin.

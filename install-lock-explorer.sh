@@ -6,6 +6,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
+feature_lifecycle "$0" "$@"
 
 plugin_id="io.github.sirjul1337.lock-explorer"
 plugin_url="https://github.com/priyeshbhawsar15/omarchy-lock-explorer.git"
@@ -155,18 +156,19 @@ managed_config_is_current() {
       and (.phasedPower.sideTimeoutMs | integer_between(1000; 3600000))
       and (.phasedPower.mainTint | integer_between(0; 100))
       and (.phasedPower.sideTint | integer_between(0; 100))
-      and .wallpaperSpanGroups == [[$policy.wallpaperSpan[] | $roles[.]]])' "$shell_config" >/dev/null
+      and .wallpaperSpanGroups == (if ($policy.wallpaperSpan | length) > 0 then [[$policy.wallpaperSpan[] | $roles[.]]] else [] end))' "$shell_config" >/dev/null
 }
 
 configure_plugin() {
   managed_config_is_current && return 0
-  cp -a -- "$shell_config" "$shell_config.bak-lock-power-$(date +%Y%m%d%H%M%S)"
-  SHELL_CONFIG="$shell_config" PLUGIN_ID="$plugin_id" MONITOR_ROLES="$monitor_roles" MONITOR_POLICY="$monitor_policy" python3 - <<'PY'
+  MANAGED_CONFIG_HELPER="$SCRIPT_DIR/config/managed-config.py" SHELL_CONFIG="$shell_config" PLUGIN_ID="$plugin_id" MONITOR_ROLES="$monitor_roles" MONITOR_POLICY="$monitor_policy" python3 - <<'PY'
+import importlib.util
 import json
 import os
 from pathlib import Path
 path = Path(os.environ['SHELL_CONFIG'])
-config = json.loads(path.read_text())
+original = path.read_bytes()
+config = json.loads(original)
 entries = config.setdefault('plugins', [])
 entry = next((e for e in entries if e.get('id') == os.environ['PLUGIN_ID']), None)
 if entry is None:
@@ -184,8 +186,14 @@ power.setdefault('mainTint', 100)
 power.setdefault('sideTint', 90)
 for key in ('offMs', 'dimMs', 'overlayOpacity'):
     power.pop(key, None)
-entry['wallpaperSpanGroups'] = [[roles[r] for r in policy['wallpaperSpan']]]
-path.write_text(json.dumps(config, indent=2) + '\n')
+entry['wallpaperSpanGroups'] = [[roles[r] for r in policy['wallpaperSpan']]] if policy['wallpaperSpan'] else []
+for key, low, high in [('mainTimeoutMs', 1000, 3600000), ('sideTimeoutMs', 1000, 3600000), ('mainTint', 0, 100), ('sideTint', 0, 100)]:
+    if type(power[key]) is not int or not low <= power[key] <= high:
+        raise ValueError('Invalid lock timeout/tint setting; preserving original configuration')
+spec = importlib.util.spec_from_file_location('lock_managed_config', os.environ['MANAGED_CONFIG_HELPER'])
+helper = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(helper)
+helper.replace_atomic(path, json.dumps(config, indent=2) + '\n', original)
 PY
   managed_config_is_current || fail "invalid monitor timeout/tint settings; use seconds 1–3600 and tint 0–100% in Lock Screen Explorer"
 }
@@ -224,16 +232,8 @@ disable_plugin() {
 }
 
 backup_feature_data() {
-  local backup_dir path relative_path
-  backup_dir="$HOME/.local/state/arch-setups/backups/lock-explorer-remove-$(date +%Y%m%d%H%M%S)"
-  mkdir -p -- "$backup_dir"
-  for path in "$HOME/.config/lock-explorer" "$HOME/.local/state/lock-explorer" "${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/lock-explorer-power"; do
-    [[ -e "$path" || -L "$path" ]] || continue
-    relative_path="${path#$HOME/}"
-    mkdir -p -- "$backup_dir/$(dirname -- "$relative_path")"
-    cp -a -- "$path" "$backup_dir/$relative_path"
-  done
-  printf '%s\n' "$backup_dir"
+  backup_feature_paths lock-explorer-remove "$HOME/.config/lock-explorer" \
+    "$HOME/.local/state/lock-explorer" "${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/lock-explorer-power"
 }
 
 remove_plugin() {
@@ -257,9 +257,9 @@ ensure_command jq jq
 ensure_command python3 python
 ensure_command ddcutil ddcutil
 
-monitor_roles="$(python3 "$SCRIPT_DIR/hypr/scripts/monitor-layout.py" --config "$SCRIPT_DIR/monitor-layout.json" resolve)" \
+monitor_roles="$(python3 "$SCRIPT_DIR/hypr/scripts/monitor-layout.py" --config "${ARCH_SETUPS_MONITOR_LAYOUT:-$SCRIPT_DIR/monitor-layout.json}" resolve)" \
   || fail "cannot resolve configured monitor identities"
-monitor_policy="$(cat "$SCRIPT_DIR/monitor-layout.json")"
+monitor_policy="$(python3 -c 'import pathlib,sys; print(pathlib.Path(sys.argv[1]).read_text())' "${ARCH_SETUPS_MONITOR_LAYOUT:-$SCRIPT_DIR/monitor-layout.json}")"
 jq -e --argjson roles "$monitor_roles" '
   [.lockMain, .lockSides[], .wallpaperSpan[]] | all(.[]; $roles[.] != null)' \
   <<<"$monitor_policy" >/dev/null || fail "connect the configured lock and wallpaper displays before installing"

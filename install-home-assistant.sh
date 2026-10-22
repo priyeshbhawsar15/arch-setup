@@ -3,6 +3,7 @@
 set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
+feature_lifecycle "$0" "$@"
 require_omarchy
 plugin_id="priyesh.home-assistant"
 plugin_url="https://github.com/priyeshbhawsar15/omarchy-home-assistant.git"
@@ -69,6 +70,9 @@ else
   changed=true
 fi
 omarchy plugin validate "$plugin_dir"
+# Seed portable blanks before the backend can apply its personal defaults.
+python3 "$SCRIPT_DIR/config/setup-inputs.py" widget home-assistant
+if [[ -f "$HOME/.config/omarchy/hass/token" ]]; then chmod 600 "$HOME/.config/omarchy/hass/token"; fi
 if runtime_current && [[ -f "$config" ]] && enabled && [[ "$changed" == false ]]; then
   log "Home Assistant widget is already installed."
   exit 0
@@ -78,6 +82,7 @@ if ! runtime_current; then
   "$venv/bin/pip" install --disable-pip-version-check 'websocket-client==1.8.0'
 fi
 "$venv/bin/python" "$plugin_dir/backend.py" seed
+python3 "$SCRIPT_DIR/config/setup-inputs.py" widget home-assistant
 omarchy-shell shell rescanPlugins >/dev/null
 for ((attempt=0; attempt<40; attempt++)); do
   if omarchy plugin list --json | jq -e --arg id "$plugin_id" 'any(.[]; .id == $id)' >/dev/null; then break; fi

@@ -1,26 +1,8 @@
 -- Display selectors are rendered from monitor-layout.json by the installers.
 -- Quattro monitor layout. See https://wiki.hypr.land/Configuring/Basics/Monitors/
 
-hl.env("GDK_SCALE", "2")
-
--- Safe fallback for displays not explicitly configured below.
-hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "auto" })
-
--- Main 4K HDR monitor.
-hl.monitor({
-	output = "@monitor:main@",
-	mode = "3840x2160@120",
-	position = "0x0",
-	scale = 1.5,
-	bitdepth = 10,
-	cm = "hdr",
-	sdrbrightness = 1.0,
-	sdrsaturation = 1.0,
-})
-
--- Portrait side monitors.
-hl.monitor({ output = "@monitor:side_left@", mode = "1920x1080@60", position = "2560x0", scale = 1, transform = 1 })
-hl.monitor({ output = "@monitor:side_right@", mode = "1920x1080@60", position = "3640x0", scale = 1, transform = 3 })
+-- Modes, positioning, scale and HDR belong to the selected host policy.
+-- @monitor-rules@
 
 -- Per-monitor Workspaces owns named workspaces while its managed toggle is
 -- present. Keep the numeric assignment rules as the stock fallback so disabling
@@ -34,12 +16,7 @@ if per_monitor_workspace_state then
 end
 
 if not per_monitor_workspaces_enabled then
-	hl.workspace_rule({ workspace = "1", monitor = "@monitor:main@", default = true, persistent = true })
-	hl.workspace_rule({ workspace = "2", monitor = "@monitor:main@", persistent = true })
-	hl.workspace_rule({ workspace = "3", monitor = "@monitor:side_left@", default = true, persistent = true })
-	hl.workspace_rule({ workspace = "4", monitor = "@monitor:side_left@", persistent = true })
-	hl.workspace_rule({ workspace = "5", monitor = "@monitor:side_right@", default = true, persistent = true })
-	hl.workspace_rule({ workspace = "6", monitor = "@monitor:side_right@", persistent = true })
+-- @workspace-rules@
 end
 
 -- A lexical loader keeps the generated file isolated from Hyprland's global

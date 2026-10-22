@@ -55,7 +55,7 @@ esac
                                         env=self.env, capture_output=True, text=True, timeout=5)
                 self.assertEqual(result.returncode, 7, result.stderr)
                 self.assertEqual(json.loads(result.stdout), ["argument with spaces", "--json"])
-                self.assertEqual((self.home / "calls").read_text().strip(), "1")
+                self.assertFalse((self.home / "calls").exists(), 'runtime wrappers must not install or update tools')
 
     def test_self_resolution_is_rejected_including_symlink_alias(self):
         for tool in ("gh", "codex"):
@@ -69,7 +69,7 @@ esac
                                         capture_output=True, text=True, timeout=5)
                 self.assertNotEqual(result.returncode, 0)
                 self.assertEqual(result.stdout, "")
-                self.assertEqual((self.home / "calls").read_text().strip(), "1")
+                self.assertFalse((self.home / "calls").exists())
                 self.assertIn("executable", result.stderr)
 
     def test_known_mise_x_wrappers_are_upgraded_with_a_backup(self):

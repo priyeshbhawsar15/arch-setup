@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "libraries": {
+    "primary": "/mnt/games"
+  },
+  "games": {
+    "cyberpunk-2077": {
+      "library": "primary",
+      "path": "Cyberpunk 2077",
+      "required": false,
+      "hdr": false,
+      "upscaler": "none"
+    }
+  },
+  "steamHdr": false
+}
