@@ -237,7 +237,7 @@
           "prefix_command": "steam-gamescope-hdr"
         },
         "wine": {
-          "version": "Proton - Experimental"
+          "version": "GE-Proton11-7-x86_64"
         }
       },
       "artwork": {
