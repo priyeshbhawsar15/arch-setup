@@ -11,7 +11,7 @@ feature_lifecycle "$0" "$@"
 plugin_id="bobbynicholas.omaland"
 plugin_url="https://github.com/priyeshbhawsar15/omaland.git"
 upstream_url="https://github.com/bobby-nicholas/omaland.git"
-plugin_commit="796f134b98f97363290f13a5708eaf1045e11325"
+plugin_commit="3376407e41ee10c69191bbbdf0e9f27cef661f87"
 plugin_dir="$HOME/.config/omarchy/plugins/$plugin_id"
 
 menu_file="$HOME/.config/omarchy/extensions/omarchy-menu.jsonc"

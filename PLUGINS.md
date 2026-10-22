@@ -258,7 +258,8 @@ Requires Hyprland Lua DPMS and Quickshell; no new package or shortcut. The exist
 - **Type:** Customized public community fork; upstream license/attribution retained.
 - **Original upstream URL:** `https://github.com/bobby-nicholas/omaland.git`
 - **Installation source:** `https://github.com/priyeshbhawsar15/omaland.git`
-- **Pinned commit:** `796f134b98f97363290f13a5708eaf1045e11325`
+- **Pinned commit:** `3376407e41ee10c69191bbbdf0e9f27cef661f87` (merges upstream `main` at `48d1c64acd78cd3a2862ccaad17c8045be3dda38` into the personal-module fork; source tests pass).
+- **Upstream maintenance:** Includes upstream shell-style refresh after appearance edits and capability-safe plugin source-path resolution. Remains public by user choice. No live desktop installation was performed during this maintenance.
 - **Modifications:** Declares and implements the personal-module contract for `hypr/looknfeel.lua`, preserving personal opacity rules rather than modifying the package entrypoint. The Hyprland installer now preserves user/Omaland appearance edits. Source tests pass with `node test/run.js`; setup CI checks the exact published manifest contract.
 
 ### Behavior and controls
