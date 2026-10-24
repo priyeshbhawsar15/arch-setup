@@ -4,7 +4,7 @@
   "install-indicators.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-indicators.git", "pin": "f159ed5d870c7b402a4885ad1c72236620819e0f"},
   "install-per-monitor-workspaces.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-per-monitor-workspaces.git", "pin": "0292ebec608cd7d3907b8f9f9427c252b242edf2"},
   "install-hyprmoncfg.sh": {"source": "https://github.com/crmne/omarchy-hyprmoncfg.git", "pin": "cf05a04a50339510cd1f9d547fb5f80556ae6599"},
-  "install-lock-explorer.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-lock-explorer.git", "pin": "b1b010a9113185b215b652c141c4b30168a2836f"},
+  "install-lock-explorer.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-lock-explorer.git", "pin": "77e44c685bde40a88845b364c5794b93747ee9ab"},
   "install-omaland.sh": {"source": "https://github.com/priyeshbhawsar15/omaland.git", "pin": "3376407e41ee10c69191bbbdf0e9f27cef661f87"},
   "install-calendar.sh": {"source": "https://github.com/tmn73/omarchy-calendar.git", "pin": "08f5c01fb3b40322787ebfa9805429baa19beb5f"},
   "install-omniroute-quota.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-omniroute-quota.git", "pin": "b2e3be74e29d9d94e97be9db3d0242641d5b2348"},
