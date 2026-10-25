@@ -328,7 +328,7 @@ def install(config, config_path, repo, hypr_only=False):
                 if plugin.get('id') == 'io.github.sirjul1337.lock-explorer' and main and sides is not None and span is not None:
                     power = plugin.get('phasedPower')
                     if power:
-                        power.update(main=main[0], sides=sides, ddcPowerOffMonitors=sides)
+                        power.update(main=main[0], sides=sides, ddcPowerOffMonitors=[])
                     plugin['wallpaperSpanGroups'] = [span] if span else []
             if json.dumps(data) != original:
                 save(path, (json.dumps(data, indent=2) + '\n').encode())

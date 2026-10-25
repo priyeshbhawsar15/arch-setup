@@ -184,7 +184,7 @@ class MonitorPolicyTest(unittest.TestCase):
             shell = dict(plugins=[dict(id='unrelated', secret='keep'),
                          dict(id='hancore.shibumi.state', shibumi=dict(presentation=dict(other='keep'))),
                          dict(id='io.github.sirjul1337.lock-explorer',
-                              phasedPower=dict(main='old', sides=['old'], sideTint=42), video='keep')])
+                              phasedPower=dict(main='old', sides=['old'], sideTint=42, ddcPowerOffMonitors=['old']), video='keep')])
             (omarchy / 'shell.json').write_text(json.dumps(shell))
             outputs = monitors()
             outputs[0]['name'] = 'HDMI-A-1'
@@ -207,6 +207,7 @@ class MonitorPolicyTest(unittest.TestCase):
             self.assertEqual(plugins[0], shell['plugins'][0])
             self.assertEqual(plugins[2]['phasedPower']['sideTint'], 42)
             self.assertEqual(plugins[2]['phasedPower']['main'], 'HDMI-A-1')
+            self.assertEqual(plugins[2]['phasedPower']['ddcPowerOffMonitors'], [])
             self.assertEqual(plugins[2]['video'], 'keep')
             self.assertEqual((core / 'GroupSlot.qml').read_text(), 'old')
             self.assertEqual((core / 'BarSection.qml').read_text(), 'old')

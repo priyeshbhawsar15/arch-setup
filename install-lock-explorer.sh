@@ -11,7 +11,7 @@ feature_lifecycle "$0" "$@"
 plugin_id="io.github.sirjul1337.lock-explorer"
 plugin_url="https://github.com/priyeshbhawsar15/omarchy-lock-explorer.git"
 plugin_revision="v1.7.7 with monitor spanning and power controls"
-plugin_commit="77e44c685bde40a88845b364c5794b93747ee9ab"
+plugin_commit="76960a2caac563501d7d4744ccfc862eef69cff1"
 plugin_dir="$HOME/.config/omarchy/plugins/$plugin_id"
 shell_config="$HOME/.config/omarchy/shell.json"
 menu_file="$HOME/.config/omarchy/extensions/omarchy-menu.jsonc"
@@ -151,7 +151,7 @@ managed_config_is_current() {
     any(.plugins[]; .id == $id
       and .phasedPower.main == $roles[$policy.lockMain]
       and .phasedPower.sides == [$policy.lockSides[] | $roles[.]]
-      and .phasedPower.ddcPowerOffMonitors == [$policy.lockSides[] | $roles[.]]
+      and .phasedPower.ddcPowerOffMonitors == []
       and (.phasedPower.mainTimeoutMs | integer_between(1000; 3600000))
       and (.phasedPower.sideTimeoutMs | integer_between(1000; 3600000))
       and (.phasedPower.mainTint | integer_between(0; 100))
@@ -179,7 +179,7 @@ roles = json.loads(os.environ['MONITOR_ROLES'])
 policy = json.loads(os.environ['MONITOR_POLICY'])
 power['main'] = roles[policy['lockMain']]
 power['sides'] = [roles[r] for r in policy['lockSides']]
-power['ddcPowerOffMonitors'] = power['sides']
+power['ddcPowerOffMonitors'] = []  # These displays power off through DPMS; DDC is unreliable.
 power.setdefault('mainTimeoutMs', power.get('offMs', 60000))
 power.setdefault('sideTimeoutMs', power.get('dimMs', 300000))
 power.setdefault('mainTint', 100)
