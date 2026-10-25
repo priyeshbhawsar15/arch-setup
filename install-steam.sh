@@ -5,9 +5,14 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
 
-# Apply only the desktop UI fix safely while Steam/games are running.
-if [[ "${1:-}" == "--ui-scale-only" ]]; then
+# Both historical flags now REMOVE the retired override; neither can reapply 80%.
+if [[ "${1:-}" == "--ui-scale-only" || "${1:-}" == "--ui-scale-reset" ]]; then
   python3 "$SCRIPT_DIR/steam/configure-ui-scale.py"
+  exit 0
+fi
+
+if [[ "${1:-}" == "--background-startup-only" ]]; then
+  python3 "$SCRIPT_DIR/steam/configure-autostart.py"
   exit 0
 fi
 
@@ -20,11 +25,16 @@ else
   omarchy pkg add steam
 fi
 
+# Remove the retired launcher AND Steam-persisted 80% values before startup setup.
+python3 "$SCRIPT_DIR/steam/configure-ui-scale.py"
+# Keep login startup silent without altering interactive menu/Big Picture launchers.
+python3 "$SCRIPT_DIR/steam/configure-autostart.py"
+
 selection="$(python3 "$SCRIPT_DIR/config/setup-inputs.py" gaming)"
 hdr_selected="$(python3 -c 'import json,sys; p=json.loads(sys.argv[1]); print(p["steamHdr"] or any(g["config"].get("system",{}).get("prefix_command")=="steam-gamescope-hdr" for g in p["games"]))' "$selection")"
 if [[ "$hdr_selected" != True ]]; then
   if [[ "$steam_installed" == true ]]; then log "Steam is already installed."; else log "Steam installed."; fi
-  log "Game launch options, HDR and client scaling are unmanaged (opt-in)."
+  log "Game launch options and HDR are unmanaged (opt-in); retired UI scaling is removed."
   exit 0
 fi
 if ! is_command_available gamescope || ! pacman -Q gamescope >/dev/null 2>&1; then

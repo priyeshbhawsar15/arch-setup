@@ -81,7 +81,7 @@ Configure `libraries` and `games` in your own selection; no particular username,
 }
 ```
 
-Omitted/disabled games remain unmanaged. An empty selection creates no personal launchers, game links, retirements or DLL modifications. `importSteam` separately opts into generic library import; `steamHdr` opts into broad Steam launch wrapping. Per-game HDR needs an explicit `resolution`; artwork and upscalers require explicit per-game selection. Existing foreign mods require a separate adoption decision. HDR opt-out removes still-owned launch settings; omitting a game stops management rather than automatically uninstalling its prior mods, prefixes or saved games. See [gaming configuration](steam/profile/README.md).
+Omitted/disabled games remain unmanaged. Without a selected/remembered Steam-first export, an empty selection creates no personal launchers, game links, retirements or DLL modifications. Optional `exportSteam: true` (or `./install-lutris.sh --export-steam`) makes Steam the frontend while retaining Lutris configurations as the backend; see [Steam-first library](steam/STEAM-LIBRARY.md). Do not combine it with the reverse `importSteam` workflow. `importSteam` separately opts into generic library import; `steamHdr` opts into broad Steam launch wrapping. Per-game HDR needs an explicit `resolution`; artwork and upscalers require explicit per-game selection. Existing foreign mods require a separate adoption decision. HDR opt-out removes still-owned launch settings; omitting a game stops management rather than automatically uninstalling its prior mods, prefixes or saved games. See [gaming configuration](steam/profile/README.md).
 
 ## Dotfiles and authorization
 

@@ -42,6 +42,14 @@ class SelectionTests(unittest.TestCase):
             installer.apply(resolved, self.home, True)
         self.assertEqual(list(self.home.iterdir()), [])
 
+    def test_steam_export_is_opt_in_and_cannot_reverse_sync(self):
+        self.assertFalse(self.resolve({'schemaVersion': 1})['exportSteam'])
+        self.assertTrue(self.resolve({'schemaVersion': 1, 'exportSteam': True})['exportSteam'])
+        with self.assertRaises(ValueError):
+            self.resolve({'schemaVersion': 1, 'exportSteam': True, 'importSteam': True})
+        with self.assertRaises(ValueError):
+            self.resolve({'schemaVersion': 1, 'exportSteam': 'yes'})
+
     def test_library_root_and_prefix_do_not_depend_on_username_or_steam_ids(self):
         game = self.resolve(self.profile())['games'][0]
         self.assertEqual(game['config']['game']['exe'], str(self.home / 'library/Cyberpunk 2077/bin/x64/Cyberpunk2077.exe'))

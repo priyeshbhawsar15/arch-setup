@@ -40,7 +40,7 @@ def main():
         os.environ['T3_PLANNER_EXECUTOR_TEST_SOURCE'] = str(source.resolve())
     collected = []
     excluded = 0
-    for directory in ('tests', 'steam', 'github', 't3', 'gaming/denuvowo'):
+    for directory in ('tests', 'steam', 'github', 't3', 'gaming', 'gaming/denuvowo'):
         suite = unittest.TestLoader().discover(str(ROOT / directory), pattern='test_*.py')
         for case in cases(suite):
             if case.__class__.__module__ == 'test_t3_planner_executor' and not include:

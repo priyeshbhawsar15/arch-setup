@@ -29,6 +29,8 @@ Per-game fields:
 - `upscaler` (default `none`): explicit compatible template choice, currently `optiscaler-094` or `fsr4vk-043` where supported.
 - `allowModReplacement` (default false): separately authorizes adoption/replacement of foreign/modified mod files. Inspect the game's files first; a backup is not evidence that replacement is safe.
 
+Global `exportSteam: true` selects the opposite, Steam-first library/Omarchy launcher workflow; see [Steam-first library](../STEAM-LIBRARY.md). It retains Lutris configurations as the non-Steam launch backend and requires both clients closed. The explicit `./install-lutris.sh --export-steam` option additionally enables artwork enrichment and remembers the preference locally. Do not combine it with `importSteam`; the installer rejects reverse-sync loops. Neither is selected by the empty default.
+
 Global `importSteam: true` opts into generic installed Steam games/shortcuts import; it does not select catalog games. Global `steamHdr: true` opts into broad Steam launch wrapping; it is independent of per-game HDR and requires Steam to be closed for VDF edits. Existing explicit Gamescope settings are user-owned and remain unchanged. The owned HDR helper uses per-game dimensions or the focused output for direct Steam launches.
 
 ## Halo capture and engine settings

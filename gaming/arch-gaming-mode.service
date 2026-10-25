@@ -1,0 +1,16 @@
+# Managed by arch-setups
+[Unit]
+Description=Automatic Steam and Lutris game detection
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/gaming-mode watch
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=120
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=graphical-session.target
