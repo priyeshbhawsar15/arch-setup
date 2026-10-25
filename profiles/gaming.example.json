@@ -4,6 +4,14 @@
     "primary": "/mnt/games"
   },
   "games": {
+    "death-stranding-2": {
+      "library": "primary",
+      "path": "DEATH STRANDING 2",
+      "required": false,
+      "hdr": true,
+      "resolution": [3840, 2160],
+      "upscaler": "none"
+    },
     "cyberpunk-2077": {
       "library": "primary",
       "path": "Cyberpunk 2077",

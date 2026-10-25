@@ -33,6 +33,18 @@ Global `exportSteam: true` selects the opposite, Steam-first library/Omarchy lau
 
 Global `importSteam: true` opts into generic installed Steam games/shortcuts import; it does not select catalog games. Global `steamHdr: true` opts into broad Steam launch wrapping; it is independent of per-game HDR and requires Steam to be closed for VDF edits. Existing explicit Gamescope settings are user-owned and remain unchanged. The owned HDR helper uses per-game dimensions or the focused output for direct Steam launches.
 
+## Ghost of Tsushima HDR diagnostic
+
+The local OLED reported HDR and Gamescope used `--hdr-enabled`, but Ghost logged only `DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709` and `HDR: No`. A backed-up local diagnostic selects separately installed `GE-Proton11-7-x86_64` and explicitly supplies `PROTON_ENABLE_HDR=1`, `ENABLE_HDR_WSI=1`, `DXVK_HDR=1`, plus 3840×2160 dimensions. Restart and verify the in-game HDR option; this is not yet a confirmed fix. For reproducible opt-in selection use `ghost-of-tsushima` with `wineVersion: "GE-Proton11-7-x86_64"`, `hdr: true`, and `resolution: [3840, 2160]`. Local pre-test YAML is retained alongside the active Lutris configuration as `*.bak-hdr-*`.
+
+## Death Stranding 2 OptiScaler diagnostic
+
+On the current machine, the installed `amd_fidelityfx_upscaler_dx12.dll` reports file version `4.1.1.2740` / product `4.1.1.0`; this identifies the library, not successful FSR4 execution. Bypassing native DXGI/OptiScaler restored the picture. A reversible diagnostic now tests `GE-Proton11-7-x86_64`, `WINEDLLOVERRIDES=dxgi=n,b`, and OptiScaler `[FrameGen]` values `Enabled=false`, `FGInput=nofg`, `FGOutput=nofg`, retaining the INT8 option. It is not yet a verified catalog preset. Local YAML/INI originals are archived under `~/.local/state/arch-setups/backups/ds2-optiscaler-test-*`. Restore them to undo the test; do not infer FSR4 activation from a menu label or loaded DLL alone.
+
+## Death Stranding 2 at 4K
+
+`profiles/gaming.example.json` includes an opt-in `death-stranding-2` example with `hdr: true` and `resolution: [3840, 2160]`. Set its library/path to the installed game and use that selection with `install-lutris.sh`. This supplies `ARCH_SETUPS_GAME_WIDTH=3840` and `ARCH_SETUPS_GAME_HEIGHT=2160` to the Gamescope HDR wrapper, independently of desktop scaling. Select 3840×2160 in the game's display menu as well; this does not force its internal rendering scale. Restart the game after changing launch settings. Omit this example entry if unwanted; the default selection remains empty.
+
 ## Halo capture and engine settings
 
 Halo's catalog runner is `GE-Proton11-7-x86_64` (install separately; `wineVersion` can override it). The observed Experimental session could not load its GStreamer libav plugin because `libavfilter.so.7` was missing, coinciding with black prerecorded cutscenes. GE bundles FFmpeg libraries; playback still needs in-game verification after restarting. The existing prefix/saves are retained; no codec packs or registry edits are applied. Set `wineVersion` back to `Proton - Experimental` to undo the runner choice.
