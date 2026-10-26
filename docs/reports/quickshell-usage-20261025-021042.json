@@ -1,0 +1,2735 @@
+{
+  "timestamp": "2026-10-25T02:10:42.747086+05:30",
+  "quickshell_pid": 289320,
+  "cpu_logical": 8,
+  "clock_ticks": 100,
+  "method": "Four alternating 30-second phases; 1Hz samples; six-second settling periods. No game and Quickshell never paused.",
+  "phases": [
+    {
+      "condition": "desktop",
+      "round": 1,
+      "start": "2026-10-25T02:10:48.757737+05:30",
+      "memory_start": {
+        "Rss_mib": 1003.84765625,
+        "Pss_mib": 891.6748046875,
+        "Private_Clean_mib": 32.28125,
+        "Private_Dirty_mib": 839.8359375,
+        "Swap_mib": 169.12109375
+      },
+      "samples": [
+        {
+          "dt": 1.0061466350016417,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 5.963345491872772,
+          "rss_mib": 1003.65234375,
+          "vram_mib": 1235.2734375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 1.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.99956059899705,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 4.001758376644261,
+          "rss_mib": 1003.65234375,
+          "vram_mib": 1235.2734375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 2.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 0.9996695150039159,
+          "shell_cpu_pct": 1.0003305942525245,
+          "tree_cpu_pct": 8.002644754020196,
+          "rss_mib": 1003.65234375,
+          "vram_mib": 1235.2734375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 2.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0005912619963055,
+          "shell_cpu_pct": 0.9994090873878653,
+          "tree_cpu_pct": 3.997636349551461,
+          "rss_mib": 1003.65234375,
+          "vram_mib": 1235.2734375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 22.0,
+          "tree_process_count": 11
+        },
+        {
+          "dt": 1.0022564320024685,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 5.986491888121125,
+          "rss_mib": 1003.65234375,
+          "vram_mib": 1235.2734375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 0.997401622000325,
+          "shell_cpu_pct": 1.002605147156733,
+          "tree_cpu_pct": 12.031261765880794,
+          "rss_mib": 1004.0625,
+          "vram_mib": 1235.2734375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 3.0,
+          "tree_process_count": 10
+        },
+        {
+          "dt": 1.00029791900306,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 4.998510848631191,
+          "rss_mib": 1004.0625,
+          "vram_mib": 1235.2734375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 2.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.999734125995019,
+          "shell_cpu_pct": 1.0002659447127669,
+          "tree_cpu_pct": 5.001329723563835,
+          "rss_mib": 1004.0625,
+          "vram_mib": 1235.2734375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 23.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 1.0013759050052613,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 7.989007884065242,
+          "rss_mib": 1004.0625,
+          "vram_mib": 1235.2734375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 0.9984975999977905,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 4.006018642417219,
+          "rss_mib": 1004.0625,
+          "vram_mib": 1235.2734375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 12.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 0.9998462950024987,
+          "shell_cpu_pct": 1.0001537286263593,
+          "tree_cpu_pct": 15.00230592939539,
+          "rss_mib": 1006.3125,
+          "vram_mib": 1235.2734375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 3.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0002619519946165,
+          "shell_cpu_pct": 0.9997381166062608,
+          "tree_cpu_pct": 3.998952466425043,
+          "rss_mib": 1006.3125,
+          "vram_mib": 1235.2734375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.042975542470930016,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 16.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 0.9997531190019799,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 5.001234709816493,
+          "rss_mib": 1006.3125,
+          "vram_mib": 1235.2734375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0014522679994116,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 9.985498380244195,
+          "rss_mib": 1006.3125,
+          "vram_mib": 1235.2734375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 1.0,
+          "tree_process_count": 12
+        },
+        {
+          "dt": 0.9985927079978865,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 7.009864926847449,
+          "rss_mib": 1006.3125,
+          "vram_mib": 1235.2734375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 3.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0013629470049636,
+          "shell_cpu_pct": 3.9945556323647082,
+          "tree_cpu_pct": 13.98094471327648,
+          "rss_mib": 1008.8125,
+          "vram_mib": 1235.2734375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 1.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 0.9988161509972997,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 17.02014928675894,
+          "rss_mib": 1008.6171875,
+          "vram_mib": 1235.2734375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 19.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9998897620025673,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 4.000441000604754,
+          "rss_mib": 1008.6171875,
+          "vram_mib": 1235.2734375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 1.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 1.0016694399964763,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 5.990000054330405,
+          "rss_mib": 1007.6875,
+          "vram_mib": 1235.2734375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 10.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 0.999978446001478,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 6.000129326778641,
+          "rss_mib": 1007.6875,
+          "vram_mib": 1235.2734375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 2.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 0.998240013999748,
+          "shell_cpu_pct": 2.0035261780244613,
+          "tree_cpu_pct": 16.02820942419569,
+          "rss_mib": 1006.32421875,
+          "vram_mib": 1235.2734375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 2.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0001733009994496,
+          "shell_cpu_pct": 8.998440561257247,
+          "tree_cpu_pct": 12.997747477371579,
+          "rss_mib": 1021.24609375,
+          "vram_mib": 1444.2734375,
+          "shared_vram_mib": 505.515625,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.11015271042519123,
+            "0000:03:00.0/compute": 0.06715226244580284,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 13.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 0.9997856159970979,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 6.001286579839548,
+          "rss_mib": 1020.60546875,
+          "vram_mib": 1444.2734375,
+          "shared_vram_mib": 505.515625,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0005052930064267,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 4.997474810928245,
+          "rss_mib": 1020.60546875,
+          "vram_mib": 1444.2734375,
+          "shared_vram_mib": 505.515625,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 1.0,
+          "tree_process_count": 11
+        },
+        {
+          "dt": 0.9995957079954678,
+          "shell_cpu_pct": 1.000404455522666,
+          "tree_cpu_pct": 7.002831188658663,
+          "rss_mib": 1020.60546875,
+          "vram_mib": 1444.2734375,
+          "shared_vram_mib": 505.515625,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 3.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0001753640026436,
+          "shell_cpu_pct": 0.9998246667444979,
+          "tree_cpu_pct": 12.997720667678472,
+          "rss_mib": 1019.1171875,
+          "vram_mib": 1444.2734375,
+          "shared_vram_mib": 505.515625,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 4.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 0.9998083800019231,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 7.001341597063365,
+          "rss_mib": 1019.1171875,
+          "vram_mib": 1444.2734375,
+          "shared_vram_mib": 505.515625,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 8.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0009912049936247,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 1.9980195530416653,
+          "rss_mib": 1019.1171875,
+          "vram_mib": 1444.2734375,
+          "shared_vram_mib": 505.515625,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 18.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 0.9990399710004567,
+          "shell_cpu_pct": 1.0009609515408897,
+          "tree_cpu_pct": 7.006726660786229,
+          "rss_mib": 1019.1171875,
+          "vram_mib": 1444.2734375,
+          "shared_vram_mib": 505.515625,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0001916460023494,
+          "shell_cpu_pct": 0.9998083907188032,
+          "tree_cpu_pct": 8.99827551646923,
+          "rss_mib": 1014.23046875,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 2.0,
+          "tree_process_count": 9
+        }
+      ],
+      "processes_start": [
+        {
+          "pid": 291490,
+          "name": "wl-paste",
+          "ppid": 289320,
+          "own": 0,
+          "waited": 5,
+          "birth": "2778783",
+          "rss": 1.9609375
+        },
+        {
+          "pid": 291492,
+          "name": "wl-paste",
+          "ppid": 289320,
+          "own": 0,
+          "waited": 0,
+          "birth": "2778783",
+          "rss": 1.8359375
+        },
+        {
+          "pid": 289320,
+          "name": "quickshell",
+          "ppid": 289317,
+          "own": 107876,
+          "waited": 288968,
+          "birth": "2778466",
+          "rss": 1003.65234375
+        },
+        {
+          "pid": 291595,
+          "name": "voxtype",
+          "ppid": 289320,
+          "own": 145,
+          "waited": 1,
+          "birth": "2778812",
+          "rss": 5.2734375
+        },
+        {
+          "pid": 289722,
+          "name": "voxtype",
+          "ppid": 289320,
+          "own": 157,
+          "waited": 2,
+          "birth": "2778592",
+          "rss": 4.921875
+        },
+        {
+          "pid": 290843,
+          "name": "python",
+          "ppid": 289320,
+          "own": 334,
+          "waited": 0,
+          "birth": "2778741",
+          "rss": 37.15234375
+        },
+        {
+          "pid": 291612,
+          "name": "voxtype",
+          "ppid": 289320,
+          "own": 147,
+          "waited": 0,
+          "birth": "2778813",
+          "rss": 5.0
+        },
+        {
+          "pid": 289853,
+          "name": "inotifywait",
+          "ppid": 289320,
+          "own": 0,
+          "waited": 0,
+          "birth": "2778639",
+          "rss": 1.83203125
+        },
+        {
+          "pid": 556862,
+          "name": "python3",
+          "ppid": 289320,
+          "own": 1,
+          "waited": 0,
+          "birth": "4886370",
+          "rss": 18.19140625
+        }
+      ],
+      "gpu_start": {
+        "engines": {
+          "0000:03:00.0/334/drm-engine-gfx": 756770732490,
+          "0000:03:00.0/334/drm-engine-compute": 1455843370,
+          "0000:00:02.0/1381/drm-engine-render": 0,
+          "0000:00:02.0/1381/drm-engine-copy": 0,
+          "0000:00:02.0/1381/drm-engine-video": 8751184,
+          "0000:00:02.0/1381/drm-engine-video-enhance": 0,
+          "0000:00:02.0/1382/drm-engine-render": 0,
+          "0000:00:02.0/1382/drm-engine-copy": 0,
+          "0000:00:02.0/1382/drm-engine-video": 8379436,
+          "0000:00:02.0/1382/drm-engine-video-enhance": 0,
+          "0000:00:02.0/1383/drm-engine-render": 0,
+          "0000:00:02.0/1383/drm-engine-copy": 0,
+          "0000:00:02.0/1383/drm-engine-video": 7788404,
+          "0000:00:02.0/1383/drm-engine-video-enhance": 0,
+          "0000:00:02.0/1287/drm-engine-render": 0,
+          "0000:00:02.0/1287/drm-engine-copy": 0,
+          "0000:00:02.0/1287/drm-engine-video": 7419510384,
+          "0000:00:02.0/1287/drm-engine-video-enhance": 0,
+          "0000:00:02.0/1289/drm-engine-render": 0,
+          "0000:00:02.0/1289/drm-engine-copy": 0,
+          "0000:00:02.0/1289/drm-engine-video": 35411778012,
+          "0000:00:02.0/1289/drm-engine-video-enhance": 0,
+          "0000:00:02.0/1384/drm-engine-render": 0,
+          "0000:00:02.0/1384/drm-engine-copy": 0,
+          "0000:00:02.0/1384/drm-engine-video": 7392008,
+          "0000:00:02.0/1384/drm-engine-video-enhance": 0,
+          "0000:00:02.0/1385/drm-engine-render": 0,
+          "0000:00:02.0/1385/drm-engine-copy": 0,
+          "0000:00:02.0/1385/drm-engine-video": 7052760,
+          "0000:00:02.0/1385/drm-engine-video-enhance": 0
+        },
+        "vram_mib": 1235.2734375,
+        "shared_vram_mib": 456.328125,
+        "gtt_mib": 20.1484375,
+        "clients": 8
+      },
+      "memory_end": {
+        "Rss_mib": 1013.87890625,
+        "Pss_mib": 901.4384765625,
+        "Private_Clean_mib": 32.28515625,
+        "Private_Dirty_mib": 849.44921875,
+        "Swap_mib": 168.5859375
+      },
+      "duration_s": 30.005661201001203
+    },
+    {
+      "condition": "gaming",
+      "round": 2,
+      "start": "2026-10-25T02:11:25.789046+05:30",
+      "memory_start": {
+        "Rss_mib": 1018.65625,
+        "Pss_mib": 908.3544921875,
+        "Private_Clean_mib": 32.95703125,
+        "Private_Dirty_mib": 854.2265625,
+        "Swap_mib": 168.5859375
+      },
+      "samples": [
+        {
+          "dt": 1.005446112001664,
+          "shell_cpu_pct": 0.994583387476807,
+          "tree_cpu_pct": 8.951250487291261,
+          "rss_mib": 1018.85546875,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 0.9997453299947665,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 6.001528409271398,
+          "rss_mib": 1018.85546875,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0000917900033528,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 4.999541092106393,
+          "rss_mib": 1018.85546875,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 0.9997888660000172,
+          "shell_cpu_pct": 1.0002111785869625,
+          "tree_cpu_pct": 11.002322964456589,
+          "rss_mib": 1018.85546875,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0002107690015691,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 7.998314203301134,
+          "rss_mib": 1018.73046875,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 0.9997735590004595,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 1.0002264922866801,
+          "rss_mib": 1018.73046875,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0003114579958492,
+          "shell_cpu_pct": 0.9996886389800301,
+          "tree_cpu_pct": 12.99595230674039,
+          "rss_mib": 1018.73046875,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 0.9997578010006691,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 3.0007267730216913,
+          "rss_mib": 1018.73046875,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0029256790003274,
+          "shell_cpu_pct": 0.9970828556277036,
+          "tree_cpu_pct": 12.962077123160148,
+          "rss_mib": 1016.24609375,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 0.9970353989992873,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 9.026760743934663,
+          "rss_mib": 1016.24609375,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.002717636001762,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 6.981028106687953,
+          "rss_mib": 1016.24609375,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 0.9974276259963517,
+          "shell_cpu_pct": 2.0051580163544775,
+          "tree_cpu_pct": 7.018053057240671,
+          "rss_mib": 1016.24609375,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0000876210033312,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 6.999386706714056,
+          "rss_mib": 1016.24609375,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 0.999860477000766,
+          "shell_cpu_pct": 1.000139542468618,
+          "tree_cpu_pct": 11.001534967154795,
+          "rss_mib": 1015.65625,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0031125169989537,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 4.984485703516763,
+          "rss_mib": 1003.453125,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 0.9968316329977824,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 4.01271374983432,
+          "rss_mib": 1003.30859375,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0002513020008337,
+          "shell_cpu_pct": 0.9997487611359955,
+          "tree_cpu_pct": 8.997738850223959,
+          "rss_mib": 1003.30859375,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9997121659980621,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 0.0,
+          "rss_mib": 1003.16796875,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0002968260014313,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 10.996735882859095,
+          "rss_mib": 1003.16796875,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 10
+        },
+        {
+          "dt": 0.999790137000673,
+          "shell_cpu_pct": 3.000629721153151,
+          "tree_cpu_pct": 11.002308977561553,
+          "rss_mib": 1005.41796875,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.000155319001351,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 5.999068230713369,
+          "rss_mib": 1005.41796875,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 1.0000073819974205,
+          "shell_cpu_pct": 0.9999926180570731,
+          "tree_cpu_pct": 6.999948326399512,
+          "rss_mib": 1005.41796875,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0001510930014774,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 5.999093578945013,
+          "rss_mib": 1004.75,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 0.9998248249976314,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 4.000700822776106,
+          "rss_mib": 1004.19140625,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.000166738005646,
+          "shell_cpu_pct": 1.9996665795825634,
+          "tree_cpu_pct": 15.997332636660508,
+          "rss_mib": 1003.75,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 0.9995093639954575,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 3.001472630539191,
+          "rss_mib": 1003.75,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.000317760001053,
+          "shell_cpu_pct": 0.9996823409382907,
+          "tree_cpu_pct": 7.997458727506325,
+          "rss_mib": 1003.75,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 0.999841748001927,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 3.000474831137195,
+          "rss_mib": 1003.75,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0002985329992953,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 8.997314004864526,
+          "rss_mib": 999.50390625,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 0.9995801810000557,
+          "shell_cpu_pct": 1.0004199953219604,
+          "tree_cpu_pct": 8.003359962575683,
+          "rss_mib": 1000.62890625,
+          "vram_mib": 1395.0859375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        }
+      ],
+      "processes_start": [
+        {
+          "pid": 291490,
+          "name": "wl-paste",
+          "ppid": 289320,
+          "own": 0,
+          "waited": 5,
+          "birth": "2778783",
+          "rss": 1.9609375
+        },
+        {
+          "pid": 291492,
+          "name": "wl-paste",
+          "ppid": 289320,
+          "own": 0,
+          "waited": 0,
+          "birth": "2778783",
+          "rss": 1.8359375
+        },
+        {
+          "pid": 289320,
+          "name": "quickshell",
+          "ppid": 289317,
+          "own": 107907,
+          "waited": 289230,
+          "birth": "2778466",
+          "rss": 1018.85546875
+        },
+        {
+          "pid": 291595,
+          "name": "voxtype",
+          "ppid": 289320,
+          "own": 145,
+          "waited": 1,
+          "birth": "2778812",
+          "rss": 5.2734375
+        },
+        {
+          "pid": 289722,
+          "name": "voxtype",
+          "ppid": 289320,
+          "own": 157,
+          "waited": 2,
+          "birth": "2778592",
+          "rss": 4.921875
+        },
+        {
+          "pid": 290843,
+          "name": "python",
+          "ppid": 289320,
+          "own": 334,
+          "waited": 0,
+          "birth": "2778741",
+          "rss": 37.15234375
+        },
+        {
+          "pid": 291612,
+          "name": "voxtype",
+          "ppid": 289320,
+          "own": 147,
+          "waited": 0,
+          "birth": "2778813",
+          "rss": 5.0
+        },
+        {
+          "pid": 289853,
+          "name": "inotifywait",
+          "ppid": 289320,
+          "own": 0,
+          "waited": 0,
+          "birth": "2778639",
+          "rss": 1.83203125
+        }
+      ],
+      "gpu_start": {
+        "engines": {
+          "0000:03:00.0/334/drm-engine-gfx": 756772264076,
+          "0000:03:00.0/334/drm-engine-compute": 1456515009,
+          "0000:00:02.0/1381/drm-engine-render": 0,
+          "0000:00:02.0/1381/drm-engine-copy": 0,
+          "0000:00:02.0/1381/drm-engine-video": 8751184,
+          "0000:00:02.0/1381/drm-engine-video-enhance": 0,
+          "0000:00:02.0/1382/drm-engine-render": 0,
+          "0000:00:02.0/1382/drm-engine-copy": 0,
+          "0000:00:02.0/1382/drm-engine-video": 8379436,
+          "0000:00:02.0/1382/drm-engine-video-enhance": 0,
+          "0000:00:02.0/1383/drm-engine-render": 0,
+          "0000:00:02.0/1383/drm-engine-copy": 0,
+          "0000:00:02.0/1383/drm-engine-video": 7788404,
+          "0000:00:02.0/1383/drm-engine-video-enhance": 0,
+          "0000:00:02.0/1287/drm-engine-render": 0,
+          "0000:00:02.0/1287/drm-engine-copy": 0,
+          "0000:00:02.0/1287/drm-engine-video": 7419510384,
+          "0000:00:02.0/1287/drm-engine-video-enhance": 0,
+          "0000:00:02.0/1289/drm-engine-render": 0,
+          "0000:00:02.0/1289/drm-engine-copy": 0,
+          "0000:00:02.0/1289/drm-engine-video": 35411778012,
+          "0000:00:02.0/1289/drm-engine-video-enhance": 0,
+          "0000:00:02.0/1384/drm-engine-render": 0,
+          "0000:00:02.0/1384/drm-engine-copy": 0,
+          "0000:00:02.0/1384/drm-engine-video": 7392008,
+          "0000:00:02.0/1384/drm-engine-video-enhance": 0,
+          "0000:00:02.0/1385/drm-engine-render": 0,
+          "0000:00:02.0/1385/drm-engine-copy": 0,
+          "0000:00:02.0/1385/drm-engine-video": 7052760,
+          "0000:00:02.0/1385/drm-engine-video-enhance": 0
+        },
+        "vram_mib": 1395.0859375,
+        "shared_vram_mib": 456.328125,
+        "gtt_mib": 20.15625,
+        "clients": 8
+      },
+      "memory_end": {
+        "Rss_mib": 1000.81640625,
+        "Pss_mib": 890.8154296875,
+        "Private_Clean_mib": 32.953125,
+        "Private_Dirty_mib": 836.8046875,
+        "Swap_mib": 168.55859375
+      },
+      "duration_s": 30.005027646999224
+    },
+    {
+      "condition": "desktop",
+      "round": 3,
+      "start": "2026-10-25T02:12:06.021276+05:30",
+      "memory_start": {
+        "Rss_mib": 1005.9296875,
+        "Pss_mib": 893.7978515625,
+        "Private_Clean_mib": 32.29296875,
+        "Private_Dirty_mib": 841.91796875,
+        "Swap_mib": 168.55859375
+      },
+      "samples": [
+        {
+          "dt": 1.005425051000202,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 8.951437992366266,
+          "rss_mib": 1005.66015625,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 2.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0002804519972415,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 4.998598133170145,
+          "rss_mib": 1005.66015625,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 23.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9997420540021267,
+          "shell_cpu_pct": 1.0002580125511784,
+          "tree_cpu_pct": 8.002064100409427,
+          "rss_mib": 1003.3203125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 1.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9999563439996564,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 3.0001309737188198,
+          "rss_mib": 1003.1796875,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 2.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9999523099977523,
+          "shell_cpu_pct": 1.0000476922766925,
+          "tree_cpu_pct": 17.000810768703772,
+          "rss_mib": 1004.5546875,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 2.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9998112660032348,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 0.0,
+          "rss_mib": 1004.5546875,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 21.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0003136890009046,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 10.9965505030593,
+          "rss_mib": 1004.5546875,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 1.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.000037252997572,
+          "shell_cpu_pct": 0.9999627483901621,
+          "tree_cpu_pct": 2.999888245170486,
+          "rss_mib": 1004.5546875,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 2.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0002262409980176,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 7.998190481403153,
+          "rss_mib": 1004.5546875,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 1.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9997108160023345,
+          "shell_cpu_pct": 2.0005785352984815,
+          "tree_cpu_pct": 12.003471211790888,
+          "rss_mib": 1006.9296875,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 21.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9999947250034893,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 8.000042200194692,
+          "rss_mib": 1006.9296875,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 1.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0000132759960252,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 3.9999468967208984,
+          "rss_mib": 1006.9296875,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 2.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9999592520034639,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 9.000366746913025,
+          "rss_mib": 1006.9296875,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 1.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0002949119952973,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 2.999115524856437,
+          "rss_mib": 1006.9296875,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 22.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9999018279995653,
+          "shell_cpu_pct": 3.000294544917368,
+          "tree_cpu_pct": 16.00157090622596,
+          "rss_mib": 1009.5546875,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 1.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9999889120008447,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 2.0000221762442005,
+          "rss_mib": 1009.5546875,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 2.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9998581180043402,
+          "shell_cpu_pct": 1.000141902129017,
+          "tree_cpu_pct": 13.001844727677222,
+          "rss_mib": 1009.3046875,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.000077741999121,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 0.0,
+          "rss_mib": 1009.3046875,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 22.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9999083129951032,
+          "shell_cpu_pct": 1.0000916954121746,
+          "tree_cpu_pct": 10.000916954121745,
+          "rss_mib": 1009.3046875,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 1.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9999445710054715,
+          "shell_cpu_pct": 1.0000554320670723,
+          "tree_cpu_pct": 9.00049888860365,
+          "rss_mib": 1008.80078125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 21.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0000982239944278,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 6.9993124995680445,
+          "rss_mib": 1008.80078125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.000151480002387,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 4.999242714701644,
+          "rss_mib": 1008.80078125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 20.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9999878579983488,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 8.000097137192649,
+          "rss_mib": 1008.80078125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 1.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9998438580005313,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 2.0003123327672,
+          "rss_mib": 1008.80078125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 2.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9999742990039522,
+          "shell_cpu_pct": 2.0000514033132117,
+          "tree_cpu_pct": 16.000411226505694,
+          "rss_mib": 1004.8125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9999806900013937,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 4.0000772414859584,
+          "rss_mib": 1004.8125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.000005173998943,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 5.9999689561669625,
+          "rss_mib": 1004.8125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 20.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0000921709943214,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 1.9998156750007756,
+          "rss_mib": 1004.8125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 1.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.000084393999714,
+          "shell_cpu_pct": 0.9999156131220324,
+          "tree_cpu_pct": 16.99856542307455,
+          "rss_mib": 1004.8125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 1.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0002897130034398,
+          "shell_cpu_pct": 1.99942074181175,
+          "tree_cpu_pct": 7.997682967247,
+          "rss_mib": 1007.0625,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        }
+      ],
+      "processes_start": [
+        {
+          "pid": 291490,
+          "name": "wl-paste",
+          "ppid": 289320,
+          "own": 0,
+          "waited": 5,
+          "birth": "2778783",
+          "rss": 1.9609375
+        },
+        {
+          "pid": 291492,
+          "name": "wl-paste",
+          "ppid": 289320,
+          "own": 0,
+          "waited": 0,
+          "birth": "2778783",
+          "rss": 1.8359375
+        },
+        {
+          "pid": 289320,
+          "name": "quickshell",
+          "ppid": 289317,
+          "own": 107956,
+          "waited": 289523,
+          "birth": "2778466",
+          "rss": 1005.66015625
+        },
+        {
+          "pid": 291595,
+          "name": "voxtype",
+          "ppid": 289320,
+          "own": 146,
+          "waited": 1,
+          "birth": "2778812",
+          "rss": 5.2734375
+        },
+        {
+          "pid": 289722,
+          "name": "voxtype",
+          "ppid": 289320,
+          "own": 157,
+          "waited": 2,
+          "birth": "2778592",
+          "rss": 4.921875
+        },
+        {
+          "pid": 290843,
+          "name": "python",
+          "ppid": 289320,
+          "own": 335,
+          "waited": 0,
+          "birth": "2778741",
+          "rss": 37.15234375
+        },
+        {
+          "pid": 291612,
+          "name": "voxtype",
+          "ppid": 289320,
+          "own": 147,
+          "waited": 0,
+          "birth": "2778813",
+          "rss": 5.0
+        },
+        {
+          "pid": 289853,
+          "name": "inotifywait",
+          "ppid": 289320,
+          "own": 0,
+          "waited": 0,
+          "birth": "2778639",
+          "rss": 1.83203125
+        }
+      ],
+      "gpu_start": {
+        "engines": {
+          "0000:03:00.0/334/drm-engine-gfx": 756782001400,
+          "0000:03:00.0/334/drm-engine-compute": 1456866774,
+          "0000:00:02.0/1381/drm-engine-render": 0,
+          "0000:00:02.0/1381/drm-engine-copy": 0,
+          "0000:00:02.0/1381/drm-engine-video": 8751184,
+          "0000:00:02.0/1381/drm-engine-video-enhance": 0,
+          "0000:00:02.0/1382/drm-engine-render": 0,
+          "0000:00:02.0/1382/drm-engine-copy": 0,
+          "0000:00:02.0/1382/drm-engine-video": 8379436,
+          "0000:00:02.0/1382/drm-engine-video-enhance": 0,
+          "0000:00:02.0/1383/drm-engine-render": 0,
+          "0000:00:02.0/1383/drm-engine-copy": 0,
+          "0000:00:02.0/1383/drm-engine-video": 7788404,
+          "0000:00:02.0/1383/drm-engine-video-enhance": 0,
+          "0000:00:02.0/1287/drm-engine-render": 0,
+          "0000:00:02.0/1287/drm-engine-copy": 0,
+          "0000:00:02.0/1287/drm-engine-video": 7419510384,
+          "0000:00:02.0/1287/drm-engine-video-enhance": 0,
+          "0000:00:02.0/1289/drm-engine-render": 0,
+          "0000:00:02.0/1289/drm-engine-copy": 0,
+          "0000:00:02.0/1289/drm-engine-video": 35411778012,
+          "0000:00:02.0/1289/drm-engine-video-enhance": 0,
+          "0000:00:02.0/1384/drm-engine-render": 0,
+          "0000:00:02.0/1384/drm-engine-copy": 0,
+          "0000:00:02.0/1384/drm-engine-video": 7392008,
+          "0000:00:02.0/1384/drm-engine-video-enhance": 0,
+          "0000:00:02.0/1385/drm-engine-render": 0,
+          "0000:00:02.0/1385/drm-engine-copy": 0,
+          "0000:00:02.0/1385/drm-engine-video": 7052760,
+          "0000:00:02.0/1385/drm-engine-video-enhance": 0
+        },
+        "vram_mib": 1244.7109375,
+        "shared_vram_mib": 456.328125,
+        "gtt_mib": 26.1484375,
+        "clients": 8
+      },
+      "memory_end": {
+        "Rss_mib": 1006.94140625,
+        "Pss_mib": 894.8095703125,
+        "Private_Clean_mib": 32.29296875,
+        "Private_Dirty_mib": 842.9296875,
+        "Swap_mib": 168.55859375
+      },
+      "duration_s": 30.005904985999223
+    },
+    {
+      "condition": "gaming",
+      "round": 4,
+      "start": "2026-10-25T02:12:42.651807+05:30",
+      "memory_start": {
+        "Rss_mib": 1000.16015625,
+        "Pss_mib": 890.158203125,
+        "Private_Clean_mib": 32.953125,
+        "Private_Dirty_mib": 836.1484375,
+        "Swap_mib": 168.55859375
+      },
+      "samples": [
+        {
+          "dt": 1.0060160599969095,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 7.95215933235159,
+          "rss_mib": 1000.1015625,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9997722289990634,
+          "shell_cpu_pct": 2.0004556457847698,
+          "tree_cpu_pct": 5.001139114461925,
+          "rss_mib": 1000.1015625,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0000601670035394,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 9.999398366163112,
+          "rss_mib": 1000.1015625,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9999325570024666,
+          "shell_cpu_pct": 1.0000674475463982,
+          "tree_cpu_pct": 7.000472132824786,
+          "rss_mib": 999.48046875,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9999994019963196,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 8.000004784032305,
+          "rss_mib": 999.48046875,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0001067889970727,
+          "shell_cpu_pct": 0.9998932224055994,
+          "tree_cpu_pct": 5.9993593344335965,
+          "rss_mib": 999.48046875,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9998916100012138,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 8.000867213987613,
+          "rss_mib": 996.11328125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.000157817004947,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 0.99984220789733,
+          "rss_mib": 996.11328125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9997734829958063,
+          "shell_cpu_pct": 1.000226568325772,
+          "tree_cpu_pct": 17.00385166153813,
+          "rss_mib": 996.23828125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9999590880033793,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 0.0,
+          "rss_mib": 996.23828125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9999836909992155,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 11.000179401934496,
+          "rss_mib": 995.58203125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0001633659994695,
+          "shell_cpu_pct": 0.9998366606846211,
+          "tree_cpu_pct": 3.9993466427384843,
+          "rss_mib": 995.58203125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9998353440023493,
+          "shell_cpu_pct": 1.000164683113713,
+          "tree_cpu_pct": 8.001317464909704,
+          "rss_mib": 995.58203125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0000758219975978,
+          "shell_cpu_pct": 0.9999241837509417,
+          "tree_cpu_pct": 9.999241837509416,
+          "rss_mib": 997.70703125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.000230844001635,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 8.997922883475175,
+          "rss_mib": 997.70703125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9997372049983824,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 2.0005257281619686,
+          "rss_mib": 997.70703125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0000295319987345,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 8.99973421986041,
+          "rss_mib": 997.70703125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9999722860011389,
+          "shell_cpu_pct": 1.0000277147669483,
+          "tree_cpu_pct": 4.000110859067793,
+          "rss_mib": 997.83203125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.20808906698016527,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0002394809998805,
+          "shell_cpu_pct": 1.9995211526750754,
+          "tree_cpu_pct": 13.996648068725529,
+          "rss_mib": 1000.33203125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9997503679987858,
+          "shell_cpu_pct": 1.0002496943329102,
+          "tree_cpu_pct": 4.000998777331641,
+          "rss_mib": 1000.33203125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.000154815003043,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 21.996594597140508,
+          "rss_mib": 1000.14453125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0027719429999706,
+          "shell_cpu_pct": 0.9972357194282103,
+          "tree_cpu_pct": 1.9944714388564206,
+          "rss_mib": 1000.51953125,
+          "vram_mib": 1244.7109375,
+          "shared_vram_mib": 456.328125,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 10.0,
+          "tree_process_count": 9
+        },
+        {
+          "dt": 0.997530533997633,
+          "shell_cpu_pct": 7.0173290555300545,
+          "tree_cpu_pct": 27.066840642758777,
+          "rss_mib": 1011.01953125,
+          "vram_mib": 1438.84765625,
+          "shared_vram_mib": 505.515625,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.10806756918806837,
+            "0000:03:00.0/compute": 0.07062801347809888,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9996382399986032,
+          "shell_cpu_pct": 2.0007237818381123,
+          "tree_cpu_pct": 11.003980800109618,
+          "rss_mib": 1009.83203125,
+          "vram_mib": 1438.84765625,
+          "shared_vram_mib": 505.515625,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0000089120003395,
+          "shell_cpu_pct": 0.9999910880790835,
+          "tree_cpu_pct": 6.999937616553585,
+          "rss_mib": 1009.83203125,
+          "vram_mib": 1438.84765625,
+          "shared_vram_mib": 505.515625,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.000056595003116,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 4.999717040998486,
+          "rss_mib": 1009.95703125,
+          "vram_mib": 1438.84765625,
+          "shared_vram_mib": 505.515625,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 1.0001379899986205,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 8.99875826135993,
+          "rss_mib": 1009.95703125,
+          "vram_mib": 1438.84765625,
+          "shared_vram_mib": 505.515625,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9998539820007863,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 0.0,
+          "rss_mib": 1009.95703125,
+          "vram_mib": 1438.84765625,
+          "shared_vram_mib": 505.515625,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9999827409992577,
+          "shell_cpu_pct": 2.0000345185972415,
+          "tree_cpu_pct": 17.00029340807655,
+          "rss_mib": 1009.95703125,
+          "vram_mib": 1438.84765625,
+          "shared_vram_mib": 505.515625,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        },
+        {
+          "dt": 0.9999714279983891,
+          "shell_cpu_pct": 0.0,
+          "tree_cpu_pct": 2.0000571456359872,
+          "rss_mib": 1005.70703125,
+          "vram_mib": 1438.84765625,
+          "shared_vram_mib": 505.515625,
+          "gpu_engines_pct": {
+            "0000:03:00.0/gfx": 0.0,
+            "0000:03:00.0/compute": 0.0,
+            "0000:00:02.0/render": 0.0,
+            "0000:00:02.0/copy": 0.0,
+            "0000:00:02.0/video": 0.0,
+            "0000:00:02.0/video-enhance": 0.0
+          },
+          "amd_busy_pct": 0.0,
+          "tree_process_count": 8
+        }
+      ],
+      "processes_start": [
+        {
+          "pid": 291490,
+          "name": "wl-paste",
+          "ppid": 289320,
+          "own": 0,
+          "waited": 5,
+          "birth": "2778783",
+          "rss": 1.9609375
+        },
+        {
+          "pid": 291492,
+          "name": "wl-paste",
+          "ppid": 289320,
+          "own": 0,
+          "waited": 0,
+          "birth": "2778783",
+          "rss": 1.8359375
+        },
+        {
+          "pid": 289320,
+          "name": "quickshell",
+          "ppid": 289317,
+          "own": 107976,
+          "waited": 289773,
+          "birth": "2778466",
+          "rss": 1000.2578125
+        },
+        {
+          "pid": 291595,
+          "name": "voxtype",
+          "ppid": 289320,
+          "own": 146,
+          "waited": 1,
+          "birth": "2778812",
+          "rss": 5.2734375
+        },
+        {
+          "pid": 289722,
+          "name": "voxtype",
+          "ppid": 289320,
+          "own": 158,
+          "waited": 2,
+          "birth": "2778592",
+          "rss": 4.921875
+        },
+        {
+          "pid": 290843,
+          "name": "python",
+          "ppid": 289320,
+          "own": 335,
+          "waited": 0,
+          "birth": "2778741",
+          "rss": 37.15234375
+        },
+        {
+          "pid": 291612,
+          "name": "voxtype",
+          "ppid": 289320,
+          "own": 147,
+          "waited": 0,
+          "birth": "2778813",
+          "rss": 5.0
+        },
+        {
+          "pid": 289853,
+          "name": "inotifywait",
+          "ppid": 289320,
+          "own": 0,
+          "waited": 0,
+          "birth": "2778639",
+          "rss": 1.83203125
+        }
+      ],
+      "gpu_start": {
+        "engines": {
+          "0000:03:00.0/334/drm-engine-gfx": 756782001400,
+          "0000:03:00.0/334/drm-engine-compute": 1456866774,
+          "0000:00:02.0/1381/drm-engine-render": 0,
+          "0000:00:02.0/1381/drm-engine-copy": 0,
+          "0000:00:02.0/1381/drm-engine-video": 8751184,
+          "0000:00:02.0/1381/drm-engine-video-enhance": 0,
+          "0000:00:02.0/1382/drm-engine-render": 0,
+          "0000:00:02.0/1382/drm-engine-copy": 0,
+          "0000:00:02.0/1382/drm-engine-video": 8379436,
+          "0000:00:02.0/1382/drm-engine-video-enhance": 0,
+          "0000:00:02.0/1383/drm-engine-render": 0,
+          "0000:00:02.0/1383/drm-engine-copy": 0,
+          "0000:00:02.0/1383/drm-engine-video": 7788404,
+          "0000:00:02.0/1383/drm-engine-video-enhance": 0,
+          "0000:00:02.0/1287/drm-engine-render": 0,
+          "0000:00:02.0/1287/drm-engine-copy": 0,
+          "0000:00:02.0/1287/drm-engine-video": 7419510384,
+          "0000:00:02.0/1287/drm-engine-video-enhance": 0,
+          "0000:00:02.0/1289/drm-engine-render": 0,
+          "0000:00:02.0/1289/drm-engine-copy": 0,
+          "0000:00:02.0/1289/drm-engine-video": 35411778012,
+          "0000:00:02.0/1289/drm-engine-video-enhance": 0,
+          "0000:00:02.0/1384/drm-engine-render": 0,
+          "0000:00:02.0/1384/drm-engine-copy": 0,
+          "0000:00:02.0/1384/drm-engine-video": 7392008,
+          "0000:00:02.0/1384/drm-engine-video-enhance": 0,
+          "0000:00:02.0/1385/drm-engine-render": 0,
+          "0000:00:02.0/1385/drm-engine-copy": 0,
+          "0000:00:02.0/1385/drm-engine-video": 7052760,
+          "0000:00:02.0/1385/drm-engine-video-enhance": 0
+        },
+        "vram_mib": 1244.7109375,
+        "shared_vram_mib": 456.328125,
+        "gtt_mib": 26.1484375,
+        "clients": 8
+      },
+      "memory_end": {
+        "Rss_mib": 1005.875,
+        "Pss_mib": 894.6572265625,
+        "Private_Clean_mib": 32.953125,
+        "Private_Dirty_mib": 840.421875,
+        "Swap_mib": 168.54296875
+      },
+      "duration_s": 30.005794320997666
+    }
+  ],
+  "conditions": "No game/fullscreen benchmark. Gaming Mode activated using a harmless GAME_NAME-marked sleep process. User subsequently reported the screen is locked; lock timing during the samples was not recorded.",
+  "validity": {
+    "screen_lock_reported_by_user": true,
+    "lock_timing_during_samples": "unknown",
+    "suitable_for_unlocked_gaming_conclusions": false
+  },
+  "memory_initial": {
+    "Rss_mib": 1007.63671875,
+    "Pss_mib": 895.447265625,
+    "Private_Clean_mib": 32.28125,
+    "Private_Dirty_mib": 843.625,
+    "Swap_mib": 169.12109375
+  },
+  "restored": true,
+  "memory_final": {
+    "Rss_mib": 1004.91015625,
+    "Pss_mib": 892.3212890625,
+    "Private_Clean_mib": 32.25390625,
+    "Private_Dirty_mib": 840.48046875,
+    "Swap_mib": 168.5390625
+  }
+}

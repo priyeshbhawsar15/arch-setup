@@ -26,6 +26,7 @@ installers=(
   install-zsh.sh
   install-hyprland.sh
   install-wallpaper-controller.sh
+  install-gaming-mode.sh
   install-shibumi-shell.sh
   install-indicators.sh
   install-per-monitor-workspaces.sh

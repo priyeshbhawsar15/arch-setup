@@ -1,0 +1,4 @@
+{
+  "excludedSlugs": ["ks", "ts4_x64exe", "hs2"],
+  "removedSlugs": ["hs2"]
+}

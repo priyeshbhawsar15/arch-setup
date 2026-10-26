@@ -1,6 +1,6 @@
 {
   "install-wallpaper-controller.sh": {"source": "https://github.com/priyeshbhawsar15/omawallpaper-manager.git", "aliases": ["git@github.com:priyeshbhawsar15/omawallpaper-manager.git"], "pin": "418884ce00419798dfbb0cb5eff27eefa6c4bf4d"},
-  "install-shibumi-shell.sh": {"source": "https://github.com/priyeshbhawsar15/Shibumi-Shell.git", "pin": "8b96105a10ef5128589adda7a4b50c4ff903a97d"},
+  "install-shibumi-shell.sh": {"source": "https://github.com/priyeshbhawsar15/Shibumi-Shell.git", "pin": "19ee5f70cf3763be9c0dcbc663c459bd4118841a"},
   "install-indicators.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-indicators.git", "pin": "f159ed5d870c7b402a4885ad1c72236620819e0f"},
   "install-per-monitor-workspaces.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-per-monitor-workspaces.git", "pin": "0292ebec608cd7d3907b8f9f9427c252b242edf2"},
   "install-hyprmoncfg.sh": {"source": "https://github.com/crmne/omarchy-hyprmoncfg.git", "pin": "cf05a04a50339510cd1f9d547fb5f80556ae6599"},

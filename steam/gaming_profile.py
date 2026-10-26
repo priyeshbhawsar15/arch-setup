@@ -23,12 +23,14 @@ def load_selection(path=None, home=None):
     home = home or Path.home()
     path = Path(path or os.environ.get('ARCH_SETUPS_GAMING_PROFILE') or DEFAULT)
     data = json.loads(path.read_text())
-    allowed = {'schemaVersion', 'libraries', 'games', 'steamHdr', 'importSteam'}
+    allowed = {'schemaVersion', 'libraries', 'games', 'steamHdr', 'importSteam', 'exportSteam'}
     if not isinstance(data, dict) or set(data) - allowed or type(data.get('schemaVersion')) is not int or data['schemaVersion'] != 1:
         raise ValueError('invalid gaming selection schema or unknown keys')
-    for key in ('steamHdr', 'importSteam'):
+    for key in ('steamHdr', 'importSteam', 'exportSteam'):
         if type(data.get(key, False)) is not bool:
             raise ValueError(key + ' must be a boolean')
+    if data.get('importSteam') and data.get('exportSteam'):
+        raise ValueError('Choose Steam import OR Lutris export, not a bidirectional sync')
     libraries, selected = data.get('libraries', {}), data.get('games', {})
     if not isinstance(libraries, dict) or not isinstance(selected, dict):
         raise ValueError('libraries and games must be objects')
@@ -121,7 +123,7 @@ def load_selection(path=None, home=None):
             environment.update(hdr_environment)
             environment.update(ARCH_SETUPS_GAME_WIDTH=str(size[0]), ARCH_SETUPS_GAME_HEIGHT=str(size[1]))
         games.append(game)
-    return dict(games=games, retired_shortcuts=[], assets=catalog['assets'], steamHdr=data.get('steamHdr', False), importSteam=data.get('importSteam', False))
+    return dict(games=games, retired_shortcuts=[], assets=catalog['assets'], steamHdr=data.get('steamHdr', False), importSteam=data.get('importSteam', False), exportSteam=data.get('exportSteam', False))
 
 
 def owned_shortcuts(profile):

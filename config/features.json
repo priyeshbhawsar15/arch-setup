@@ -17,6 +17,7 @@
   "install-zsh.sh": {},
   "install-hyprland.sh": {"session": true},
   "install-wallpaper-controller.sh": {"requires": ["install-hyprland.sh"], "session": true, "plugin": "priyesh.wallpaper-controller", "pending": "Select available local wallpaper assets; Workshop subscriptions and downloads are external."},
+  "install-gaming-mode.sh": {"requires": ["install-steam.sh", "install-wallpaper-controller.sh"], "session": true, "pending": "Verify actual Steam/Lutris game launches, exit, controller and HDR behavior. Runtime game detection needs no per-game setup; Gamescope wrapping remains opt-in."},
   "install-shibumi-shell.sh": {"requires": ["install-hyprland.sh"], "session": true, "suite": true},
   "install-indicators.sh": {"requires": ["install-shibumi-shell.sh"], "session": true, "plugin": "priyesh.indicators"},
   "install-per-monitor-workspaces.sh": {"requires": ["install-shibumi-shell.sh"], "session": true, "plugin": "mmsbrggr.per-monitor-workspaces"},
