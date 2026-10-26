@@ -36,7 +36,7 @@ Custom feature profile:
 }
 ```
 
-Use registered `install-*.sh` names from `config/features.json`, including required installers in an explicit `enabledInstallers` list. Missing explicit dependencies, unknown keys/names and malformed local state are errors. Remembering a disabled dependency skips its dependents with a reason; the runner does not secretly enable it. `config/plugin-sources.json` records exact source locks and CI checks agreement with the installer declarations.
+Use registered `install-*.sh` names from `config/features.json`, including required installers in an explicit `enabledInstallers` list. Missing explicit dependencies, unknown keys/names and malformed local state are errors. Remembering a disabled dependency skips its dependents with a reason; the runner does not secretly enable it. `config/plugin-sources.json` records exact source locks; run `python3 config/check-source-contracts.py` manually to check agreement with the installer declarations.
 
 ```bash
 ./install-all.sh --profile /path/to/selected-features.json --plan
@@ -100,7 +100,7 @@ Credentials, OAuth, game files, Workshop downloads, vaults, runner binaries and 
 python3 config/check-source-contracts.py
 ```
 
-Test dependencies: Python/PyYAML/Pillow, Git, Node.js, jq, Lua, Lutris/system GI, Bash and coreutils. The clean-checkout CI job installs these on Arch and runs unprivileged. Private workflow integration is explicit:
+Test dependencies: Python/PyYAML/Pillow, Git, Node.js, jq, Lua, Lutris/system GI, Bash and coreutils. GitHub Actions setup jobs have been removed; install these dependencies and run the checks manually as an unprivileged user. Private workflow integration is explicit:
 
 ```bash
 /usr/bin/python3 tests/run.py --require-system-tests --require-integration \
