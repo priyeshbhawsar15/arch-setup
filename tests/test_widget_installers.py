@@ -19,7 +19,7 @@ class WidgetInstallerTest(unittest.TestCase):
         self.bin = self.base / 'bin'
         self.bin.mkdir()
         for name, body in {
-            'omarchy': '#!/bin/bash\nif [[ "$1 $2" == "plugin list" ]]; then printf \'[{"id":"%s","enabled":true}]\\n\' "$TEST_PLUGIN_ID"; fi\n',
+            'omarchy': '#!/bin/bash\nprintf \'%s\\n\' "$*" >> "$OMARCHY_CALLS"\nif [[ "$1 $2" == "plugin list" ]]; then printf \'[{"id":"%s","enabled":true}]\\n\' "$TEST_PLUGIN_ID"; fi\n',
             'omarchy-shell': '#!/bin/bash\nexit 0\n',
             'obsidian': '#!/bin/bash\nexit 0\n',
         }.items():
@@ -27,7 +27,8 @@ class WidgetInstallerTest(unittest.TestCase):
             target.write_text(body)
             target.chmod(0o755)
         self.env = {**os.environ, 'HOME': str(self.home), 'XDG_STATE_HOME': str(self.home / '.local/state'),
-                    'PATH': str(self.bin) + ':' + os.environ['PATH'], 'PYTHONDONTWRITEBYTECODE': '1'}
+                    'PATH': str(self.bin) + ':' + os.environ['PATH'], 'PYTHONDONTWRITEBYTECODE': '1',
+                    'OMARCHY_CALLS': str(self.base / 'omarchy-calls')}
 
     def git(self, *args, cwd=None):
         return subprocess.check_output(['git', *args], cwd=cwd, text=True, stderr=subprocess.PIPE).strip()
@@ -71,6 +72,27 @@ class WidgetInstallerTest(unittest.TestCase):
         result = self.run_installer('install-weather-widget.sh', 'weather-widget', upstream, new)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.git('rev-parse', 'HEAD', cwd=target), new)
+
+    def assert_pin_update_restarts_shell(self, filename, feature, command):
+        upstream, _, old = self.fixture(feature, command)
+        (upstream / 'new').write_text('new payload')
+        self.git('add', '.', cwd=upstream)
+        self.git('-c', 'user.name=Tests', '-c', 'user.email=tests@example.invalid', 'commit', '-qm', 'update', cwd=upstream)
+        new = self.git('rev-parse', 'HEAD', cwd=upstream)
+        calls = Path(self.env['OMARCHY_CALLS'])
+        result = self.run_installer(filename, feature, upstream, new)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(calls.read_text().splitlines().count('restart shell'), 1)
+        calls.unlink()
+        result = self.run_installer(filename, feature, upstream, new)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn('restart shell', calls.read_text().splitlines())
+
+    def test_quota_pin_update_restarts_shell_once(self):
+        self.assert_pin_update_restarts_shell('install-omniroute-quota.sh', 'omniroute-quota', 'omniroute-quota')
+
+    def test_weather_pin_update_restarts_shell_once(self):
+        self.assert_pin_update_restarts_shell('install-weather-widget.sh', 'weather-widget', 'weather-widget')
 
     def test_matching_quota_checkout_repairs_cli_and_secret_permissions(self):
         upstream, target, revision = self.fixture('omniroute-quota', 'omniroute-quota')
