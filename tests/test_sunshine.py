@@ -39,6 +39,31 @@ class SunshineConfigTests(unittest.TestCase):
             self.assertEqual(len(list((home / 'state/arch-setups/backups').glob('sunshine-*'))), 1)
 
 
+class AdminAccessTests(unittest.TestCase):
+    def access(self, state=None):
+        with tempfile.TemporaryDirectory() as tmp:
+            config = Path(tmp) / 'sunshine'
+            config.mkdir()
+            if state is not None:
+                (config / 'sunshine_state.json').write_text(state)
+            result = subprocess.run(['bash', str(ROOT / 'sunshine/start.sh'), '--print-admin-access'], capture_output=True, text=True,
+                                    env=dict(os.environ, XDG_CONFIG_HOME=tmp, PYTHONDONTWRITEBYTECODE='1'))
+            self.assertEqual(result.returncode, 0, result.stderr)
+            return result.stdout.strip()
+
+    def test_admin_page_stays_on_this_pc_until_a_login_exists(self):
+        self.assertEqual(self.access(), 'pc')
+        self.assertEqual(self.access('not json'), 'pc')
+        self.assertEqual(self.access('{"root": {"uniqueid": "host"}}'), 'pc')
+        self.assertEqual(self.access('{"username": "", "password": "hash", "salt": "salt"}'), 'pc')
+        self.assertEqual(self.access('{"username": "admin", "password": "hash", "salt": "salt"}'), 'lan')
+
+    def test_managed_configuration_never_allows_public_admin_access(self):
+        for name in ('sunshine/configure.py', 'sunshine/virtual-desktop.py'):
+            source = (ROOT / name).read_text().replace(' ', '')
+            self.assertIn("'origin_web_ui_allowed':'lan'", source)
+
+
 class PairingRepairTests(unittest.TestCase):
     def test_duplicate_identity_is_reduced_without_changing_other_devices(self):
         import importlib.util

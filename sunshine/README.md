@@ -33,7 +33,11 @@ launcher discovers current host IPv4 origins best-effort at each startup. Other
 origins retain native CSRF checks. Native streaming accepts newly appearing
 addresses without restarting; remote administration through a new address may
 require a Sunshine restart to refresh the origin list. Localhost administration
-remains available. Missing address discovery never blocks startup. Administration requires the existing login. Manual Sunshine starts
+remains available. Missing address discovery never blocks startup. Administration requires the existing login.
+The admin page accepts private LAN and Tailscale sources (`origin_web_ui_allowed = lan`), and public
+addresses are refused. Until an admin login exists the launcher limits the page to this PC, because
+whoever opens a host with no login can create one and approve their own pairing. On a new install, create
+the login at `https://localhost:47990`, then restart Sunshine to open the page to LAN and Tailscale. Manual Sunshine starts
 outside the managed service default to loopback through the configuration file.
 
 No router forwarding or firewall rules are changed by the installer. Binding

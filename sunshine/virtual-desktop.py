@@ -62,7 +62,7 @@ def configure():
         'sunshine_name':socket.gethostname()+' Virtual 1080p', 'capture':'wlr',
         'encoder':'vaapi', 'output_name':OUTPUT, 'port':'48989',
         'bind_address':'0.0.0.0', 'address_family':'ipv4', 'upnp':'disabled',
-        'origin_web_ui_allowed':'wan', 'csrf_allowed_origins':'',
+        'origin_web_ui_allowed':'lan', 'csrf_allowed_origins':'',
         'lan_encryption_mode':'2','wan_encryption_mode':'2','system_tray':'disabled',
         'hevc_mode':'2','av1_mode':'1',
     }

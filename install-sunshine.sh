@@ -79,3 +79,7 @@ remember_feature_choice "$0" true
 log 'Sunshine configured for LAN and Tailscale access, independent of interface startup order.'
 log 'Use the LAN IP locally or the Tailscale IP remotely in Moonlight; administration is available at https://localhost:47990.'
 log 'Verify capture, audio and input from your client. No router forwarding is needed.'
+if [[ "$(bash "$SCRIPT_DIR/sunshine/start.sh" --print-admin-access)" == pc ]]; then
+  log "No admin login yet: create one on this PC at https://localhost:47990, then run: systemctl --user restart $unit"
+  log 'Until then the admin page only opens on this PC.'
+fi

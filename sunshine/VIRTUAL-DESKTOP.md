@@ -58,7 +58,8 @@ firewall/tailnet policy allows. The host has its own certificate, UUID and clien
 pairing list. The existing Sunshine administrator username/password hash/salt are
 seeded once if present, so initially use the same administrator login; subsequent
 password changes are independent. No existing client trust is copied or reset.
-If the main host has no admin account yet, create one on this new profile's page.
+If the main host has no admin account yet, the installer stops: create one at
+`https://localhost:47990` first, then rerun it. The virtual host never starts without a login.
 Accept the self-signed certificate only after verifying the host address.
 
 Launch the **Virtual Desktop 1080p** tile in that new PC. Set Moonlight to

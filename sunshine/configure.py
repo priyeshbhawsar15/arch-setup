@@ -16,7 +16,7 @@ def main():
     old = path.read_text() if path.exists() else ''
     managed = {
         'upnp': 'disabled', 'address_family': 'ipv4', 'bind_address': '127.0.0.1',
-        'port': '47989', 'origin_web_ui_allowed': 'wan',
+        'port': '47989', 'origin_web_ui_allowed': 'lan',
         'capture': 'kms', 'csrf_allowed_origins': '', 'lan_encryption_mode': '2', 'wan_encryption_mode': '2',
     }
     lines = []
