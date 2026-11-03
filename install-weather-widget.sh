@@ -10,7 +10,7 @@ feature_lifecycle "$0" "$@"
 
 plugin_id="priyesh.weather-widget"
 plugin_url="https://github.com/priyeshbhawsar15/omarchy-weather-widget.git"
-plugin_commit="e9c0d99ffa587452ba4597160a28f1fdc9d8b00c"
+plugin_commit="79e2550348dd32da306358524a51daeb34142324"
 plugin_dir="$HOME/.config/omarchy/plugins/$plugin_id"
 
 require_omarchy
@@ -121,4 +121,8 @@ if plugin_is_enabled; then
 fi
 
 enable_plugin
+if [[ "$checkout_changed" == true ]]; then
+  # An existing QML service can retain its old component after a pin update.
+  omarchy restart shell
+fi
 log "Installed and activated Weather Widget at $plugin_commit."

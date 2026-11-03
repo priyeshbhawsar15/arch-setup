@@ -296,12 +296,12 @@ Provides a Google Calendar integration and clock/date bar widget in the center s
 - **Type:** Original plugin, maintained in its own repository.
 - **Original upstream URL:** Not applicable; this is the original plugin repository.
 - **Installation source:** `https://github.com/priyeshbhawsar15/omarchy-omniroute-quota.git`
-- **Pinned commit:** `b2e3be74e29d9d94e97be9db3d0242641d5b2348`
-- **Local modifications:** None. The plugin repository maintains the official Provider Limits API parser and edge-docked collapse fix.
+- **Pinned commit:** `aa2d521df53415b5e06d1359447d8a2f512e0f5d`
+- **Local modifications:** None. The plugin repository maintains the official Provider Limits API parser, the Claude Code session/weekly limits, and the edge-docked collapse fix.
 
 ### Behavior and controls
 
-Provides a live AI provider quota and connection health desktop HUD on portrait display `DP-4`. It joins active connections from OmniRoute's `/api/providers` endpoint with official quota observations from `/api/usage/provider-limits`. Startup and manual refresh perform a live upstream quota sync; 30-second background reads reuse OmniRoute's provider-limit cache without repeatedly hitting provider APIs. The HUD displays Copilot premium-interaction capacity, Codex 5-hour and weekly capacity, and the active Antigravity Pro account's Gemini capacity with reset intervals. Missing telemetry is explicitly shown as unavailable instead of being inferred as 100% from the absence of a cooldown.
+Provides a live AI provider quota and connection health desktop HUD at the top of the right-hand widget column on portrait display `DP-4`, above Weather and Home Assistant. These three use fixed offsets, so changing one card's height means updating the margins below it in their own repositories. It joins active connections from OmniRoute's `/api/providers` endpoint with official quota observations from `/api/usage/provider-limits`. Startup and manual refresh perform a live upstream quota sync; 30-second background reads reuse OmniRoute's provider-limit cache without repeatedly hitting provider APIs. The HUD displays Copilot premium-interaction capacity, Codex 5-hour and weekly capacity, Claude Code 5-hour session and weekly capacity, and the active Antigravity Pro account's Gemini capacity with reset intervals. Claude Code data comes from the active `claude` OAuth connection in OmniRoute; the weekly bar is the overall `weekly_all` window, not a model-scoped one. Missing telemetry is explicitly shown as unavailable instead of being inferred as 100% from the absence of a cooldown.
 
 - **Configuration:** `~/.config/omarchy/omniroute-quota.json` (endpoint, token, refresh interval, position, dimensions). Fresh installs seed an empty endpoint/token; supply a local endpoint plus a private `tokenFile` through `--settings`, or configure locally before using the HUD. Existing configuration is preserved; credentials are not stored in this repository.
 - **CLI helper:** `omniroute-quota {refresh|status|config}`.
@@ -317,12 +317,12 @@ Provides a live AI provider quota and connection health desktop HUD on portrait 
 - **Type:** Original plugin, maintained in its own repository.
 - **Original upstream URL:** Not applicable; this is the original plugin repository.
 - **Installation source:** `https://github.com/priyeshbhawsar15/omarchy-system-metrics.git`
-- **Pinned commit:** `aac22520daa5f27b94699dad3479c8d811062995`
+- **Pinned commit:** `6e5e99225564d0432c3c0b672da80481b4797d57`
 - **Local modifications:** The original plugin now supports a reloadable `targetScreen` setting instead of a hardcoded DP-4 target; its source remains in the separate repository. The edge-docked collapse fix is maintained in the plugin repository.
 
 ### Behavior and controls
 
-Provides a real-time hardware telemetry HUD on portrait monitor `DP-4` (positioned directly below the OmniRoute Quota HUD). Displays:
+Provides a real-time hardware telemetry HUD on the left side of portrait monitor `DP-4`, directly below the Immich Photo Frame. Displays:
 
 - **Circular Progress Rings**: Side-by-side circular donut meters for System RAM (Cyan) and GPU VRAM (Purple), showing used/total GB and percentage occupied.
 - **Real-time CPU Metrics & Graph**: CPU utilization percentage, CPU temperature in °C, and a 20-point rolling area graph (Emerald).
@@ -330,7 +330,7 @@ Provides a real-time hardware telemetry HUD on portrait monitor `DP-4` (position
 - **Real-time Network Throughput & Graph**: Download/Upload speeds in KB/s / MB/s and network traffic activity graph (Sky Blue).
 
 - **CLI helper:** `system-metrics-collector {once|daemon}`.
-- **Controls:** Pin overlays the card above apps; Auto-Hide slides it into the right display edge with the shared vertical accent handle. Both preferences persist in `~/.local/state/omarchy/system-metrics/settings.json`.
+- **Controls:** Pin overlays the card above apps; Auto-Hide slides it into the left display edge with the shared vertical accent handle. Both preferences persist in `~/.local/state/omarchy/system-metrics/settings.json`.
 - **Toggle visibility:** `omarchy-shell shell toggle priyesh.system-metrics`.
 - **Install or re-enable:** `./install-system-metrics.sh` — installs the pinned checkout and enables the plugin in Omarchy shell.
 - **Disable:** `./install-system-metrics.sh --disable` — disables the plugin and hides the HUD.
@@ -344,12 +344,12 @@ Provides a real-time hardware telemetry HUD on portrait monitor `DP-4` (position
 - **Type:** Original plugin, maintained in its own repository.
 - **Original upstream URL:** Not applicable; this is the original plugin repository.
 - **Installation source:** `https://github.com/priyeshbhawsar15/omarchy-weather-widget.git`
-- **Pinned commit:** `e9c0d99ffa587452ba4597160a28f1fdc9d8b00c`
+- **Pinned commit:** `79e2550348dd32da306358524a51daeb34142324`
 - **Local modifications:** None.
 
 ### Behavior and controls
 
-Provides a desktop weather card widget on portrait monitor `DP-4` (positioned directly below the System Metrics HUD). Displays:
+Provides a desktop weather card widget on portrait monitor `DP-4` (positioned directly below the OmniRoute Quota HUD). Displays:
 
 - **Large Weather Outline Icon**: Dynamic high-contrast weather condition icon (cloud with rain drops, sun rays, fog, snow, thunderstorm).
 - **Thermometer Gauge**: Custom QML canvas glass thermometer showing an inner mercury fill height proportional to temperature with right-side tick marks.
@@ -426,10 +426,10 @@ Shibumi Bar monitors `~/.local/state/omarchy/toggles/` (`bar-autohide` and `bar-
 - **Plugin ID:** `priyesh.home-assistant`; original private plugin in its own repository.
 - **Original upstream:** Not applicable; original implementation.
 - **Installation source:** `https://github.com/priyeshbhawsar15/omarchy-home-assistant.git` (private).
-- **Pinned commit:** `1fe269a3fdff3a7c8f920c0403f069449745069b`.
+- **Pinned commit:** `722719dd9da898cfcc91272673b4e98c1f645683`.
 - **Modifications:** None outside the maintained original source repository.
 
-A desktop-only control card on **DP-4**, directly below Weather at the right edge, emphasizes room temperature and humidity in two aligned, equally prominent 30px readouts. It matches Weather/System Metrics: 390px card width, shared font hierarchy, 85%-alpha Aether background, 30%-alpha accent outline, `Style.space(16)` rounding/padding, and 28px Auto-Hide then Pin header controls. The full controls are always present when revealed in a fixed-height, bounded scrollable card (up to 650px); there is no compact-to-expanded resize or slide animation. The cleaned-up AC keeps a compact 164px 270° setpoint dial and ± buttons, with Mode/Fan/Preset fields aligned alongside it and equal-width Vertical/Horizontal Swing fields below. The redundant AC current-temperature block is removed. Every climate/WLED dropdown and popup uses the same font, 34px height, padding, 8px corners and theme-bound selected/focus/hover states. Room switches occupy an aligned 2×2 grid and all four are visible without scrolling at this DP-4 geometry; lower WLED controls remain scrollable. Dial drag commits on release and ±/arrow keys step within the entity's actual limits. Hover/focus or click instantly reveals Panasonic AC power, temperature and supported climate options; outdoor HA weather; Tube, Top 1, Top 2 and Fan switches; Mood Lighting and Focus Mode scenes; Monitor/Bed/Window WLED brightness, named color presets/hue and actual effect-list selection. Escape dismisses details. No bar entry, new global shortcut or smart-home automation is created. The existing HA Quick entry is absent from the current bar; unrelated bar layout is preserved.
+A desktop-only control card on **DP-4**, directly below Weather at the right edge and filling the remaining display height, emphasizes room temperature and humidity in two aligned, equally prominent 30px readouts. It matches Weather/System Metrics: 390px card width, shared font hierarchy, 85%-alpha Aether background, 30%-alpha accent outline, `Style.space(16)` rounding/padding, and 28px Auto-Hide then Pin header controls. The full controls are always present when revealed in a fixed-height, bounded scrollable card; there is no compact-to-expanded resize or slide animation. The cleaned-up AC keeps a compact 164px 270° setpoint dial and ± buttons, with Mode/Fan/Preset fields aligned alongside it and equal-width Vertical/Horizontal Swing fields below. The redundant AC current-temperature block is removed. Every climate/WLED dropdown and popup uses the same font, 34px height, padding, 8px corners and theme-bound selected/focus/hover states. Room switches occupy an aligned 2×2 grid and all four are visible without scrolling at this DP-4 geometry; lower WLED controls remain scrollable. Dial drag commits on release and ±/arrow keys step within the entity's actual limits. Hover/focus or click instantly reveals Panasonic AC power, temperature and supported climate options; outdoor HA weather; Tube, Top 1, Top 2 and Fan switches; Mood Lighting and Focus Mode scenes; Monitor/Bed/Window WLED brightness, named color presets/hue and actual effect-list selection. Escape dismisses details. No bar entry, new global shortcut or smart-home automation is created. The existing HA Quick entry is absent from the current bar; unrelated bar layout is preserved.
 
 **Removed controls:** Good Night and Leave Home have been removed from default and current local configuration, and are filtered from legacy scene mappings. Mood Lighting and Focus Mode remain. **Intentional limitation:** Monitor (`light.window`) is unavailable in HA; no direct WLED bypass is used. Repair its HA integration separately; no substitute device actions are invented.
 

@@ -7,7 +7,7 @@ feature_lifecycle "$0" "$@"
 require_omarchy
 plugin_id="priyesh.home-assistant"
 plugin_url="https://github.com/priyeshbhawsar15/omarchy-home-assistant.git"
-plugin_commit="1fe269a3fdff3a7c8f920c0403f069449745069b"
+plugin_commit="722719dd9da898cfcc91272673b4e98c1f645683"
 plugin_dir="$HOME/.config/omarchy/plugins/$plugin_id"
 venv="$HOME/.local/share/omarchy-home-assistant/venv"
 config="$HOME/.config/omarchy/home-assistant.json"
