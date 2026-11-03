@@ -10,7 +10,7 @@ feature_lifecycle "$0" "$@"
 
 plugin_id="priyesh.omniroute-quota"
 plugin_url="https://github.com/priyeshbhawsar15/omarchy-omniroute-quota.git"
-plugin_commit="b2e3be74e29d9d94e97be9db3d0242641d5b2348"
+plugin_commit="aa2d521df53415b5e06d1359447d8a2f512e0f5d"
 plugin_dir="$HOME/.config/omarchy/plugins/$plugin_id"
 config_file="$HOME/.config/omarchy/omniroute-quota.json"
 
@@ -128,4 +128,8 @@ if plugin_is_enabled; then
 fi
 
 enable_plugin
+if [[ "$checkout_changed" == true ]]; then
+  # An existing QML service can retain its old component after a pin update.
+  omarchy restart shell
+fi
 log "Installed and activated OmniRoute Quota at $plugin_commit."

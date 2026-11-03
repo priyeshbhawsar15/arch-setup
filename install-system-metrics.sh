@@ -10,7 +10,7 @@ feature_lifecycle "$0" "$@"
 
 plugin_id="priyesh.system-metrics"
 plugin_url="https://github.com/priyeshbhawsar15/omarchy-system-metrics.git"
-plugin_commit="aac22520daa5f27b94699dad3479c8d811062995"
+plugin_commit="6e5e99225564d0432c3c0b672da80481b4797d57"
 plugin_dir="$HOME/.config/omarchy/plugins/$plugin_id"
 
 require_omarchy
