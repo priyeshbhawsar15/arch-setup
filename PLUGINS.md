@@ -503,3 +503,82 @@ For each plugin:
 6. For updates, integrate upstream changes into the fork if needed, resolve conflicts, and test before publishing authorized changes and advancing this repository's pin. Keep installed configuration and both documentation files synchronized. Offer useful fixes upstream with user authorization, and consider dropping a fork once upstream provides the needed behavior.
 
 Maintenance happens on request. Automatic monitoring or scheduled updates require separately configured and authorized automation.
+
+## Sunshine remote streaming (application, not a shell plugin)
+
+Sunshine streams the logged-in desktop, audio and remote input to paired Moonlight clients over the LAN or Tailscale. Installed from the Omarchy package repository; upstream is https://github.com/LizardByte/Sunshine. This is package-managed software, with no plugin fork, copied source or plugin commit pin. The repository owns only its installer, network policy and service launcher.
+
+Run `./install-sunshine.sh`. The single entrypoint includes it when selected in a profile; Tailscale is a separate optional application. See [setup and connection steps](sunshine/README.md). No new keyboard shortcuts, menu entries or shell plugin dependencies. Existing monitor/encoder selection and credentials are preserved; old network settings are privately backed up. Administration and streaming bind all IPv4 interfaces (`0.0.0.0`) so LAN and Tailscale work together, including after an interface reconnects. Startup does not call or require Tailscale or a LAN address. UPnP is disabled, stream encryption required, and only exact current host IPv4 origins are trusted for browser administration; other origins retain native CSRF checks. Restart Sunshine to refresh remote UI origins if an address appears later; native streaming needs no restart. Connect to the LAN IP locally or Tailscale IPv4 remotely. Access follows the host firewall, Tailscale policies for tailnet traffic, and Sunshine pairing/admin credentials. No router forwarding or firewall changes are applied.
+
+If Moonlight reports “client is not verified” and the host logs “Client certificate identity is not enabled”, check for duplicate certificate identities left by repeated pairing. This Sunshine version rejects multiple records for the same certificate. `./install-sunshine.sh --repair-pairing` makes a private backup, retains the newest enabled record per identical certificate and preserves unrelated clients/credentials; disabled duplicate records require explicit review. This is an opt-in state repair, not a plugin/source modification or a certificate-verification bypass. Avoid pairing again when the phone already has a valid host entry. For an explicit fresh start, `./install-sunshine.sh --reset-pairing` archives then removes all Sunshine client trust and the host certificate/key, retaining the admin login. All clients must forget the old PC and pair once against the regenerated identity; this does not change Tailscale certificates.
+
+Enable with `./install-sunshine.sh --enable`; disable with `./install-sunshine.sh --disable`. Updates use the normal Omarchy package workflow; rerun the installer afterward to reconcile settings. Removal: disable the service, privately back up `~/.config/sunshine`, remove only `~/.local/bin/sunshine-host` and `~/.config/systemd/user/app-dev.lizardbyte.app.Sunshine.service.d/arch-setups-network.conf`, run `systemctl --user daemon-reload`, and remove the Sunshine package through Omarchy if desired. Preserve credentials unless deliberately resetting pairings; Tailscale is independent and remains installed. Disable/remove the installer selection in your profile/local choices to prevent future reinstall.
+
+Requires a running Hyprland session and DRM/KMS capture, a supported hardware encoder and uinput support. Managed capture uses KMS to avoid the unavailable RemoteDesktop portal on Hyprland. Package hooks manage capture capabilities and input-device rules. Sleep, login-screen access, headless display creation and automatic monitor/resolution changes are not configured. Other Sunshine autostarts must be disabled to avoid duplicate listeners.
+
+## SDDM automatic login with startup lock (system integration)
+
+Opt-in companion behavior for unattended remote access: SDDM logs the selected
+current user into the UWSM Hyprland session, then a dedicated user service requests
+and verifies the existing Omarchy lock. This is not a shell plugin and has no
+upstream fork, plugin pin, copied plugin source or new shortcuts. It uses the
+native lock IPC, retaining the active lock screen and dynamic theme. Built-in
+lock functionality remains package-managed; Lock Explorer remains independent.
+
+Enable with `./install-sddm-autologin.sh --enable`, inspect with `--status`, and
+disable with `--disable`. The root drop-in and user startup-lock unit are managed
+together; disabling removes neither normal password login nor regular locking.
+`Relogin=false` leaves the greeter visible after intentional logout. No display
+manager restart or reboot is performed. Requires SDDM, UWSM Hyprland and working
+Omarchy password-lock IPC; no dependency on Sunshine or a particular lock plugin.
+Disabled by default in both shipped profiles; successful direct choices are
+remembered by the single-script setup. Existing conflicting startup lockers
+should be disabled separately rather than running two session lockers.
+
+The startup guard waits for a secure session lock, and requests UWSM shutdown
+if locking fails. Automatic login still exposes a startup interval before the
+lock initializes; disk encryption and encrypted keyrings remain separate. Remote
+unlocking through Moonlight and next-boot behavior need a real boot/client test.
+See [configuration, updates, backups and removal](sddm/README.md). Updates are
+applied by rerunning the selected installer; disabling never changes unrelated
+plugins, idle/suspend locking, greeter theme, PAM or personal Hyprland modules.
+
+## Virtual Desktop 1080p (independent Sunshine host, not a shell plugin)
+
+`install-virtual-desktop.sh` adds a separate hostname-derived **Virtual 1080p**
+PC in Moonlight, with its own **Virtual Desktop 1080p** tile. It uses a named
+1920×1080@60 Hyprland headless output and wlr/VAAPI capture/encoding; the physical
+Desktop and Steam profile remains independent. It shares the actual Linux
+session, applications, input and audio, so avoid simultaneous local/remote or
+physical/virtual host use. This is package-managed Sunshine plus personal
+configuration/helpers, with no plugin fork, source copy or new keyboard shortcuts.
+The virtual desktop inherits native Omarchy/Aether theming.
+
+Enable/status/disable through `./install-virtual-desktop.sh --enable`, `--status`
+and `--disable`. The service creates/removes only its owned output and restores
+monitor focus after quitting the virtual app where appropriate. Profile data is
+retained on disable. Requires Sunshine, Mesa VAAPI, UWSM Hyprland and systemd user
+services; no dependency on a specific wallpaper/lock plugin or Tailscale startup.
+Opt-in in both shipped profiles and registered in `install-all.sh` after Sunshine.
+An initially empty virtual workspace needs an application launched on it; existing
+physical-monitor windows stay on their monitors. Unchanged installer runs preserve
+active streams. Disable checks inactive owned outputs too and reports cleanup
+failures rather than dropping ownership state.
+The native mobile Moonlight app has displayed this virtual desktop successfully.
+The separately hosted Moonlight Web gateway's current protocol library lacks
+encrypted-video support; its blue-screen failure affects both hosts. Mandatory
+LAN/WAN encryption remains enabled by user choice; use the native app.
+
+Network base is 48989; administrator UI is https://localhost:48990. Add
+`<LAN-IP>:48989` or `<Tailscale-IP>:48989` in Moonlight, pair once with this distinct
+host, and choose the virtual tile. Its private profile seeds only existing admin
+authentication once, then owns its certificate, UUID and client trust independently.
+Enabling is refused until the main Sunshine host has an admin login, so the virtual
+admin port is never open while unclaimed. Disabling main Sunshine also disables this host.
+UPnP stays disabled and encryption required. A dedicated UFW application profile
+permits only private-LAN sources or `tailscale0`; disable removes its exact rules.
+There is no router forwarding. Updates are applied by rerunning the feature
+installer; no plugin pin changes. See [configuration, conflicts, backups and
+removal](sunshine/VIRTUAL-DESKTOP.md). Monitor-off, reboot, remote unlock and
+client frame/latency tests remain necessary; a hardware capture probe is not an
+end-to-end stream benchmark.

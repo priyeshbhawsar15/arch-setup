@@ -1,0 +1,19 @@
+# Managed by arch-setups/install-virtual-desktop.sh
+[Unit]
+Description=Sunshine Virtual Desktop 1080p
+After=graphical-session.target wayland-session-waitenv.service
+PartOf=graphical-session.target
+StartLimitIntervalSec=120
+StartLimitBurst=3
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 %h/.local/lib/arch-setups/sunshine-virtual.py run
+ExecStopPost=/usr/bin/python3 %h/.local/lib/arch-setups/sunshine-virtual.py cleanup
+Restart=on-failure
+RestartSec=15
+UMask=0077
+TimeoutStopSec=15
+
+[Install]
+WantedBy=graphical-session.target

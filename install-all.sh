@@ -20,11 +20,13 @@ installers=(
   install-steam.sh
   install-lutris.sh
   install-linuwux.sh
-  install-sunshine.sh
   install-tailscale.sh
+  install-sunshine.sh
+  install-virtual-desktop.sh
   install-keyd.sh
   install-zsh.sh
   install-hyprland.sh
+  install-sddm-autologin.sh
   install-wallpaper-controller.sh
   install-gaming-mode.sh
   install-shibumi-shell.sh

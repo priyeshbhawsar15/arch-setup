@@ -48,6 +48,12 @@ class FeaturePreferencesTest(unittest.TestCase):
         self.assertIn('required installer', result.stderr)
         self.assertFalse((self.base / 'state').exists())
 
+    def test_autologin_choice_does_not_require_managed_personal_hyprland_settings(self):
+        self.assertEqual(self.run_profile('remember', 'install-hyprland.sh', 'false').returncode, 0)
+        self.assertEqual(self.run_profile('remember', 'install-sddm-autologin.sh', 'true').returncode, 0)
+        result = self.run_profile('enabled', 'install-sddm-autologin.sh')
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_corrupt_preferences_do_not_get_overwritten(self):
         state = self.base / 'state/arch-setups/features.json'
         state.parent.mkdir(parents=True)

@@ -241,6 +241,9 @@ def inspect(preflight=False, dotfiles=None, profile_path=None):
     if 'install-calendar.sh' in selected:
         code, _ = command(['systemctl', '--user', 'is-active', '--quiet', 'omarchy-calendar-sync.timer'])
         add('readiness:calendar', 'ok' if code == 0 else 'pending', 'Calendar timer active; verify event sync.' if code == 0 else 'Complete Calendar OAuth and rerun its installer.')
+    if 'install-virtual-desktop.sh' in selected:
+        code, _ = command(['systemctl', '--user', 'is-active', '--quiet', 'arch-sunshine-virtual'])
+        add('readiness:virtual-desktop', 'ok' if code == 0 else 'pending', 'Virtual host active; verify separate pairing, 1080p capture and monitors-off behavior.' if code == 0 else 'Enable the virtual host from a running Hyprland session and inspect its journal.')
     if 'install-sunshine.sh' in selected:
         code, _ = command(['systemctl', '--user', 'is-active', '--quiet', 'sunshine'])
         add('readiness:sunshine', 'ok' if code == 0 else 'pending', 'Sunshine active; verify pairing and capture.' if code == 0 else 'Configure Sunshine credentials, pairing, capture and service startup.')

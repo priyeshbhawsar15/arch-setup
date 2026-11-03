@@ -285,3 +285,20 @@ install_mise_cli() {
   log "$tool mise installation/configuration complete."
 }
 
+# Disabling must stay safe, and keep cleaning up, when a unit was never installed.
+disable_user_unit() {
+  if systemctl --user cat "$1" >/dev/null 2>&1; then
+    systemctl --user disable --now "$1"
+  fi
+}
+
+# Desktop installers can authenticate graphically when no terminal is attached.
+run_privileged() {
+  if (( EUID == 0 )); then
+    "$@"
+  elif [[ -t 0 ]]; then
+    sudo "$@"
+  else
+    pkexec "$@"
+  fi
+}

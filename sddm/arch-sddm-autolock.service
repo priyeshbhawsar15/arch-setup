@@ -1,0 +1,14 @@
+# Managed by arch-setups/install-sddm-autologin.sh
+[Unit]
+Description=Lock the Omarchy session immediately after automatic login
+After=graphical-session.target wayland-session-waitenv.service
+PartOf=graphical-session.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 %h/.local/lib/arch-setups/sddm-autolock.py
+TimeoutStartSec=45
+RemainAfterExit=yes
+
+[Install]
+WantedBy=graphical-session.target
