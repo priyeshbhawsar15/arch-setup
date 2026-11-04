@@ -79,6 +79,46 @@ class ExportTests(unittest.TestCase):
         mapping = config['InstallConfigStore']['Software']['Valve']['Steam']['CompatToolMapping']
         self.assertEqual(mapping, {'813780': {'name': 'keep'}})
 
+    STORE = ('"UserLocalConfigStore"\n{\n\t"Software"\n\t{\n\t\t"Valve"\n\t\t{\n\t\t\t"Steam"\n\t\t\t{\n'
+             '\t\t\t\t"apps"\n\t\t\t\t{\n\t\t\t\t\t"4217488047"\n\t\t\t\t\t{\n\t\t\t\t\t\t"Nested"\t\t"keep"\n\t\t\t\t\t}\n'
+             '\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\t"SteamController_XBoxSupport"\t\t"1"\n')
+
+    def apps(self, text):
+        return m.vdf.loads(text)['UserLocalConfigStore'].get('apps', {})
+
+    def test_steam_input_disabled_adds_missing_apps_block_and_entries(self):
+        text = self.STORE + '}\n'
+        updated = m.disable_steam_input(text, {4217488047, 3681072528})
+        apps = self.apps(updated)
+        self.assertEqual(apps['4217488047']['UseSteamControllerConfig'], '0')
+        self.assertEqual(apps['3681072528']['UseSteamControllerConfig'], '0')
+        # The similarly named nested Software/Valve/Steam/apps block is untouched.
+        nested = m.vdf.loads(updated)['UserLocalConfigStore']['Software']['Valve']['Steam']['apps']
+        self.assertEqual(nested, {'4217488047': {'Nested': 'keep'}})
+        self.assertEqual(m.disable_steam_input(updated, {4217488047, 3681072528}), updated)
+
+    def test_steam_input_disabled_updates_existing_entry_and_keeps_other_keys(self):
+        text = (self.STORE + '\t"apps"\n\t{\n\t\t"413080"\n\t\t{\n\t\t\t"UseSteamControllerConfig"\t\t"0"\n\t\t}\n'
+                '\t\t"3681072528"\n\t\t{\n\t\t\t"UseSteamControllerConfig"\t\t"1"\n\t\t\t"SteamControllerRumble"\t\t"-1"\n\t\t}\n'
+                '\t\t"2623494187"\n\t\t{\n\t\t\t"SteamControllerRumble"\t\t"-1"\n\t\t}\n\t}\n}\n')
+        updated = m.disable_steam_input(text, {3681072528, 2623494187, 2314256998})
+        apps = self.apps(updated)
+        self.assertEqual(apps['413080'], {'UseSteamControllerConfig': '0'})
+        self.assertEqual(apps['3681072528'], {'UseSteamControllerConfig': '0', 'SteamControllerRumble': '-1'})
+        self.assertEqual(apps['2623494187'], {'SteamControllerRumble': '-1', 'UseSteamControllerConfig': '0'})
+        self.assertEqual(apps['2314256998'], {'UseSteamControllerConfig': '0'})
+        self.assertEqual(m.disable_steam_input(updated, {3681072528, 2623494187, 2314256998}), updated)
+
+    def test_steam_input_edit_preserves_unrelated_text_byte_for_byte(self):
+        text = self.STORE.replace('"keep"', '"Shift\tKEY"') + '}\n'
+        updated = m.disable_steam_input(text, {1})
+        # Only the new apps block is added; every original byte stays exactly in place.
+        self.assertEqual(updated, text[:-2] + '\t"apps"\n\t{\n\t\t"1"\n\t\t{\n\t\t\t"UseSteamControllerConfig"\t\t"0"\n\t\t}\n\t}\n}\n')
+
+    def test_steam_input_edit_requires_user_store(self):
+        with self.assertRaises(ValueError):
+            m.disable_steam_input('"Other"\n{\n}\n', {1})
+
     def test_uri_uses_64bit_nonsteam_id(self):
         aid = 3681072528
         self.assertEqual(m.steam_uri(aid), 'steam://rungameid/' + str((aid << 32) | 0x02000000))
@@ -117,6 +157,65 @@ class ExportTests(unittest.TestCase):
             self.assertTrue((writer.backup / str(profile).lstrip('/')).exists())
             again = m.Writer()
             m.reconcile_launcher_policy(again, apps)
+            self.assertEqual(again.changes, 0)
+
+    def lutris_game(self, gid, slug, name, runner='wine'):
+        return dict(id=gid, name=name, slug=slug, runner=runner, configpath=slug)
+
+    def test_game_launchers_are_single_direct_lutris_entries(self):
+        with tempfile.TemporaryDirectory() as td, patch.object(m, 'STATE', Path(td) / 'state'), \
+             patch.object(m, 'HOME', Path(td) / 'home'):
+            apps = Path(td) / 'applications'
+            apps.mkdir()
+            hidden = apps / 'lutris-ghost.desktop'
+            hidden.write_text('[Desktop Entry]\nName=Ghost\nExec=lutris lutris:rungameid/8\nCategories=Game;\nHidden=true\n')
+            nonsteam = apps / 'steam-library-4217488047.desktop'
+            nonsteam.write_text(m.desktop('Ghost', m.steam_uri(4217488047), 'steam'))
+            native = apps / 'steam-library-813780.desktop'
+            native.write_text(m.desktop('AoE', m.steam_uri(813780, native=True), 'steam'))
+            foreign = apps / 'steam-library-123456789.desktop'
+            foreign.write_text('[Desktop Entry]\nName=Mine\nExec=/usr/bin/steam ' + m.steam_uri(123456789) + '\n')
+            games = [self.lutris_game(8, 'ghost-of-tsushima', 'Ghost'),
+                     self.lutris_game(5, 'aoe', 'AoE', runner='steam')]
+            writer = m.Writer()
+            m.reconcile_game_launchers(writer, apps, games)
+            self.assertNotIn('Hidden=true', hidden.read_text())
+            self.assertFalse(nonsteam.exists())
+            self.assertTrue((writer.backup / str(nonsteam).lstrip('/')).exists())
+            self.assertTrue(native.exists())
+            self.assertTrue(foreign.exists())
+            self.assertFalse((apps / 'lutris-aoe.desktop').exists())
+            again = m.Writer()
+            m.reconcile_game_launchers(again, apps, games)
+            self.assertEqual(again.changes, 0)
+
+    def test_missing_direct_launcher_is_created_without_clobbering_foreign_files(self):
+        with tempfile.TemporaryDirectory() as td, patch.object(m, 'STATE', Path(td) / 'state'), \
+             patch.object(m, 'HOME', Path(td) / 'home'):
+            apps = Path(td) / 'applications'
+            apps.mkdir()
+            icons = Path(td) / 'home/.local/share/icons/hicolor/128x128/apps'
+            icons.mkdir(parents=True)
+            (icons / 'lutris_epic-games-store.png').write_bytes(b'png')
+            games = [self.lutris_game(1, 'epic-games-store', 'Epic Games Store'),
+                     self.lutris_game(6, 'ts4_x64exe', 'TS4_x64.exe'),
+                     self.lutris_game(9, 'cyberpunk-2077', 'Cyberpunk 2077')]
+            foreign = apps / 'lutris-cyberpunk-2077.desktop'
+            foreign.write_text('[Desktop Entry]\nName=Custom\nExec=/opt/other-launcher\n')
+            writer = m.Writer()
+            m.reconcile_game_launchers(writer, apps, games)
+            epic = (apps / 'lutris-epic-games-store.desktop').read_text()
+            self.assertIn('Name=Epic Games Store\n', epic)
+            self.assertIn('Exec=lutris lutris:rungameid/1\n', epic)
+            self.assertIn(f'Icon={icons / "lutris_epic-games-store.png"}\n', epic)
+            self.assertIn('X-ArchSetups-LutrisLauncher=true', epic)
+            self.assertNotIn('Hidden', epic)
+            sims = (apps / 'lutris-ts4_x64exe.desktop').read_text()
+            self.assertIn('Name=TS4_x64.exe\n', sims)  # metadata policy keeps the source title
+            self.assertIn('Icon=lutris\n', sims)
+            self.assertEqual(foreign.read_text(), '[Desktop Entry]\nName=Custom\nExec=/opt/other-launcher\n')
+            again = m.Writer()
+            m.reconcile_game_launchers(again, apps, games)
             self.assertEqual(again.changes, 0)
 
     def test_profile_launcher_is_kept_if_no_standard_aoe_entry_exists(self):
@@ -167,6 +266,7 @@ class ExportTests(unittest.TestCase):
             (base / 'shortcuts.vdf').write_bytes(m.vdf.binary_dumps({'shortcuts': {'0': {
                 'appid': m.signed(3509545727), 'AppName': 'Honey Select 2 DX',
                 'Exe': '"/usr/bin/lutris"', 'LaunchOptions': 'lutris:rungameid/17'}}}))
+            (base / 'localconfig.vdf').write_text(self.STORE + '}\n')
             applications = home / '.local/share/applications'
             applications.mkdir(parents=True)
             removed_launcher = applications / 'steam-library-3509545727.desktop'
@@ -181,11 +281,19 @@ class ExportTests(unittest.TestCase):
                  patch.dict(m.os.environ, XDG_DATA_HOME=str(home / '.local/share')):
                 m.migrate(args)
                 before = (base / 'shortcuts.vdf').read_bytes()
+                localconfig_before = (base / 'localconfig.vdf').read_bytes()
                 m.migrate(args)
                 self.assertEqual((base / 'shortcuts.vdf').read_bytes(), before)
+                self.assertEqual((base / 'localconfig.vdf').read_bytes(), localconfig_before)
+            # Steam Input is disabled only for the exported Lutris shortcut, not the removed entry.
+            apps = self.apps((base / 'localconfig.vdf').read_text())
+            self.assertEqual(apps, {'3225172075': {'UseSteamControllerConfig': '0'}})
             self.assertEqual((games / 'local.yml').read_bytes(), yaml)
             self.assertEqual(second.read_bytes(), b'untouched account')
             entries = m.vdf.binary_loads(before)['shortcuts']
             self.assertEqual(len(entries), 1)
             self.assertIn('lutris:rungameid/1', next(iter(entries.values()))['LaunchOptions'])
             self.assertFalse(removed_launcher.exists())
+            # The exported Lutris game gets one direct Lutris launcher and no Steam launcher.
+            self.assertIn('Exec=lutris lutris:rungameid/1\n', (applications / 'lutris-local.desktop').read_text())
+            self.assertFalse((applications / 'steam-library-3225172075.desktop').exists())

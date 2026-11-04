@@ -9,8 +9,8 @@ are modified. This is a companion service, not a shell plugin requiring a separa
 
 ## Enter and exit
 
-- Launch a game from Steam (desktop or Big Picture), Lutris, or a Steam-backed Omarchy
-  game entry. The service checks runtime signals every second and activates automatically.
+- Launch a game from Steam (desktop or Big Picture), Lutris, or an Omarchy
+  game entry (a direct Lutris entry for non-Steam games, a Steam entry for Steam games). The service checks runtime signals every second and activates automatically.
   Installing a new game does not require another installer run or launch-option edit.
 - Steam's `SteamAppId`/`SteamGameId` process environment markers and Lutris's `GAME_NAME`
   marker identify game processes. Lutris sets its marker in `configure_game()` for all

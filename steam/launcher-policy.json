@@ -1,5 +1,6 @@
 {
   "showLutris": true,
   "removeAoEAccountLaunchers": true,
-  "deduplicateNativeSteamIds": [813780]
+  "deduplicateNativeSteamIds": [813780, 322330, 431960, 1607680],
+  "disableSteamInputForLutris": true
 }

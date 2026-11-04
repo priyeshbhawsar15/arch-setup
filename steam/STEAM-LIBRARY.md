@@ -1,5 +1,8 @@
 # Steam-first library and Omarchy launchers
 
+> Launcher change: non-Steam games appear in the Omarchy launcher as one direct Lutris entry each
+> (the Steam shortcuts stay in the Steam library). Native Steam games keep a Steam entry.
+
 Steam provides the game-library frontend; the Lutris application is also available in the
 Omarchy launcher. Lutris remains installed as the launch backend for
 its non-Steam games, preserving each live YAML configuration: prefix, Wine/GE-Proton,
@@ -58,23 +61,43 @@ it can overwrite the Lutris source configuration with the new Linux launcher tar
 - Steam does not support official store descriptions, achievements, DLC entitlements or
   ownership metadata on arbitrary non-Steam shortcuts. Artwork does NOT turn a shortcut
   into an owned Steam copy; official IDs are used only for public artwork lookup.
-- `~/.local/share/applications/steam-library-*.desktop` entries launch through Steam.
-  Non-Steam URIs use the full 64-bit game ID, not just the 32-bit shortcut ID.
-- Existing recognized `lutris-*.desktop` game entries are hidden, not destroyed. The
-  tracked `steam/launcher-policy.json` keeps the main Lutris app visible. Its file-handler
+- Omarchy launcher entries: every Lutris-backed (non-Steam) game gets exactly ONE launcher,
+  a direct Lutris entry (`lutris-<slug>.desktop`, `lutris lutris:rungameid/ID`). Existing
+  recognized Lutris entries are made visible (a second copy for the same game stays hidden),
+  and a managed one (`X-ArchSetups-LutrisLauncher=true`) is created when Lutris has none.
+  The managed `steam-library-<64-bit id>.desktop` launchers for those games are removed
+  (backed up first); the Steam library shortcuts themselves remain for Big Picture/Steam.
+  Native Steam games keep a Steam launcher (`steam-library-<appid>.desktop`, 32-bit app ID).
+  Foreign files with the same name are left untouched. The tracked
+  `steam/launcher-policy.json` keeps the main Lutris app visible. Its file-handler
   entry retains `NoDisplay=true` so it does not create a second Lutris application icon.
   Package-managed desktop files are untouched; later exports preserve this visibility.
 - The same policy archives recognized `aoe2-*.desktop` account-switching shortcuts only
   when a standard AoE launcher exists. It hides additional direct native Steam entries
-  for app 813780 when the managed canonical entry is valid, leaving one visible AoE entry.
+  for the app IDs in `deduplicateNativeSteamIds` (AoE II 813780, Don't Starve Together 322330,
+  Wallpaper Engine 431960, Bread & Fred 1607680) when the managed canonical entry is valid,
+  leaving one visible entry for each. Hidden copies are not deleted.
   Unknown custom commands, account data and the account-switching helper are preserved.
   The policy runs during exports and via `--apply --launchers-only`; that restricted action
   edits no Steam VDF/library files and does not require closing either client.
 - Existing matching Omarchy gamepad-wheel Steam actions are corrected to full game IDs;
   unrelated menu entries, colors and settings remain intact. The wheel is not filled with
-  every game; all exported games appear in the normal applications launcher.
+  every game; all exported games appear in the normal applications launcher as direct Lutris entries.
 - Nothing adds a second Gamescope layer. Steam starts Lutris natively; the game uses its
   existing Lutris wrapper. Do not force a Steam compatibility tool on these shortcuts.
+- Steam Input is turned off for every exported Lutris shortcut. Steam only activates a
+  controller layout for the game it believes has focus, and it cannot see the Gamescope/umu
+  window of a Lutris-launched game. It therefore never activates the shortcut's layout, yet it
+  still creates a silent virtual Xbox pad; the game receives no controller input at all. The
+  export sets `UseSteamControllerConfig` to `"0"` for each exported shortcut ID in the account's
+  `localconfig.vdf` (the same setting as Properties -> Controller -> Disable Steam Input), so
+  the game reads the physical controller directly. This is a minimal text edit that only inserts
+  or updates those `apps` entries; the rest of the file is left byte-for-byte. Steam rewrites
+  this file when it exits, so it is edited only during `--apply`, which already requires Steam
+  and Lutris to be closed. Native Steam games, other settings and the Home/Guide button behavior
+  are untouched. Set `"disableSteamInputForLutris": false` in `steam/launcher-policy.json` to
+  stop managing this; already written entries are not reverted automatically (re-enable per
+  game in Steam, or delete the entry).
 
 `steam/metadata-policy.json` records reproducible visual exclusions and explicit removals.
 Sims 4 (`ts4_x64exe`) and KS retain their original source titles, empty shortcut icons and

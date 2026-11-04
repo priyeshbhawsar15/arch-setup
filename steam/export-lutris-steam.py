@@ -136,6 +136,84 @@ def remove_compat(config, ids):
             del mapping[key]
 
 
+def disable_steam_input(text, ids):
+    """Set UseSteamControllerConfig=0 for ids in localconfig.vdf's top-level apps block.
+
+    Steam never activates a controller layout for games running behind Lutris/umu/Gamescope, but
+    still creates a silent virtual pad. Disabling Steam Input for these shortcuts lets the game use
+    the physical pad directly. This is a minimal text edit: Steam rewrites this file at exit, and
+    reserializing it would change unrelated formatting. Only the 'apps' entries below
+    UserLocalConfigStore (not Software/Valve/Steam/apps) are touched.
+    """
+    lines = text.splitlines(keepends=True)
+    if lines and not lines[-1].endswith('\n'):
+        lines[-1] += '\n'
+    key_line = re.compile(r'^\s*"((?:[^"\\]|\\.)*)"\s*$')
+    value_line = re.compile(r'^(\s*"UseSteamControllerConfig"\s+)"[^"]*"(\s*)$')
+    stack, pending = [], None
+    store = apps = None  # [open index, close index]
+    entries = {}  # app id -> [open index, close index]
+    for index, line in enumerate(lines):
+        stripped = line.strip()
+        if stripped == '{':
+            stack.append(pending)
+            pending = None
+            path = tuple(stack)
+            if path == ('UserLocalConfigStore',):
+                store = [index, None]
+            elif path == ('UserLocalConfigStore', 'apps'):
+                apps = [index, None]
+            elif len(path) == 3 and path[:2] == ('UserLocalConfigStore', 'apps'):
+                entries[path[2]] = [index, None]
+        elif stripped == '}':
+            path = tuple(stack)
+            if path == ('UserLocalConfigStore',) and store:
+                store[1] = index
+            elif path == ('UserLocalConfigStore', 'apps') and apps:
+                apps[1] = index
+            elif len(path) == 3 and path[:2] == ('UserLocalConfigStore', 'apps') and path[2] in entries:
+                entries[path[2]][1] = index
+            if stack:
+                stack.pop()
+            pending = None
+        else:
+            match = key_line.match(line)
+            pending = match.group(1) if match else None
+    if store is None or store[1] is None:
+        raise ValueError('Steam localconfig.vdf has no UserLocalConfigStore block')
+    wanted = [str(int(i) & 0xffffffff) for i in sorted(ids)]
+    inserts = {}  # line index -> text inserted before it
+
+    def entry_block(aid, depth):
+        tabs = '\t' * depth
+        return (f'{tabs}"{aid}"\n{tabs}{{\n{tabs}\t"UseSteamControllerConfig"\t\t"0"\n{tabs}}}\n')
+
+    missing = []
+    for aid in wanted:
+        if apps is None or aid not in entries:
+            missing.append(aid)
+            continue
+        opened, closed = entries[aid]
+        found = False
+        for index in range(opened + 1, closed):
+            match = value_line.match(lines[index].rstrip('\n'))
+            if match:
+                lines[index] = match.group(1) + '"0"' + match.group(2) + '\n'
+                found = True
+        if not found:
+            inserts[opened + 1] = inserts.get(opened + 1, '') + '\t' * 3 + '"UseSteamControllerConfig"\t\t"0"\n'
+    if missing and apps is not None:
+        inserts[apps[1]] = inserts.get(apps[1], '') + ''.join(entry_block(a, 2) for a in missing)
+    elif missing:
+        block = '\t"apps"\n\t{\n' + ''.join(entry_block(a, 2) for a in missing) + '\t}\n'
+        inserts[store[1]] = inserts.get(store[1], '') + block
+    out = []
+    for index, line in enumerate(lines):
+        out.append(inserts.get(index, ''))
+        out.append(line)
+    return ''.join(out)
+
+
 def desktop(name, uri, icon):
     if any('\n' in str(v) or '\r' in str(v) for v in (name, uri, icon)):
         raise ValueError('Invalid desktop field')
@@ -172,6 +250,64 @@ def desktop_native_id(text):
         if match:
             return int(match[1])
     return None
+
+
+LUTRIS_EXEC = re.compile(r'(?m)^Exec=(?:/usr/bin/)?lutris lutris:rungameid/(\d+)\s*$')
+
+
+def lutris_launcher(game, icon):
+    name = display_name(game)
+    if any('\n' in str(v) or '\r' in str(v) for v in (name, icon)):
+        raise ValueError('Invalid desktop field')
+    return ('[Desktop Entry]\nName=' + name.replace('\\', '\\\\') +
+            '\nComment=Launch ' + name.replace('\\', '\\\\') + ' with Lutris'
+            f"\nExec=lutris lutris:rungameid/{game['id']}\nIcon=" + str(icon).replace('\\', '\\\\') +
+            '\nTerminal=false\nType=Application\nCategories=Game;\nKeywords=Lutris;\nStartupNotify=true'
+            '\nX-ArchSetups-LutrisLauncher=true\n')
+
+
+def reconcile_game_launchers(writer, applications, games):
+    """Give every Lutris-backed (non-Steam) game exactly one launcher entry: a direct Lutris one.
+
+    Existing recognized lutris-*.desktop entries are made visible (extra copies for the same game stay
+    hidden), a managed one is created when Lutris has none, and the managed Steam launchers for
+    non-Steam shortcuts (64-bit steam://rungameid IDs) are removed. Native Steam games keep their
+    Steam launcher.
+    """
+    recognized = {}
+    for target in sorted(applications.glob('lutris-*.desktop')):
+        if target.is_symlink() or not target.is_file():
+            continue
+        text = target.read_text()
+        match = LUTRIS_EXEC.search(text)
+        if match:
+            recognized.setdefault(int(match[1]), []).append((target, text))
+    icons = HOME / '.local/share/icons/hicolor/128x128/apps'
+    for game in games:
+        if game['runner'] == 'steam':
+            continue
+        entries = recognized.get(game['id'])
+        if entries:
+            for index, (target, text) in enumerate(entries):
+                writer.write(target, hide_desktop(text, hidden=index > 0).encode())
+            continue
+        target = applications / f"lutris-{game['slug']}.desktop"
+        if target.exists() or target.is_symlink():
+            print('Keeping unrelated launcher: ' + str(target))
+            continue
+        icon = icons / ('lutris_' + game['slug'] + '.png')
+        writer.write(target, lutris_launcher(game, icon if icon.is_file() else 'lutris').encode())
+        target.chmod(0o644)
+    for target in sorted(applications.glob('steam-library-*.desktop')):
+        if target.is_symlink() or not target.is_file():
+            continue
+        text = target.read_text()
+        if 'X-ArchSetups-SteamLibrary=true' not in text:
+            continue
+        args = desktop_args(text)
+        match = len(args) == 2 and Path(args[0]).name == 'steam' and re.fullmatch(r'steam://rungameid/(\d+)', args[1])
+        if match and int(match[1]) >= 1 << 32:
+            writer.remove(target)
 
 
 def reconcile_launcher_policy(writer, applications):
@@ -363,6 +499,8 @@ def migrate(args):
         applications = Path(os.environ.get('XDG_DATA_HOME', HOME / '.local/share')) / 'applications'
         writer = Writer()
         reconcile_launcher_policy(writer, applications)
+        removed = set(POLICY['removedSlugs'])
+        reconcile_game_launchers(writer, applications, [g for g in load_library(removed) if g['slug'] not in removed])
         if shutil.which('update-desktop-database'):
             subprocess.run(['update-desktop-database', str(applications)], check=True)
         print(f'Launcher policy: {writer.changes} changes. Backups: {writer.backup or "none (already current)"}')
@@ -452,9 +590,7 @@ def migrate(args):
     binary = vdf.binary_dumps(data)
     if vdf.binary_loads(binary) != data:
         raise ValueError('Shortcut binary round-trip failed')
-    desktops = {}
-    for game, aid, icon in exported:
-        desktops[f'steam-library-{aid}.desktop'] = desktop(display_name(game), steam_uri(aid), icon or 'steam')
+    desktops = {}  # Steam launchers are only for native Steam games; Lutris games launch directly.
     for game, aid in native:
         icon = HOME / '.local/share/icons/hicolor/128x128/apps' / ('lutris_' + game['slug'] + '.png')
         desktops[f'steam-library-{aid}.desktop'] = desktop(game['name'], steam_uri(aid, native=True), icon if icon.is_file() else 'steam')
@@ -468,6 +604,12 @@ def migrate(args):
     if configpath.read_bytes() != config_bytes:
         raise RuntimeError('Steam configuration changed while planning')
     writer.write(path, binary)
+    if LAUNCHER_POLICY.get('disableSteamInputForLutris', True):
+        localconfig = base / 'localconfig.vdf'
+        if localconfig.exists():
+            current = localconfig.read_bytes().decode('utf-8', 'surrogateescape')
+            updated = disable_steam_input(current, {aid for _, aid, _ in exported})
+            writer.write(localconfig, updated.encode('utf-8', 'surrogateescape'))
     if config != original_config:
         writer.write(configpath, vdf.dumps(config, pretty=True).encode())
     for filename, text in desktops.items():
@@ -475,10 +617,7 @@ def migrate(args):
         writer.write(target, text.encode())
         # Desktop entries must be readable to the session launcher.
         target.chmod(0o644)
-    for p in applications.glob('lutris-*.desktop'):
-        text = p.read_text()
-        if re.search(r'(?m)^Exec=(?:/usr/bin/)?lutris lutris:rungameid/\d+\s*$', text):
-            writer.write(p, hide_desktop(text).encode())
+    reconcile_game_launchers(writer, applications, [game for game, _, _ in exported])
     reconcile_launcher_policy(writer, applications)
     # Existing Omarchy wheel entries incorrectly used 32-bit non-Steam IDs.
     wheel = HOME / '.config/omarchy/extensions/gamepad-wheel.json'
