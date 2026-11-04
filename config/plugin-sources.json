@@ -3,6 +3,7 @@
   "install-shibumi-shell.sh": {"source": "https://github.com/priyeshbhawsar15/Shibumi-Shell.git", "pin": "19ee5f70cf3763be9c0dcbc663c459bd4118841a"},
   "install-indicators.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-indicators.git", "pin": "f159ed5d870c7b402a4885ad1c72236620819e0f"},
   "install-per-monitor-workspaces.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-per-monitor-workspaces.git", "pin": "0292ebec608cd7d3907b8f9f9427c252b242edf2"},
+  "install-fluentbird.sh": {"source": "https://github.com/Deathbyteacup/fluentbird.git", "pin": "aec46b35aebde03c0da5575fa54692c3eac09585"},
   "install-hyprmoncfg.sh": {"source": "https://github.com/crmne/omarchy-hyprmoncfg.git", "pin": "cf05a04a50339510cd1f9d547fb5f80556ae6599"},
   "install-lock-explorer.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-lock-explorer.git", "pin": "6b0167d45689e45cb05f50bbb0288942984e4b79"},
   "install-omaland.sh": {"source": "https://github.com/priyeshbhawsar15/omaland.git", "pin": "3376407e41ee10c69191bbbdf0e9f27cef661f87"},

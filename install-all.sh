@@ -11,6 +11,8 @@ installers=(
   install-chrome.sh
   install-brave-origin.sh
   install-zen.sh
+  install-thunderbird.sh
+  install-fluentbird.sh
   install-stow.sh
   install-hermes-desktop.sh
   install-codex.sh

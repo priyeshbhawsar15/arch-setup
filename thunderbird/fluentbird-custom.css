@@ -1,0 +1,51 @@
+/* PERSONAL FLUENTBIRD OVERRIDES
+ *
+ * Deployed by install-fluentbird.sh as chrome/custom.css. The theme pulls it in
+ * with @import at the very TOP of userChrome.css, so it comes first in source
+ * order and LOSES ties against the theme's own rules. Most upstream rules use
+ * !important, so an override needs !important plus a more specific selector
+ * (for example prefix it with `:root`).
+ * Put personal CSS tweaks here, then rerun ./install-fluentbird.sh so the
+ * change is reproducible on a fresh install.
+ */
+
+/* ---- Solid window -------------------------------------------------------
+ * The theme expects Windows 11 Mica behind the window. Linux has no Mica, and
+ * Thunderbird's body paints no background, so the desktop wallpaper showed
+ * through the left rail, the message list and (at 90%) everything else.
+ */
+#messengerWindow,
+#messengerWindow > body {
+	background-color: var(--color-surface-lower) !important;
+}
+
+#messengerBody {
+	opacity: 1 !important;
+}
+
+:root #spacesToolbar {
+	background-color: var(--spaces-bg-color) !important;
+}
+
+/* ---- Left rail starts below the header ----------------------------------
+ * Stock Thunderbird pins the rail to the full window height and shifts the
+ * header right, so its icons ran into the header row and were cut at the
+ * boundary. The header height changes with the tab bar, so anchor to it rather
+ * than hard-code a number. Without anchor support, this falls back to stock.
+ */
+#navigation-toolbox {
+	anchor-name: --arch-setups-header;
+}
+
+:root #spacesToolbar:not([hidden]) {
+	position-anchor: --arch-setups-header;
+	inset-block-start: anchor(bottom) !important;
+}
+
+:root:not(.customizingUnifiedToolbar) #spacesToolbar:not([hidden]) ~ #navigation-toolbox #titlebar {
+	margin-inline-start: 0 !important;
+}
+
+:root:not(.customizingUnifiedToolbar) #spacesToolbar:not([hidden]) ~ #navigation-toolbox #unifiedToolbarContainer {
+	inline-size: 100vw !important;
+}
