@@ -18,6 +18,7 @@ APPLICATIONS = {
     'install-chrome.sh': ['google-chrome-stable', 'google-chrome'],
     'install-brave-origin.sh': ['brave-origin', 'brave-origin-beta'],
     'install-zen.sh': ['zen', 'zen-browser'], 'install-stow.sh': ['stow'],
+    'install-thunderbird.sh': ['thunderbird'],
     'install-hermes-desktop.sh': ['hermes-desktop'], 'install-codex.sh': ['codex'],
     'install-github-cli.sh': ['gh'], 'install-t3code.sh': ['t3code', 't3code-nightly'],
     'install-steam.sh': ['steam'], 'install-lutris.sh': ['lutris'],
@@ -148,6 +149,8 @@ def inspect(preflight=False, dotfiles=None, profile_path=None):
                 checkout = Path.home() / '.config/omarchy/plugins' / REGISTRY[name]['plugin']
             elif REGISTRY[name].get('suite'):
                 checkout = Path.home() / '.local/share/shibumi-shell' / pin
+            elif REGISTRY[name].get('checkout'):
+                checkout = Path(os.environ.get('XDG_DATA_HOME') or str(Path.home() / '.local/share')) / REGISTRY[name]['checkout']
             else:
                 checkout = Path(os.environ.get('T3_PLANNER_EXECUTOR_SOURCE_DIR', str(Path(os.environ.get('XDG_DATA_HOME') or str(Path.home() / '.local/share')) / 't3-planner-executor/source')))
             rev_code, revision = command(['git', '--no-optional-locks', '-C', str(checkout), 'rev-parse', 'HEAD'])
@@ -231,6 +234,18 @@ def inspect(preflight=False, dotfiles=None, profile_path=None):
         except (OSError, ValueError, TypeError):
             ready = False
         add('readiness:home-assistant', 'ok' if ready else 'pending', 'HA local URL/token/entity prerequisites present; verify server connectivity.' if ready else 'Supply the Home Assistant HTTPS URL, private token-file reference and entity mappings locally.')
+    if 'install-fluentbird.sh' in selected:
+        code, response = command([sys.executable, str(ROOT / 'thunderbird/fluentbird.py'), 'status', '--json',
+                                  '--revision', SOURCES['install-fluentbird.sh']['pin']])
+        try:
+            report = json.loads(response)
+            state, message = report['state'], report['message']
+            warnings = ' '.join(report.get('warnings', []))
+        except (ValueError, KeyError, TypeError):
+            state, message, warnings = 'error', 'Cannot read Fluentbird status.', ''
+        # A missing profile is the expected state on a fresh install until Thunderbird has run once.
+        add('readiness:fluentbird', 'ok' if state == 'current' else ('pending' if state == 'no-profile' else 'error'),
+            (message + ' ' + warnings).strip())
     if 'install-tailscale.sh' in selected:
         code, response = command(['tailscale', 'status', '--json'])
         try:

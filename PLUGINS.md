@@ -582,3 +582,39 @@ installer; no plugin pin changes. See [configuration, conflicts, backups and
 removal](sunshine/VIRTUAL-DESKTOP.md). Monitor-off, reboot, remote unlock and
 client frame/latency tests remain necessary; a hardware capture probe is not an
 end-to-end stream benchmark.
+
+## Fluentbird Thunderbird theme (application theme, not a shell plugin)
+
+Gives Thunderbird's mail UI a Windows 11 Fluent look (rounded cards, Fluent icons, spaces rail and a tab strip), following the system light/dark preference. It is a `userChrome.css` theme for an application, not an Omarchy shell plugin, so it has no plugin ID, `omarchy plugin` entry, bar widget, menu entry or keyboard shortcut. Thunderbird itself comes from the Omarchy package repository.
+
+| | |
+|---|---|
+| Upstream | https://github.com/Deathbyteacup/fluentbird (Danny King; MIT licence, Fluent icons © Microsoft, MIT) |
+| Installation source | The same upstream URL. No fork and no copied source in this repository. |
+| Exact commit | `aec46b35aebde03c0da5575fa54692c3eac09585` (upstream `main`, README release 1.1.4), also recorded in `config/plugin-sources.json` |
+| Local modifications | None to upstream files. Personal CSS lives in `thunderbird/fluentbird-custom.css` and is deployed as `chrome/custom.css`, replacing upstream's empty stub. The upstream licence is deployed as `chrome/LICENSE.fluentbird`. |
+
+Review before pinning: pure CSS plus SVG/PNG assets, no scripts, installation hooks, remote `url()` or `@import` (the only import is the local `custom.css`).
+
+### Behavior and configuration
+
+- `./install-fluentbird.sh` (selected in the safe `features.json` default and the personal profile, after `install-thunderbird.sh`) checks out the pinned commit and copies the theme into the `chrome/` folder of the profile Thunderbird starts with, then adds a marked block to that profile's `user.js` setting `toolkit.legacyUserProfileCustomizations.stylesheets` to `true`. Restart Thunderbird to apply.
+- Dark/light follows the system (`prefers-color-scheme`; this desktop prefers dark). The theme's Windows-only Mica preferences (`widget.windows.mica*`) are not set because they do nothing on Linux. Without Mica, the stock theme lets the desktop wallpaper show through (Thunderbird's body paints no background, the theme makes the left rail transparent and fades all content to 90%), so `thunderbird/fluentbird-custom.css` restores a solid window. Omarchy's desktop-wide window opacity (98.5% active, 96% inactive) still applies, as for every other application.
+- `thunderbird/fluentbird-custom.css` also starts the left rail below the header, anchored to the header's bottom edge so it follows the tab bar appearing and disappearing. The header then spans the full window width. If Thunderbird ever drops CSS anchor positioning, the rail falls back to its stock full-height position. Recheck these overrides after Thunderbird updates or a pin change.
+- Put further personal CSS in that file and rerun the installer. Upstream imports it at the top of `userChrome.css`, so it loses source-order ties and most upstream rules use `!important`: an override needs `!important` plus a more specific selector (for example prefixed with `:root`).
+- Upstream's own limits apply: compose and pop-up windows, the Settings pages and parts of Calendar/Tasks/Chat live in shadow DOM and cannot be themed; upstream does not test Linux.
+- Fresh installs: Thunderbird creates its profile on first launch. Until then the installer exits `0` with a notice and `doctor.sh --acceptance` reports the theme **pending** (exit 2). Start Thunderbird once, then rerun `./install-fluentbird.sh`.
+- Only the installation's default profile is themed. Select another one with `ARCH_SETUPS_THUNDERBIRD_PROFILE=DIR`.
+
+### Dependencies and conflicts
+
+- Requires Thunderbird (`install-thunderbird.sh`), Git and Python 3.
+- Thunderbird's **System** theme must stay selected (Settings > General > Appearance). Choosing Light, Dark or an add-on theme disables the look; the installer and doctor warn but never change this preference.
+- It never overwrites files it does not own. An existing different `chrome/userChrome.css`, `custom.css`, `Icons/` or `Titlebar_Icons/` file, or a symlinked `chrome/` or `user.js`, stops the installer with a list of the conflicting paths and changes nothing. Move them aside, or fold them into `thunderbird/fluentbird-custom.css`, and rerun.
+
+### Install, enable, disable, update and remove
+
+- Install/enable: `./install-fluentbird.sh` (or `--enable`). Inspect with `./install-fluentbird.sh --status` or `./doctor.sh`.
+- Disable: `./install-fluentbird.sh --disable` removes the deployed theme files and the managed `user.js` block, keeps the checkout, and is remembered so full setup skips it. Re-enable by running the installer again. Thunderbird's other preferences, accounts and mail are unaffected, and Thunderbird may keep the harmless stylesheet preference in its own `prefs.js`.
+- Remove: `./install-fluentbird.sh --remove` does the same and also deletes the managed checkout (only when it is clean and has the expected origin). Locally edited theme files and a changed `user.js` are backed up first under `${XDG_STATE_HOME:-~/.local/state}/arch-setups/backups/fluentbird-*`. Uninstalling Thunderbird itself is a normal Omarchy package removal.
+- Update: on request only, review upstream's changes, change the pin in `install-fluentbird.sh` and `config/plugin-sources.json`, update this section and rerun the installer. Nothing monitors or updates the pin automatically. If a source change is ever needed, maintain it in a separate fork that preserves the licence and attribution.
