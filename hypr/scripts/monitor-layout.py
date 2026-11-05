@@ -23,7 +23,7 @@ def load_config(path):
         raise ValueError('monitor policy must have roles and no unknown fields')
     identities = []
     for entry in roles.values():
-        if not isinstance(entry, dict) or set(entry) - {'description', 'connector', 'selector', 'mode', 'position', 'scale', 'transform', 'bitdepth', 'cm', 'sdrbrightness', 'sdrsaturation', 'workspaces'}:
+        if not isinstance(entry, dict) or set(entry) - {'description', 'connector', 'selector', 'mode', 'position', 'scale', 'transform', 'bitdepth', 'cm', 'sdrbrightness', 'sdrsaturation'}:
             raise ValueError('unknown monitor setting')
         selectors = [key for key in ('description', 'connector', 'selector') if key in entry]
         if len(selectors) != 1 or not isinstance(entry[selectors[0]], str) or not entry[selectors[0]].strip() or any(ord(c) < 32 for c in entry[selectors[0]]):
@@ -42,9 +42,6 @@ def load_config(path):
         for key in ('sdrbrightness', 'sdrsaturation'):
             if key in entry and (type(entry[key]) not in (int, float) or not math.isfinite(entry[key]) or entry[key] < 0):
                 raise ValueError('invalid HDR numeric setting')
-        workspaces = entry.get('workspaces', [])
-        if not isinstance(workspaces, list) or any(type(n) is not int or n < 1 for n in workspaces):
-            raise ValueError('workspaces must be positive integers')
         identities.append((selectors[0], entry[selectors[0]]))
     if len(set(identities)) != len(identities):
         raise ValueError('monitor identities must be unique; include serials for identical models')
@@ -130,7 +127,7 @@ def lua(value):
 
 def render(config, path):
     text = Path(path).read_text()
-    rules, workspaces = [], []
+    rules = []
     if config.get('toolkitScale') is not None:
         if type(config['toolkitScale']) is not int or not 1 <= config['toolkitScale'] <= 4:
             raise ValueError('toolkitScale must be an integer from 1 to 4')
@@ -138,13 +135,10 @@ def render(config, path):
     rules.append('hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "auto" })')
     for role, entry in config['monitors'].items():
         text = text.replace(json.dumps('@monitor:' + role + '@'), lua(selector(entry)))
-        fields = dict(output=selector(entry), **{k: v for k, v in entry.items() if k not in ('description', 'connector', 'selector', 'workspaces')})
+        fields = dict(output=selector(entry), **{k: v for k, v in entry.items() if k not in ('description', 'connector', 'selector')})
         rules.append('hl.monitor({ ' + ', '.join(key + ' = ' + lua(value) for key, value in fields.items()) + ' })')
-        for number in entry.get('workspaces', []):
-            if selector(entry):
-                workspaces.append('hl.workspace_rule({ workspace = ' + json.dumps(str(number)) + ', monitor = ' + lua(selector(entry)) + ', default = ' + ('true' if number == entry['workspaces'][0] else 'false') + ', persistent = true })')
     main_description = config['monitors'][config['barMain']].get('description', '')
-    return text.replace('-- @monitor-rules@', '\n'.join(rules)).replace('-- @workspace-rules@', '\n'.join(workspaces)).replace(json.dumps('@bar-main-description@'), json.dumps(main_description))
+    return text.replace('-- @monitor-rules@', '\n'.join(rules)).replace(json.dumps('@bar-main-description@'), json.dumps(main_description))
 
 
 def single_monitor_lua(config, outputs):

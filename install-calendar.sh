@@ -10,8 +10,9 @@ source "$SCRIPT_DIR/lib.sh"
 feature_lifecycle "$0" "$@"
 
 plugin_id="tmn73.calendar"
-plugin_url="https://github.com/tmn73/omarchy-calendar.git"
-plugin_commit="08f5c01fb3b40322787ebfa9805429baa19beb5f"
+plugin_url="https://github.com/priyeshbhawsar15/omarchy-calendar.git"
+upstream_url="https://github.com/tmn73/omarchy-calendar.git"
+plugin_commit="d4d452d4fb801461bc517187ab0d551460c9b460"
 plugin_dir="$HOME/.config/omarchy/plugins/$plugin_id"
 shell_config="$HOME/.config/omarchy/shell.json"
 
@@ -62,7 +63,7 @@ wait_for_plugin_discovery() {
 }
 
 checkout_pinned_plugin() {
-  install_pinned_plugin "$plugin_dir" "$plugin_url" "$plugin_commit" "$plugin_id"
+  install_pinned_plugin "$plugin_dir" "$plugin_url" "$plugin_commit" "$plugin_id" "$upstream_url"
 }
 
 update_pinned_plugin() {
@@ -98,7 +99,9 @@ if action == 'install':
     # Check both files before changing either; custom user units remain untouched.
     for name, content in expected.items():
         path = destination / name
-        if path.exists() and path.read_bytes() != content and owned.get(name) != digest(path.read_bytes()):
+        # Older setups wrote the home directory out in full where the template has %h.
+        if path.exists() and path.read_bytes().replace(os.fsencode(pathlib.Path.home()), b'%h') != content \
+                and owned.get(name) != digest(path.read_bytes()):
             raise SystemExit('Preserving custom calendar sync unit: ' + str(path))
     destination.mkdir(parents=True, exist_ok=True)
     for name, content in expected.items():

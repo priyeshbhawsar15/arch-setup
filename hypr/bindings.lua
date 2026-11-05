@@ -1,28 +1,5 @@
 -- Personal Quattro binding overrides.
 
--- Per-monitor Workspaces is enabled only while its managed Lua toggle exists.
--- The plugin supplies the complete named-workspace keymap; keeping the switch
--- here makes disabling the feature also restore Omarchy's normal keybindings.
-local per_monitor_workspace_toggle = os.getenv("HOME")
-  .. "/.local/state/omarchy/toggles/hypr/per-monitor-workspaces.lua"
-local per_monitor_workspace_state = io.open(per_monitor_workspace_toggle, "r")
-if per_monitor_workspace_state then
-  per_monitor_workspace_state:close()
-  -- Omarchy 4.5 ships its own numeric per-monitor workspaces, whose reconcile
-  -- treats a named workspace as foreign and shows a numeric one instead on
-  -- startup, reload and hotplug. Its event handlers call through this table.
-  if type(o.workspaces) == "table" then
-    o.workspaces.reconcile = function() end
-  end
-  -- Omarchy 4.5 also binds these keys, and the plugin binds without unbinding,
-  -- so both would fire.
-  for _, direction in ipairs({ "LEFT", "RIGHT", "UP", "DOWN" }) do
-    hl.unbind("SUPER + SHIFT + CTRL + " .. direction)
-  end
-  pcall(dofile, os.getenv("HOME")
-    .. "/.config/omarchy/plugins/mmsbrggr.per-monitor-workspaces/hypr/init.lua")
-end
-
 o.bind("ALT + H", "Focus on left window", hl.dsp.focus({ direction = "l" }))
 o.bind("ALT + J", "Focus on below window", hl.dsp.focus({ direction = "d" }))
 o.bind("ALT + K", "Focus on above window", hl.dsp.focus({ direction = "u" }))

@@ -14,6 +14,7 @@ plugin_tag="v2.3.5"
 plugin_commit="cf05a04a50339510cd1f9d547fb5f80556ae6599"
 plugin_dir="$HOME/.config/omarchy/plugins/$plugin_id"
 shell_config="$HOME/.config/omarchy/shell.json"
+hyprmoncfg_profiles="$HOME/.config/hyprmoncfg/profiles"
 
 bar_role="brightness"
 bar_state_file="${XDG_STATE_HOME:-$HOME/.local/state}/arch-setups/crmne.hyprmoncfg/bar-layout.json"
@@ -171,10 +172,39 @@ manage_bar_layout() {
     "$plugin_id" "$bar_role" "$1"
 }
 
+# Omarchy numbers each monitor's workspaces. A workspace plan saved in a profile
+# would generate numeric rules and rebind Super+number over Omarchy's keys.
+# Exit status 2 from the helper (an unreadable profile) must fail rather than
+# read as "no plan".
+workspace_plan_is_off() {
+  local status=0
+  [[ -d "$hyprmoncfg_profiles" ]] || return 0
+  python3 "$SCRIPT_DIR/config/hyprmoncfg-workspace-plan.py" check "$hyprmoncfg_profiles" || status=$?
+  (( status < 2 )) || fail "could not read hyprmoncfg profiles"
+  return "$status"
+}
+
+stand_down_workspace_plan() {
+  workspace_plan_is_off && return 0
+  backup_feature_paths hyprmoncfg-workspace-plan "$hyprmoncfg_profiles" >/dev/null
+  python3 "$SCRIPT_DIR/config/hyprmoncfg-workspace-plan.py" disable "$hyprmoncfg_profiles" \
+    || fail "could not turn off the workspace plan"
+  # Regenerate the monitor file through the running daemon. Do not restart it:
+  # the bar plugin holds a socket to it inside the running shell, and closing
+  # that socket crashed Quickshell.
+  local profile
+  profile="$(hyprmon_command status --json 2>/dev/null | jq -r '.recommended_profile.name // empty' || true)"
+  if [[ -n "$profile" ]]; then
+    hyprmon_command apply "$profile" --confirm-timeout 0 \
+      || fail "could not re-apply profile $profile"
+  fi
+}
+
 enable_plugin() {
   omarchy-shell shell rescanPlugins >/dev/null
   wait_for_plugin_discovery
   start_monitor_management
+  stand_down_workspace_plan
   manage_bar_layout enable
   omarchy plugin enable "$plugin_id"
   plugin_is_enabled || fail "Omarchy did not enable $plugin_id"
@@ -230,7 +260,8 @@ else
   checkout_changed=true
 fi
 
-if plugin_is_enabled && manage_bar_layout check && runtime_is_current && [[ "$checkout_changed" == false ]]; then
+if plugin_is_enabled && manage_bar_layout check && runtime_is_current && workspace_plan_is_off \
+  && [[ "$checkout_changed" == false ]]; then
   log "hyprmoncfg is already installed."
   exit 0
 fi
