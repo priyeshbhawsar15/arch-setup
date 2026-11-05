@@ -1,6 +1,6 @@
 {
   "install-wallpaper-controller.sh": {"source": "https://github.com/priyeshbhawsar15/omawallpaper-manager.git", "aliases": ["git@github.com:priyeshbhawsar15/omawallpaper-manager.git"], "pin": "418884ce00419798dfbb0cb5eff27eefa6c4bf4d"},
-  "install-shibumi-shell.sh": {"source": "https://github.com/priyeshbhawsar15/Shibumi-Shell.git", "pin": "19ee5f70cf3763be9c0dcbc663c459bd4118841a"},
+  "install-shibumi-shell.sh": {"source": "https://github.com/priyeshbhawsar15/Shibumi-Shell.git", "pin": "3a34afca511fa85ecc6f9ceecc486c7bf7270d66"},
   "install-indicators.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-indicators.git", "pin": "f159ed5d870c7b402a4885ad1c72236620819e0f"},
   "install-per-monitor-workspaces.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-per-monitor-workspaces.git", "pin": "0292ebec608cd7d3907b8f9f9427c252b242edf2"},
   "install-fluentbird.sh": {"source": "https://github.com/Deathbyteacup/fluentbird.git", "pin": "aec46b35aebde03c0da5575fa54692c3eac09585"},

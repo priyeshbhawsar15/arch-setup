@@ -12,7 +12,7 @@ feature_lifecycle "$0" "$@"
 
 suite_url="https://github.com/priyeshbhawsar15/Shibumi-Shell.git"
 suite_tag="v0.1.1-beta.14.1"
-suite_commit="19ee5f70cf3763be9c0dcbc663c459bd4118841a"
+suite_commit="3a34afca511fa85ecc6f9ceecc486c7bf7270d66"
 suite_dir="$HOME/.local/share/shibumi-shell/$suite_commit"
 suite_state="$HOME/.local/state/shibumi/install.json"
 shell_config="$HOME/.config/omarchy/shell.json"
