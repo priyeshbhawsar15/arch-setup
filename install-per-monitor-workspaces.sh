@@ -16,6 +16,7 @@ plugin_commit="0292ebec608cd7d3907b8f9f9427c252b242edf2"
 plugin_dir="$HOME/.config/omarchy/plugins/$plugin_id"
 shell_config="$HOME/.config/omarchy/shell.json"
 toggle_path="$HOME/.local/state/omarchy/toggles/hypr/per-monitor-workspaces.lua"
+hyprmoncfg_profiles="$HOME/.config/hyprmoncfg/profiles"
 state_dir="$HOME/.local/state/omarchy"
 
 bar_role="workspaces"
@@ -96,6 +97,35 @@ manage_bar_layout() {
     "$plugin_id" "$bar_role" "$1"
 }
 
+# A saved hyprmoncfg workspace plan generates numeric rules and, on Omarchy 4.5,
+# rebinds Super+number over this plugin's keys. Exit status 2 from the helper
+# (an unreadable profile) must fail rather than read as "no plan".
+hyprmoncfg_workspace_plan_is_off() {
+  local status=0
+  [[ -d "$hyprmoncfg_profiles" ]] || return 0
+  python3 "$SCRIPT_DIR/config/hyprmoncfg-workspace-plan.py" check "$hyprmoncfg_profiles" || status=$?
+  (( status < 2 )) || fail "could not read hyprmoncfg profiles"
+  return "$status"
+}
+
+stand_down_hyprmoncfg_workspace_plan() {
+  hyprmoncfg_workspace_plan_is_off && return 0
+  backup_feature_paths per-monitor-workspaces-hyprmoncfg "$hyprmoncfg_profiles" >/dev/null
+  python3 "$SCRIPT_DIR/config/hyprmoncfg-workspace-plan.py" disable "$hyprmoncfg_profiles" \
+    || fail "could not turn off the hyprmoncfg workspace plan"
+  # Regenerate the monitor file through the running daemon. Do not restart it:
+  # the hyprmoncfg bar plugin holds a socket to it inside the running shell, and
+  # closing that socket crashed Quickshell.
+  local profile=""
+  if command -v hyprmoncfg >/dev/null 2>&1; then
+    profile="$(hyprmoncfg status --json 2>/dev/null | jq -r '.recommended_profile.name // empty' || true)"
+  fi
+  if [[ -n "$profile" ]]; then
+    hyprmoncfg apply "$profile" --confirm-timeout 0 \
+      || fail "could not re-apply hyprmoncfg profile $profile"
+  fi
+}
+
 reload_hyprland() {
   if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
     hyprctl reload
@@ -113,6 +143,7 @@ enable_plugin() {
   manage_bar_layout enable
   omarchy plugin enable "$plugin_id"
   write_enabled_toggle
+  stand_down_hyprmoncfg_workspace_plan
   reload_hyprland
 
   plugin_is_enabled || fail "Omarchy did not enable $plugin_id"
@@ -171,7 +202,8 @@ else
   checkout_changed=true
 fi
 
-if plugin_is_enabled && plugin_is_configured && [[ "$checkout_changed" == false ]]; then
+if plugin_is_enabled && plugin_is_configured && hyprmoncfg_workspace_plan_is_off \
+  && [[ "$checkout_changed" == false ]]; then
   log "Per-monitor Workspaces is already installed."
   exit 0
 fi

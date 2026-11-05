@@ -119,4 +119,23 @@ print(rules,generated)
             out=subprocess.run(['lua','-'],input=harness,env=self.env,capture_output=True,text=True);self.assertEqual(out.returncode,0,out.stderr);return out.stdout.strip()
         self.assertEqual(run(),'6\t0');marker.touch();self.assertEqual(run(),'7\t1');toggle.touch();self.assertEqual(run(),'0\t1')
 
+    @unittest.skipUnless(shutil.which('lua'),'Lua interpreter required')
+    def test_per_monitor_toggle_stands_down_omarchy_workspaces_before_plugin_keys(self):
+        toggle=self.home/'.local/state/omarchy/toggles/hypr/per-monitor-workspaces.lua';toggle.parent.mkdir(parents=True)
+        plugin=self.home/'.config/omarchy/plugins/mmsbrggr.per-monitor-workspaces/hypr';plugin.mkdir(parents=True)
+        (plugin/'init.lua').write_text('plugin_saw_stub = o.workspaces.reconcile ~= stock_reconcile\nplugin_unbound = #unbound\n')
+        harness='''unbound={}
+local any;any=setmetatable({},{__index=function() return any end,__call=function() return any end})
+function stock_reconcile() end
+hl=setmetatable({unbind=function(keys) unbound[#unbound+1]=keys end},{__index=any})
+o=setmetatable({workspaces={reconcile=stock_reconcile}},{__index=any})
+dofile(arg_bindings)
+local stubbed=o.workspaces.reconcile~=stock_reconcile
+print(stubbed,plugin_saw_stub,plugin_unbound or 0)
+'''.replace('arg_bindings',repr(str(REPO/'hypr/bindings.lua')))
+        def run():
+            out=subprocess.run(['lua','-'],input=harness,env=self.env,capture_output=True,text=True);self.assertEqual(out.returncode,0,out.stderr);return out.stdout.strip()
+        self.assertEqual(run(),'false\tnil\t0')
+        toggle.touch();self.assertEqual(run(),'true\ttrue\t4')
+
 if __name__=='__main__':unittest.main()

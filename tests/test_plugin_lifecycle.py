@@ -86,7 +86,7 @@ if name=='hyprmoncfg':
     if 'status' in args:
         pending=s.get('statusPending',0)
         s['statusPending']=max(0,pending-1)
-        finish(output=json.dumps({'daemon':{'running':not pending and s.get('active',{}).get('hyprmoncfgd.service',False)}}))
+        finish(output=json.dumps({'daemon':{'running':not pending and s.get('active',{}).get('hyprmoncfgd.service',False)},'recommended_profile':{'name':s['recommendedProfile']} if s.get('recommendedProfile') else None}))
     if 'version' in args: finish(output='hyprmoncfg version 1.22.1')
     finish()
 if name=='systemctl':
@@ -201,6 +201,34 @@ class PluginLifecycleTests(unittest.TestCase):
         self.run_installer('install-per-monitor-workspaces.sh');self.run_installer('install-per-monitor-workspaces.sh')
         self.run_installer('install-per-monitor-workspaces.sh','--disable');self.run_installer('install-per-monitor-workspaces.sh','--disable')
         self.assertEqual(self.read_shell(),self.original)
+
+    def write_hyprmoncfg_profile(self,enabled=True):
+        profile=self.home/'.config/hyprmoncfg/profiles/desk.json';profile.parent.mkdir(parents=True,exist_ok=True)
+        profile.write_text(json.dumps({'name':'desk','outputs':[{'key':'keep'}],'workspaces':{'enabled':enabled,'strategy':'manual','rules':[{'workspace':'1'}]}}))
+        return profile
+
+    def test_pmw_stands_down_hyprmoncfg_workspace_plan_and_keeps_profile_data(self):
+        profile=self.write_hyprmoncfg_profile();self.state['active']={'hyprmoncfgd.service':True};self.state['recommendedProfile']='desk';self.write_state()
+        self.run_installer('install-per-monitor-workspaces.sh')
+        saved=json.loads(profile.read_text());self.assertFalse(saved['workspaces']['enabled'])
+        self.assertEqual(saved['outputs'],[{'key':'keep'}]);self.assertEqual(saved['workspaces']['rules'],[{'workspace':'1'}])
+        calls=self.read_state()['calls']
+        # Restarting the daemon closes a socket the running shell holds, which crashed Quickshell.
+        self.assertFalse(any(c[0]=='systemctl' and 'hyprmoncfgd.service' in c and ('restart' in c or 'stop' in c) for c in calls))
+        self.assertIn(['hyprmoncfg','apply','desk','--confirm-timeout','0'],calls)
+        backups=list((self.home/'.local/state/arch-setups/backups').glob('per-monitor-workspaces-hyprmoncfg-*'))
+        self.assertEqual(len(backups),1)
+        backup=next(backups[0].rglob('desk.json'));self.assertTrue(json.loads(backup.read_text())['workspaces']['enabled'])
+
+    def test_pmw_rerun_repairs_a_returned_workspace_plan(self):
+        profile=self.write_hyprmoncfg_profile(enabled=False)
+        self.run_installer('install-per-monitor-workspaces.sh')
+        self.state=self.read_state()
+        self.assertFalse(any(c[0]=='hyprmoncfg' and 'apply' in c for c in self.state['calls']))
+        self.write_hyprmoncfg_profile(enabled=True)
+        result=self.run_installer('install-per-monitor-workspaces.sh')
+        self.assertNotIn('already installed',result.stdout)
+        self.assertFalse(json.loads(profile.read_text())['workspaces']['enabled'])
 
     def test_pmw_disable_after_switch_to_stock_preserves_stock_workspace(self):
         self.run_installer('install-per-monitor-workspaces.sh')
