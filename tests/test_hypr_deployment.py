@@ -107,7 +107,6 @@ class DeploymentTests(unittest.TestCase):
         generated=self.config/'hyprmoncfg-monitors.lua';generated.write_text('hl.monitor({output="generated",mode="preferred"})\nhl.workspace_rule({workspace="99"})\n')
         rendered=self.config/'monitors.lua';rendered.write_text(layout.render(layout.load_config(REPO/'monitor-layout.json'),REPO/'hypr/monitors.lua'))
         marker=self.home/'.local/state/arch-setups/crmne.hyprmoncfg/managed';marker.parent.mkdir(parents=True)
-        toggle=self.home/'.local/state/omarchy/toggles/hypr/per-monitor-workspaces.lua';toggle.parent.mkdir(parents=True)
         harness='''local rules,generated=0,0
 local workspace=function() rules=rules+1 end
 hl={env=function() end,monitor=function(m) if m.output=='generated' then generated=generated+1 end end,workspace_rule=workspace}
@@ -117,6 +116,13 @@ print(rules,generated)
 '''
         def run():
             out=subprocess.run(['lua','-'],input=harness,env=self.env,capture_output=True,text=True);self.assertEqual(out.returncode,0,out.stderr);return out.stdout.strip()
-        self.assertEqual(run(),'6\t0');marker.touch();self.assertEqual(run(),'7\t1');toggle.touch();self.assertEqual(run(),'0\t1')
+        # Omarchy numbers each monitor's workspaces, so no numeric rule may load.
+        self.assertEqual(run(),'0\t0');marker.touch();self.assertEqual(run(),'0\t1')
+
+    def test_workspaces_and_their_keys_are_left_to_omarchy(self):
+        bindings=(REPO/'hypr/bindings.lua').read_text()
+        for term in ('per-monitor-workspaces','per_monitor_workspace','o.workspaces','code:1'):
+            self.assertNotIn(term,bindings)
+        self.assertNotIn('workspaces',json.loads((REPO/'monitor-layout.json').read_text())['monitors']['main'])
 
 if __name__=='__main__':unittest.main()

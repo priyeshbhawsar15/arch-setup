@@ -4,23 +4,9 @@
 -- Modes, positioning, scale and HDR belong to the selected host policy.
 -- @monitor-rules@
 
--- Per-monitor Workspaces owns named workspaces while its managed toggle is
--- present. Keep the numeric assignment rules as the stock fallback so disabling
--- that independently managed plugin restores the current desktop behavior.
-local per_monitor_workspace_toggle = os.getenv("HOME")
-	.. "/.local/state/omarchy/toggles/hypr/per-monitor-workspaces.lua"
-local per_monitor_workspace_state = io.open(per_monitor_workspace_toggle, "r")
-local per_monitor_workspaces_enabled = per_monitor_workspace_state ~= nil
-if per_monitor_workspace_state then
-	per_monitor_workspace_state:close()
-end
-
-if not per_monitor_workspaces_enabled then
--- @workspace-rules@
-end
-
--- A lexical loader keeps the generated file isolated from Hyprland's global
--- API. The standard include line below must stay last: hyprmoncfg 1.22.1
+-- Omarchy numbers each monitor's workspaces, so numeric workspace rules from the
+-- generated file must not load. A lexical loader keeps that isolated from
+-- Hyprland's global API. The standard include line below must stay last: hyprmoncfg 1.22.1
 -- recognizes and maintains that spelling during manage/unmanage operations.
 local dofile = function(path)
 	local state_home = os.getenv("XDG_STATE_HOME")
@@ -30,10 +16,7 @@ local dofile = function(path)
 	local managed = io.open(state_home .. "/arch-setups/crmne.hyprmoncfg/managed", "r")
 	if not managed then return end
 	managed:close()
-	local api = setmetatable({}, { __index = hl })
-	if per_monitor_workspaces_enabled then
-		api.workspace_rule = function() end
-	end
+	local api = setmetatable({ workspace_rule = function() end }, { __index = hl })
 	local environment = setmetatable({ hl = api }, { __index = _G })
 	local chunk, error_message = loadfile(path, "t", environment)
 	assert(chunk, error_message)

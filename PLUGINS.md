@@ -75,7 +75,9 @@ The installer uses Omarchy to install missing `linux-wallpaperengine-git`, `aeth
 - **Type:** Customized community suite, maintained in a separate public fork; original license/attribution retained. All 24 interdependent plugin roots remain suite-lifecycle managed.
 - **Original upstream:** `https://github.com/HANCORE-linux/Shibumi-Shell.git`
 - **Installation source:** `https://github.com/priyeshbhawsar15/Shibumi-Shell.git`
-- **Pinned commit:** `19ee5f70cf3763be9c0dcbc663c459bd4118841a` (development fork based on upstream `v0.1.1-beta.14.1` / `7a6c853b1947d303bad9a5b640c224c01b669106`; not a new upstream release).
+- **Pinned commit:** `5eb47d11810663e89f769eb81b8b7393463a24c9` (development fork based on upstream `v0.1.1-beta.14.1` / `7a6c853b1947d303bad9a5b640c224c01b669106`; not a new upstream release).
+- **Startup fix:** The published `fix/registry-prime-early-deadline` branch stops the bar staying hidden after a mistimed startup registry prime, seen on an autologin boot where the 7-second deadline fired after 606ms as the session lock engaged. A deadline that fires early now waits out the time really remaining, and a replacement Bar that arrives after a real timeout still completes the prime. It also records the previous `19ee5f70cf3763be9c0dcbc663c459bd4118841a` payload as a repair predecessor so existing installs can upgrade.
+- **Widget settings fix:** The published `fix/widget-settings-arrays` branch hands widgets a deep copy of their settings, because passing entries through a `Repeater` turned nested arrays into values that fail `Array.isArray`. Omarchy's Elsewhen world clock read its cities that way, decided it had none, and overwrote them with its defaults whenever it reloaded. The branch also records the earlier fork payloads as repair predecessors, and tells center widgets, including those outside G8, the width really available inside the notch, less its curved edges and any now-playing art and visualizer.
 - **Modifications:** The fork owns the centered bar, configured-main-display filtering, compact media notch, album-art/visualizer/expanded controls, opaque theme-token surfaces and non-click-consuming auto-hide reveal sensor. It adds supported `install/activate --user-layout`, `repair --keep-layout` and `presentation.mainMonitorDescription` APIs while preserving exact payload identity and transactional predecessor admission. Media presentation consumes the existing Shibumi media service; no additional player owner, username-specific helper, Jellyfin polling process or credential-bearing `/tmp` art cache is deployed. Bluetooth remains the supported G15 slot; the native media slot is visually displaced, not its required service disabled. The published `gaming/visualizer-pause-20261025` branch adds a process-shared, event-driven watcher for Gaming Mode's version-1 journal. Valid same-session `pauseDecorations: true` stops only the decorative media animation; playback, media controls, appearance and geometry remain intact. Hidden bars also stop this loop. Personal configuration explicitly retains the hidden `hancore.shibumi.media` service when G9 is displaced, so the normal notch/visualizer still works; it does not add a visible widget. The producer can opt out with `pauseDecorations: false`; malformed/missing/unsupported/foreign-session hints restore normal behavior. No second media owner or polling process is added. Source/UI/tests live only in the fork; obsolete setup-repository copies were removed. Checkout path is `~/.local/share/shibumi-shell/<exact-commit>/`.
 
 ### Behavior and compatibility
@@ -111,44 +113,47 @@ This patch passed 291 Python source/lifecycle tests, isolated actual-animation/f
 ## Per-monitor Workspaces for Shibumi
 
 - **Plugin ID:** `mmsbrggr.per-monitor-workspaces`
-- **Type:** Customized community plugin. It remains a separate public fork so Shibumi-specific QML changes do not modify either upstream project.
+- **Type:** Customized community plugin, kept as a separate public fork.
 - **Original upstream URL:** `https://github.com/mmsbrggr/omarchy-per-monitor-workspaces`
 - **Installation source:** `https://github.com/priyeshbhawsar15/omarchy-per-monitor-workspaces.git`
-- **Pinned commit:** `0292ebec608cd7d3907b8f9f9427c252b242edf2` (`v1.2.0-shibumi.5`)
-- **Local modifications:** The fork preserves upstream MIT attribution, named-workspace protocol, Hyprland Lua actions, hotplug adoption, and mouse behavior. It replaces only `Workspaces.qml` with a Shibumi-native workspace pill: matching Shibumi’s presentation tokens, marker geometry, color treatment, hover feedback, tooltips, and standard QML wheel handling. It also consumes Shibumi State’s public, variant-scoped G2 appearance settings, so the existing Control Center **Bars → Workspaces** visual controls affect this provider. It requires Shibumi’s State presentation library and is not intended for the stock Omarchy bar.
+- **Pinned commit:** `cfaea278b09f326088cc929a83429d89929ea9c8` (`v1.3.0-shibumi.1`, branch `omarchy-native-workspaces`)
+- **Local modifications:** The fork keeps upstream's MIT attribution and only the widget. Upstream's named workspaces, Lua actions and keymap are removed, because Omarchy 4.5 provides per-monitor workspaces itself and the two conflict. `Workspaces.qml` keeps the Shibumi-native pill and reads Omarchy's workspace blocks.
 
 ### Behavior and keyboard controls
 
-Hyprland itself has global workspaces; the plugin implements independent per-monitor slots as named workspaces keyed to each output’s display description. `Super+1` through `Super+5` therefore always selects the corresponding slot on the focused monitor. The default count is five slots per monitor. The bar on each output displays only that output’s slots, plus a Shibumi-styled display marker for a disconnected output’s temporarily parked workspace.
+Omarchy 4.5 gives every monitor its own workspaces 1-10, numbered in a block of ten in Hyprland's global numbering (1-10, 11-20, and so on) and tied to the monitor's make, model and serial in `~/.local/state/omarchy/monitor-workspaces`. Omarchy owns those workspaces, their keys and their hotplug handling. This plugin is only the bar display: each bar shows its own monitor's block, numbered from 1.
 
-Shibumi Control Center → **Bars** → **Workspaces** controls this provider’s active-profile appearance (fill color, content tone, opacity) and marker preferences (**Marker Style** and **Visible Workspaces** mode). The five-slot count remains a local widget setting because it is also projected into Hyprland’s binding actions. The native `hancore.shibumi.workspaces` plugin must remain enabled as the default-bundle G2 service and safe fallback; it is visually displaced by this provider, not disabled.
+- Left-click a dot to go to that workspace on the bar's monitor, right-click to move the focused window there, and scroll to cycle through the monitor's workspaces.
+- The `count` setting (five here) chooses how many dots to show. A higher workspace appears while it exists, so `Super+7` is not lost from the bar. Workspaces from an unplugged monitor appear after the dots with a monitor icon.
+- Shibumi Control Center → **Bars** → **Workspaces** controls appearance, Marker Style and Visible Workspaces, as it does for Shibumi's native widget.
 
-The feature-specific keymap is activated by the managed toggle at `~/.local/state/omarchy/toggles/hypr/per-monitor-workspaces.lua`, which `hypr/bindings.lua` reads before loading the plugin’s `hypr/init.lua`. While active it replaces Omarchy’s global workspace bindings:
+The plugin adds no shortcuts. These are Omarchy's:
 
-- `Super+1…5`, `Super+Shift+1…5`, and `Super+Shift+Alt+1…5` select or move windows within the focused monitor’s slots.
-- `Super+Tab`, `Super+Shift+Tab`, and `Super+scroll` cycle the focused monitor’s slots; `Super+Ctrl+Tab` returns to its previous workspace.
-- `Super+L` toggles the named workspace’s dwindle/scrolling layout.
-- Directional `Super+Ctrl+Alt`, `Super+Ctrl+Shift`, `Super+Shift+Alt`, and `Super+Ctrl+Alt+Shift` arrow bindings focus a monitor, move a window, move the current workspace’s windows, or swap workspace contents.
+- `Super+1…0`, `Super+Shift+1…0` and `Super+Shift+Alt+1…0` select a slot on the focused monitor or move the window there, following it or staying put.
+- `Super+Tab`, `Super+Shift+Tab` and `Super+Ctrl+Tab` cycle within the monitor or return to its previous workspace.
+- `Super+Shift+Alt+arrows` moves the workspace to a monitor and `Super+Shift+Ctrl+arrows` moves the window to one.
 
-`hypr/monitors.lua` keeps the existing numeric workspace rules only while this feature is disabled. Enabling it removes those static assignments at the next Hyprland reload; existing numeric workspaces remain accessible as parked workspaces until their windows are moved or closed.
+Moving to Omarchy's workspaces removed the old keymap's `Super+Ctrl+Alt+arrows` (focus a monitor by direction) and `Super+Ctrl+Alt+Shift+arrows` (swap two monitors' workspaces). Omarchy's `Ctrl+Alt+Tab` cycles monitor focus.
 
 ### Dependencies, conflicts, and lifecycle
 
-This feature requires the active `hancore.shibumi.bar`, its `hancore.shibumi.state` presentation library, and its enabled native `hancore.shibumi.workspaces` default-bundle service. It replaces Shibumi’s workspace presentation without disabling that service; do not separately enable the stock `omarchy.workspaces`, Screens workspace spreading, or another per-monitor workspace manager. The fork is pinned because marketplace installation clones mutable upstream HEAD; the marketplace’s latest upstream source was not snapshot-verified when this fork was made.
+This feature requires the active `hancore.shibumi.bar` and its `hancore.shibumi.state` presentation library, and Omarchy 4.5 or later. It replaces Shibumi's workspace presentation in the bar and does not change the workspaces themselves.
 
-- **Install or re-enable:** `./install-per-monitor-workspaces.sh` — validates and installs the pinned fork, configures it as Shibumi’s workspace provider, enables the Lua toggle, and reloads Hyprland. It requires an active Shibumi desktop session.
-- **Disable:** `./install-per-monitor-workspaces.sh --disable` — disables the widget, removes the temporary stock-workspace restoration, removes the Lua toggle, and reloads Hyprland so Shibumi’s native workspace widget and numeric workspace rules return.
-- **Remove:** `./install-per-monitor-workspaces.sh --remove` — archives the plugin’s count, layout, and toggle state under `~/.local/state/arch-setups/backups/per-monitor-workspaces-remove-<timestamp>/`, then disables and removes the pinned checkout.
-- **Update:** Do not use `omarchy plugin update`; it follows a branch tip. Request maintenance instead: merge or rebase a reviewed upstream change into the fork, test bar rendering, named-workspace keybindings, unplug/replug behavior, and the enable/disable lifecycle, publish the change, then update this pin and both documentation files together.
+Numeric workspace rules conflict with Omarchy's blocks, so `hypr/monitors.lua` has none and blocks any from hyprmoncfg's generated file. See the hyprmoncfg section for its saved workspace plan.
+
+- **Install or re-enable:** `./install-per-monitor-workspaces.sh` — validates and installs the pinned fork and configures it as Shibumi's workspace provider. On a machine that used the earlier named-workspace version, it also removes the old toggle and count files and sends windows from named workspaces to the same slot on their monitor. It requires an active Shibumi desktop session.
+- **Disable:** `./install-per-monitor-workspaces.sh --disable` — disables the widget and restores Shibumi's native workspace widget. Omarchy's per-monitor workspaces stay in place, and that native widget does not understand their numbering, so it shows Hyprland's global numbers.
+- **Remove:** `./install-per-monitor-workspaces.sh --remove` — archives the plugin's data under `~/.local/state/arch-setups/backups/per-monitor-workspaces-remove-<timestamp>/`, then disables and removes the pinned checkout.
+- **Update:** Do not use `omarchy plugin update`; it follows a branch tip. Request maintenance instead: review and test a change in the fork, including bar rendering, clicks and scrolling on each monitor, and the enable/disable lifecycle, then update `plugin_commit` and this document together.
 
 ## hyprmoncfg: Multi-Monitor Manager for Omarchy
 
 - **Plugin ID:** `crmne.hyprmoncfg`
-- **Type:** Unmodified community plugin.
+- **Type:** Customized community plugin, kept as a separate public fork.
 - **Original upstream URL:** `https://github.com/crmne/omarchy-hyprmoncfg.git`
-- **Installation source:** `https://github.com/crmne/omarchy-hyprmoncfg.git`
-- **Pinned release:** `v2.3.5` at `cf05a04a50339510cd1f9d547fb5f80556ae6599`
-- **Local modifications:** None.
+- **Installation source:** `https://github.com/priyeshbhawsar15/omarchy-hyprmoncfg.git`
+- **Pinned commit:** `6f9756bdc10ca594cd89effdf38b9af2b4bd190a` (branch `shibumi-widget-color`, based on upstream `v2.3.5` / `cf05a04a50339510cd1f9d547fb5f80556ae6599`)
+- **Local modifications:** The bar icon takes its color from the Shibumi bar's `seal` token when the bar provides one, falling back to the bar's urgent color, so it matches the other Shibumi widgets.
 
 ### Behavior and controls
 
@@ -158,6 +163,10 @@ Provides automatic multi-monitor profile layout switching on hotplug, lid open/c
 - **Disable:** `./install-hyprmoncfg.sh --disable` — disables the plugin in Omarchy shell.
 - **Remove:** `./install-hyprmoncfg.sh --remove` — archives configuration and state under `~/.local/state/arch-setups/backups/hyprmoncfg-remove-<timestamp>/`, then disables and removes the plugin.
 
+
+**Workspace plan:** a workspace plan saved in a profile generates numeric rules and, on Omarchy 4.5, rebinds `Super+number`, `Super+Tab` and scroll over Omarchy's keys from a file that loads last. `install-hyprmoncfg.sh` therefore sets `workspaces.enabled` to `false` in every profile (backed up under `~/.local/state/arch-setups/backups/hyprmoncfg-workspace-plan-<timestamp>/`, with the saved rules kept) and re-applies the recommended profile without restarting the daemon. Re-enabling a plan in the hyprmoncfg UI brings the conflict back; rerunning the installer repairs it.
+
+**Known issue, daemon restarts crash the shell:** this plugin holds a socket to `hyprmoncfgd`, and restarting the daemon segfaults Quickshell when that socket closes. It has happened on both restarts tested, with the same stack in `QObject::deleteLater` on the socket's disconnect path. The shell relaunches by itself in about five seconds and shows a crash dialog you can close. The installer restarts the daemon only when its settings file changes, and waits for the shell afterwards. A package update that restarts the daemon could trigger the same crash.
 ## Lock Screen Explorer
 
 - **Plugin ID:** `io.github.sirjul1337.lock-explorer`
@@ -276,11 +285,11 @@ Provides a graphical panel for editing Hyprland's visual look and feel (gaps, bo
 ## Calendar Bar Widget
 
 - **Plugin ID:** `tmn73.calendar`
-- **Type:** Unmodified community plugin.
+- **Type:** Customized community plugin, kept as a separate public fork.
 - **Original upstream URL:** `https://github.com/tmn73/omarchy-calendar.git`
-- **Installation source:** `https://github.com/tmn73/omarchy-calendar.git`
-- **Pinned commit:** `08f5c01fb3b40322787ebfa9805429baa19beb5f` (`v0.2.1`)
-- **Local modifications:** None.
+- **Installation source:** `https://github.com/priyeshbhawsar15/omarchy-calendar.git`
+- **Pinned commit:** `d4d452d4fb801461bc517187ab0d551460c9b460` (branch `fit-announcement-to-width`, based on upstream `v0.2.1` / `08f5c01fb3b40322787ebfa9805429baa19beb5f`)
+- **Local modifications:** The upcoming-event announcement fits the width its host allows. The title is shortened so the countdown stays whole. If a long clock format leaves the title no useful room, the clock shows only the time for the announcement, for example `4:20 PM · Engagement c… in 9 min`, then returns to the full format. The panel still shows the full event. A host that sets no width keeps upstream's behavior. The plugin has no setting for this, so it needs a source change.
 
 ### Behavior and controls
 

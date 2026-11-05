@@ -1,17 +1,5 @@
 -- Personal Quattro binding overrides.
 
--- Per-monitor Workspaces is enabled only while its managed Lua toggle exists.
--- The plugin supplies the complete named-workspace keymap; keeping the switch
--- here makes disabling the feature also restore Omarchy's normal keybindings.
-local per_monitor_workspace_toggle = os.getenv("HOME")
-  .. "/.local/state/omarchy/toggles/hypr/per-monitor-workspaces.lua"
-local per_monitor_workspace_state = io.open(per_monitor_workspace_toggle, "r")
-if per_monitor_workspace_state then
-  per_monitor_workspace_state:close()
-  pcall(dofile, os.getenv("HOME")
-    .. "/.config/omarchy/plugins/mmsbrggr.per-monitor-workspaces/hypr/init.lua")
-end
-
 o.bind("ALT + H", "Focus on left window", hl.dsp.focus({ direction = "l" }))
 o.bind("ALT + J", "Focus on below window", hl.dsp.focus({ direction = "d" }))
 o.bind("ALT + K", "Focus on above window", hl.dsp.focus({ direction = "u" }))
@@ -39,3 +27,12 @@ o.bind("SUPER + CTRL + SHIFT + F", "Toggle window span across portrait displays"
 -- Cycle top bar visibility mode (Always show -> Auto-hide -> Disabled)
 hl.unbind("SUPER + SHIFT + SPACE")
 o.bind("SUPER + SHIFT + SPACE", "Cycle top bar visibility mode", "~/.config/hypr/scripts/bar-visibility-mode-toggle.sh")
+
+hl.bind("CTRL + SHIFT + 2", hl.dsp.global("com.t3tools.T3Code:capture-window"))
+
+-- Dictation keys from before Alt + Space and Right Alt became the defaults.
+-- Remove these lines to give the keys back to applications.
+if o.dictation_installed and o.dictation_installed() then
+  o.bind("SUPER + CTRL + X", "Toggle dictation", "omarchy-dictation toggle")
+  o.bind_hold("F9", "Start dictation (push-to-talk)", "omarchy-dictation start", "Stop dictation (push-to-talk)", "omarchy-dictation stop")
+end

@@ -12,7 +12,7 @@ feature_lifecycle "$0" "$@"
 
 plugin_id="mmsbrggr.per-monitor-workspaces"
 plugin_url="https://github.com/priyeshbhawsar15/omarchy-per-monitor-workspaces.git"
-plugin_commit="0292ebec608cd7d3907b8f9f9427c252b242edf2"
+plugin_commit="cfaea278b09f326088cc929a83429d89929ea9c8"
 plugin_dir="$HOME/.config/omarchy/plugins/$plugin_id"
 shell_config="$HOME/.config/omarchy/shell.json"
 toggle_path="$HOME/.local/state/omarchy/toggles/hypr/per-monitor-workspaces.lua"
@@ -64,7 +64,7 @@ wait_for_plugin_discovery() {
 }
 
 plugin_is_configured() {
-  [[ -f "$shell_config" && -f "$toggle_path" ]] || return 1
+  [[ -f "$shell_config" ]] || return 1
   jq -e --arg id "$plugin_id" '
     .bar.id == "hancore.shibumi.bar"
     and any(.bar.layout.left[], .bar.layout.center[], .bar.layout.right[];
@@ -80,20 +80,38 @@ update_pinned_plugin() {
   checkout_pinned_plugin
 }
 
-write_enabled_toggle() {
-  mkdir -p -- "$(dirname -- "$toggle_path")"
-  cat > "$toggle_path" <<'EOF'
--- Presence enables Per-monitor Workspaces through managed Hyprland modules.
--- The plugin's named-workspace bindings are loaded from bindings.lua.
-EOF
-}
-
 # Keep the reversible layout change separate from Omarchy's plugin registry.
 # Restore before disabling a cloned widget so the registry cannot replace an
 # unrelated stock workspace entry with a manufactured fallback.
 manage_bar_layout() {
   python3 "$SCRIPT_DIR/config/bar-layout.py" "$shell_config" "$bar_state_file" \
     "$plugin_id" "$bar_role" "$1"
+}
+
+# Earlier versions of this feature ran named workspaces and their own keymap.
+retire_named_workspaces() {
+  rm -f -- "$toggle_path" "$state_dir/$plugin_id.lua" "$state_dir/$plugin_id.layouts.lua"
+}
+
+# Windows left on a named <monitor>:<slot> workspace would be stranded, because
+# Omarchy shows numbered workspaces only. Send each to the same slot on its monitor.
+migrate_named_workspace_windows() {
+  [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]] || return 0
+  local focused address connector slot
+  focused="$(hyprctl -j monitors | jq -r '.[] | select(.focused) | .name')"
+  while IFS=$'\t' read -r address connector slot; do
+    [[ -n "$address" ]] || continue
+    hyprctl dispatch "function() hl.dispatch(hl.dsp.focus({ monitor = \"$connector\" })); hl.dispatch(hl.dsp.window.move({ workspace = tostring(o.workspaces.workspace_id(hl.get_monitor(\"$connector\"), $slot)), window = \"address:$address\", follow = false })) end" >/dev/null
+  done < <(jq -rn --argjson clients "$(hyprctl -j clients)" --argjson monitors "$(hyprctl -j monitors)" '
+    $clients[] | select(.mapped and .workspace.id < 0 and (.workspace.name | startswith("special:") | not))
+    | . as $client
+    | (.workspace.name | capture("^(?<description>.+?)(@[^:]+)?:(?<slot>[0-9]+)$")?) as $named
+    | ($monitors[] | select(.description == $named.description) | .name) as $connector
+    | select(($named.slot | tonumber) >= 1 and ($named.slot | tonumber) <= 10)
+    | [$client.address, $connector, $named.slot] | @tsv')
+  if [[ -n "$focused" ]]; then
+    hyprctl dispatch "hl.dsp.focus({ monitor = \"$focused\" })" >/dev/null
+  fi
 }
 
 reload_hyprland() {
@@ -112,8 +130,9 @@ enable_plugin() {
   wait_for_plugin_discovery
   manage_bar_layout enable
   omarchy plugin enable "$plugin_id"
-  write_enabled_toggle
+  retire_named_workspaces
   reload_hyprland
+  migrate_named_workspace_windows
 
   plugin_is_enabled || fail "Omarchy did not enable $plugin_id"
   plugin_is_configured || fail "Shibumi did not retain the managed workspace widget configuration"
@@ -126,9 +145,9 @@ disable_plugin() {
   if [[ "$was_enabled" == true ]]; then
     omarchy plugin disable "$plugin_id"
   fi
-  rm -f -- "$toggle_path"
+  retire_named_workspaces
   reload_hyprland
-  log "Per-monitor Workspaces is disabled; Shibumi's native workspace widget and Omarchy's numeric workspace rules are restored."
+  log "Per-monitor Workspaces is disabled; Shibumi's native workspace widget is back, and Omarchy still numbers each monitor's workspaces."
 }
 
 backup_feature_data() {
@@ -171,7 +190,8 @@ else
   checkout_changed=true
 fi
 
-if plugin_is_enabled && plugin_is_configured && [[ "$checkout_changed" == false ]]; then
+if plugin_is_enabled && plugin_is_configured && [[ ! -e "$toggle_path" ]] \
+  && [[ "$checkout_changed" == false ]]; then
   log "Per-monitor Workspaces is already installed."
   exit 0
 fi

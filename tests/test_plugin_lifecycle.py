@@ -10,9 +10,9 @@ import unittest
 
 REPO = Path(__file__).resolve().parents[1]
 PINS = {
-    'crmne.hyprmoncfg': ('https://github.com/crmne/omarchy-hyprmoncfg.git', 'cf05a04a50339510cd1f9d547fb5f80556ae6599'),
-    'mmsbrggr.per-monitor-workspaces': ('https://github.com/priyeshbhawsar15/omarchy-per-monitor-workspaces.git', '0292ebec608cd7d3907b8f9f9427c252b242edf2'),
-    'tmn73.calendar': ('https://github.com/tmn73/omarchy-calendar.git', '08f5c01fb3b40322787ebfa9805429baa19beb5f'),
+    'crmne.hyprmoncfg': ('https://github.com/priyeshbhawsar15/omarchy-hyprmoncfg.git', '6f9756bdc10ca594cd89effdf38b9af2b4bd190a'),
+    'mmsbrggr.per-monitor-workspaces': ('https://github.com/priyeshbhawsar15/omarchy-per-monitor-workspaces.git', 'cfaea278b09f326088cc929a83429d89929ea9c8'),
+    'tmn73.calendar': ('https://github.com/priyeshbhawsar15/omarchy-calendar.git', 'd4d452d4fb801461bc517187ab0d551460c9b460'),
 }
 
 FIXTURE = r'''#!/usr/bin/python3
@@ -86,7 +86,7 @@ if name=='hyprmoncfg':
     if 'status' in args:
         pending=s.get('statusPending',0)
         s['statusPending']=max(0,pending-1)
-        finish(output=json.dumps({'daemon':{'running':not pending and s.get('active',{}).get('hyprmoncfgd.service',False)}}))
+        finish(output=json.dumps({'daemon':{'running':not pending and s.get('active',{}).get('hyprmoncfgd.service',False)},'recommended_profile':{'name':s['recommendedProfile']} if s.get('recommendedProfile') else None}))
     if 'version' in args: finish(output='hyprmoncfg version 1.22.1')
     finish()
 if name=='systemctl':
@@ -140,7 +140,7 @@ class PluginLifecycleTests(unittest.TestCase):
         (units/'omarchy-calendar-sync.timer').write_text('[Unit]\nDescription=Calendar timer\n[Timer]\nOnCalendar=*:0/5\nPersistent=true\n[Install]\nWantedBy=timers.target\n')
         sync=units.parent/'omarchy-calendar-sync';sync.write_text('#!/bin/bash\nexit 0\n');sync.chmod(0o755)
         (self.home/'.config/hypr').mkdir();(self.home/'.config/hypr/monitors.lua').write_text('-- personal monitors\n')
-        self.env=dict(os.environ,HOME=str(self.home),PATH=str(self.bin),FIXTURE_SOURCE=str(self.fixture),FIXTURE_BIN=str(self.bin),XDG_STATE_HOME=str(self.home/'.local/state'),XDG_RUNTIME_DIR=str(self.base/'runtime'),DBUS_SESSION_BUS_ADDRESS='fixture')
+        self.env=dict(os.environ,ARCH_SETUPS_DAEMON_RESTART_SETTLE="0",HOME=str(self.home),PATH=str(self.bin),FIXTURE_SOURCE=str(self.fixture),FIXTURE_BIN=str(self.bin),XDG_STATE_HOME=str(self.home/'.local/state'),XDG_RUNTIME_DIR=str(self.base/'runtime'),DBUS_SESSION_BUS_ADDRESS='fixture')
         self.env.pop('HYPRLAND_INSTANCE_SIGNATURE',None)
 
     def tearDown(self): self.temp.cleanup()
@@ -157,6 +157,14 @@ class PluginLifecycleTests(unittest.TestCase):
         (self.bin/'hyprmoncfg').unlink()
         self.run_installer('install-hyprmoncfg.sh')
         state=self.read_state(); self.assertTrue(state['managed']);self.assertTrue(state['active'].get('hyprmoncfgd.service'));self.assertTrue(state['enabled'].get('hyprmoncfgd.service'))
+
+    def test_hyprmoncfg_waits_for_the_shell_after_restarting_the_daemon(self):
+        self.run_installer('install-hyprmoncfg.sh')
+        calls=self.read_state()['calls']
+        restart=next(i for i,c in enumerate(calls) if c[0]=='systemctl' and 'restart' in c and 'hyprmoncfgd.service' in c)
+        enabled=next(i for i,c in enumerate(calls) if c[:3]==['omarchy','plugin','enable'])
+        ping=[i for i,c in enumerate(calls) if c==['omarchy-shell','shell','ping']]
+        self.assertTrue(any(restart<i<enabled for i in ping),calls)
 
     def test_hyprmoncfg_waits_for_daemon_ipc_before_manage(self):
         self.state['statusPending']=2;self.write_state()
@@ -202,6 +210,41 @@ class PluginLifecycleTests(unittest.TestCase):
         self.run_installer('install-per-monitor-workspaces.sh','--disable');self.run_installer('install-per-monitor-workspaces.sh','--disable')
         self.assertEqual(self.read_shell(),self.original)
 
+    def write_hyprmoncfg_profile(self,enabled=True):
+        profile=self.home/'.config/hyprmoncfg/profiles/desk.json';profile.parent.mkdir(parents=True,exist_ok=True)
+        profile.write_text(json.dumps({'name':'desk','outputs':[{'key':'keep'}],'workspaces':{'enabled':enabled,'strategy':'manual','rules':[{'workspace':'1'}]}}))
+        return profile
+
+    def test_hyprmoncfg_leaves_workspaces_to_omarchy_and_keeps_profile_data(self):
+        self.run_installer('install-hyprmoncfg.sh')
+        profile=self.write_hyprmoncfg_profile();s=self.read_state();s['recommendedProfile']='desk';s['calls']=[];self.state=s;self.write_state()
+        result=self.run_installer('install-hyprmoncfg.sh')
+        self.assertNotIn('already installed',result.stdout)
+        saved=json.loads(profile.read_text());self.assertFalse(saved['workspaces']['enabled'])
+        self.assertEqual(saved['outputs'],[{'key':'keep'}]);self.assertEqual(saved['workspaces']['rules'],[{'workspace':'1'}])
+        calls=self.read_state()['calls']
+        # Restarting the daemon closes a socket the running shell holds, which crashed Quickshell.
+        self.assertFalse(any(c[0]=='systemctl' and 'hyprmoncfgd.service' in c and ('restart' in c or 'stop' in c) for c in calls))
+        self.assertTrue(any(c[0]=='hyprmoncfg' and c[-4:]==['apply','desk','--confirm-timeout','0'] for c in calls))
+        backups=list((self.home/'.local/state/arch-setups/backups').glob('hyprmoncfg-workspace-plan-*'))
+        self.assertEqual(len(backups),1)
+        backup=next(backups[0].rglob('desk.json'));self.assertTrue(json.loads(backup.read_text())['workspaces']['enabled'])
+
+    def test_hyprmoncfg_rerun_is_quiet_once_the_workspace_plan_is_off(self):
+        self.write_hyprmoncfg_profile(enabled=False)
+        self.run_installer('install-hyprmoncfg.sh');result=self.run_installer('install-hyprmoncfg.sh')
+        self.assertIn('already installed',result.stdout)
+        self.assertFalse(any(c[0]=='hyprmoncfg' and 'apply' in c for c in self.read_state()['calls']))
+
+    def test_pmw_retires_the_named_workspace_toggle_and_stays_configured_without_it(self):
+        toggle=self.home/'.local/state/omarchy/toggles/hypr/per-monitor-workspaces.lua'
+        self.run_installer('install-per-monitor-workspaces.sh');self.assertFalse(toggle.exists())
+        self.assertIn('already installed',self.run_installer('install-per-monitor-workspaces.sh').stdout)
+        toggle.parent.mkdir(parents=True,exist_ok=True);toggle.write_text('-- legacy\n')
+        count=self.home/'.local/state/omarchy/mmsbrggr.per-monitor-workspaces.lua';count.write_text('return { count = 5 }\n')
+        self.assertNotIn('already installed',self.run_installer('install-per-monitor-workspaces.sh').stdout)
+        self.assertFalse(toggle.exists());self.assertFalse(count.exists())
+
     def test_pmw_disable_after_switch_to_stock_preserves_stock_workspace(self):
         self.run_installer('install-per-monitor-workspaces.sh')
         stock={'bar':{'layout':{'left':['omarchy.workspaces'],'center':['omarchy.clock'],'right':[]}},'plugins':[]}
@@ -239,6 +282,16 @@ class PluginLifecycleTests(unittest.TestCase):
         self.run_installer('install-calendar.sh','--disable')
         self.assertFalse(self.read_state()['active']['omarchy-calendar-sync.timer'])
         self.assertFalse(self.read_state()['enabled']['omarchy-calendar-sync.timer'])
+
+    def test_calendar_unit_with_only_the_home_path_expanded_is_not_custom(self):
+        plugin_units=self.home/'.config/omarchy/plugins/tmn73.calendar/sync/systemd'
+        units=self.home/'.config/systemd/user';units.mkdir(parents=True,exist_ok=True)
+        plugin_units.mkdir(parents=True,exist_ok=True)
+        (plugin_units/'omarchy-calendar-sync.service').write_text('[Service]\nExecStart=%h/sync\n')
+        (plugin_units/'omarchy-calendar-sync.timer').write_text('[Timer]\nOnCalendar=hourly\n')
+        (units/'omarchy-calendar-sync.service').write_text(f'[Service]\nExecStart={self.home}/sync\n')
+        self.run_installer('install-calendar.sh')
+        self.assertEqual((units/'omarchy-calendar-sync.service').read_text(),'[Service]\nExecStart=%h/sync\n')
 
     def test_calendar_custom_unit_is_preserved_before_any_write(self):
         units=self.home/'.config/systemd/user';units.mkdir(parents=True)
