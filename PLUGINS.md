@@ -149,11 +149,11 @@ Numeric workspace rules conflict with Omarchy's blocks, so `hypr/monitors.lua` h
 ## hyprmoncfg: Multi-Monitor Manager for Omarchy
 
 - **Plugin ID:** `crmne.hyprmoncfg`
-- **Type:** Unmodified community plugin.
+- **Type:** Customized community plugin, kept as a separate public fork.
 - **Original upstream URL:** `https://github.com/crmne/omarchy-hyprmoncfg.git`
-- **Installation source:** `https://github.com/crmne/omarchy-hyprmoncfg.git`
-- **Pinned release:** `v2.3.5` at `cf05a04a50339510cd1f9d547fb5f80556ae6599`
-- **Local modifications:** None.
+- **Installation source:** `https://github.com/priyeshbhawsar15/omarchy-hyprmoncfg.git`
+- **Pinned commit:** `6f9756bdc10ca594cd89effdf38b9af2b4bd190a` (branch `shibumi-widget-color`, based on upstream `v2.3.5` / `cf05a04a50339510cd1f9d547fb5f80556ae6599`)
+- **Local modifications:** The bar icon takes its color from the Shibumi bar's `seal` token when the bar provides one, falling back to the bar's urgent color, so it matches the other Shibumi widgets.
 
 ### Behavior and controls
 
@@ -164,7 +164,9 @@ Provides automatic multi-monitor profile layout switching on hotplug, lid open/c
 - **Remove:** `./install-hyprmoncfg.sh --remove` — archives configuration and state under `~/.local/state/arch-setups/backups/hyprmoncfg-remove-<timestamp>/`, then disables and removes the plugin.
 
 
-**Workspace plan:** a workspace plan saved in a profile generates numeric rules and, on Omarchy 4.5, rebinds `Super+number`, `Super+Tab` and scroll over Omarchy's keys from a file that loads last. `install-hyprmoncfg.sh` therefore sets `workspaces.enabled` to `false` in every profile (backed up under `~/.local/state/arch-setups/backups/hyprmoncfg-workspace-plan-<timestamp>/`, with the saved rules kept) and re-applies the recommended profile without restarting the daemon. Restarting it crashed Quickshell once, most likely because this plugin holds a socket to the daemon. Re-enabling a plan in the hyprmoncfg UI brings the conflict back; rerunning the installer repairs it.
+**Workspace plan:** a workspace plan saved in a profile generates numeric rules and, on Omarchy 4.5, rebinds `Super+number`, `Super+Tab` and scroll over Omarchy's keys from a file that loads last. `install-hyprmoncfg.sh` therefore sets `workspaces.enabled` to `false` in every profile (backed up under `~/.local/state/arch-setups/backups/hyprmoncfg-workspace-plan-<timestamp>/`, with the saved rules kept) and re-applies the recommended profile without restarting the daemon. Re-enabling a plan in the hyprmoncfg UI brings the conflict back; rerunning the installer repairs it.
+
+**Known issue, daemon restarts crash the shell:** this plugin holds a socket to `hyprmoncfgd`, and restarting the daemon segfaults Quickshell when that socket closes. It has happened on both restarts tested, with the same stack in `QObject::deleteLater` on the socket's disconnect path. The shell relaunches by itself in about five seconds and shows a crash dialog you can close. The installer restarts the daemon only when its settings file changes, and waits for the shell afterwards. A package update that restarts the daemon could trigger the same crash.
 ## Lock Screen Explorer
 
 - **Plugin ID:** `io.github.sirjul1337.lock-explorer`

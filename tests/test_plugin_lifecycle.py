@@ -10,7 +10,7 @@ import unittest
 
 REPO = Path(__file__).resolve().parents[1]
 PINS = {
-    'crmne.hyprmoncfg': ('https://github.com/crmne/omarchy-hyprmoncfg.git', 'cf05a04a50339510cd1f9d547fb5f80556ae6599'),
+    'crmne.hyprmoncfg': ('https://github.com/priyeshbhawsar15/omarchy-hyprmoncfg.git', '6f9756bdc10ca594cd89effdf38b9af2b4bd190a'),
     'mmsbrggr.per-monitor-workspaces': ('https://github.com/priyeshbhawsar15/omarchy-per-monitor-workspaces.git', 'cfaea278b09f326088cc929a83429d89929ea9c8'),
     'tmn73.calendar': ('https://github.com/priyeshbhawsar15/omarchy-calendar.git', 'd4d452d4fb801461bc517187ab0d551460c9b460'),
 }
@@ -140,7 +140,7 @@ class PluginLifecycleTests(unittest.TestCase):
         (units/'omarchy-calendar-sync.timer').write_text('[Unit]\nDescription=Calendar timer\n[Timer]\nOnCalendar=*:0/5\nPersistent=true\n[Install]\nWantedBy=timers.target\n')
         sync=units.parent/'omarchy-calendar-sync';sync.write_text('#!/bin/bash\nexit 0\n');sync.chmod(0o755)
         (self.home/'.config/hypr').mkdir();(self.home/'.config/hypr/monitors.lua').write_text('-- personal monitors\n')
-        self.env=dict(os.environ,HOME=str(self.home),PATH=str(self.bin),FIXTURE_SOURCE=str(self.fixture),FIXTURE_BIN=str(self.bin),XDG_STATE_HOME=str(self.home/'.local/state'),XDG_RUNTIME_DIR=str(self.base/'runtime'),DBUS_SESSION_BUS_ADDRESS='fixture')
+        self.env=dict(os.environ,ARCH_SETUPS_DAEMON_RESTART_SETTLE="0",HOME=str(self.home),PATH=str(self.bin),FIXTURE_SOURCE=str(self.fixture),FIXTURE_BIN=str(self.bin),XDG_STATE_HOME=str(self.home/'.local/state'),XDG_RUNTIME_DIR=str(self.base/'runtime'),DBUS_SESSION_BUS_ADDRESS='fixture')
         self.env.pop('HYPRLAND_INSTANCE_SIGNATURE',None)
 
     def tearDown(self): self.temp.cleanup()
@@ -157,6 +157,14 @@ class PluginLifecycleTests(unittest.TestCase):
         (self.bin/'hyprmoncfg').unlink()
         self.run_installer('install-hyprmoncfg.sh')
         state=self.read_state(); self.assertTrue(state['managed']);self.assertTrue(state['active'].get('hyprmoncfgd.service'));self.assertTrue(state['enabled'].get('hyprmoncfgd.service'))
+
+    def test_hyprmoncfg_waits_for_the_shell_after_restarting_the_daemon(self):
+        self.run_installer('install-hyprmoncfg.sh')
+        calls=self.read_state()['calls']
+        restart=next(i for i,c in enumerate(calls) if c[0]=='systemctl' and 'restart' in c and 'hyprmoncfgd.service' in c)
+        enabled=next(i for i,c in enumerate(calls) if c[:3]==['omarchy','plugin','enable'])
+        ping=[i for i,c in enumerate(calls) if c==['omarchy-shell','shell','ping']]
+        self.assertTrue(any(restart<i<enabled for i in ping),calls)
 
     def test_hyprmoncfg_waits_for_daemon_ipc_before_manage(self):
         self.state['statusPending']=2;self.write_state()

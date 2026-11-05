@@ -9,9 +9,9 @@ source "$SCRIPT_DIR/lib.sh"
 feature_lifecycle "$0" "$@"
 
 plugin_id="crmne.hyprmoncfg"
-plugin_url="https://github.com/crmne/omarchy-hyprmoncfg.git"
-plugin_tag="v2.3.5"
-plugin_commit="cf05a04a50339510cd1f9d547fb5f80556ae6599"
+plugin_url="https://github.com/priyeshbhawsar15/omarchy-hyprmoncfg.git"
+upstream_url="https://github.com/crmne/omarchy-hyprmoncfg.git"
+plugin_commit="6f9756bdc10ca594cd89effdf38b9af2b4bd190a"
 plugin_dir="$HOME/.config/omarchy/plugins/$plugin_id"
 shell_config="$HOME/.config/omarchy/shell.json"
 hyprmoncfg_profiles="$HOME/.config/hyprmoncfg/profiles"
@@ -57,7 +57,7 @@ wait_for_plugin_discovery() {
 }
 
 checkout_pinned_plugin() {
-  install_pinned_plugin "$plugin_dir" "$plugin_url" "$plugin_commit" "$plugin_id"
+  install_pinned_plugin "$plugin_dir" "$plugin_url" "$plugin_commit" "$plugin_id" "$upstream_url"
 }
 
 update_pinned_plugin() {
@@ -108,6 +108,19 @@ runtime_is_current() {
   hyprmon_command status --json | jq -e '.daemon.running == true' >/dev/null
 }
 
+# The bar plugin holds a socket to the daemon inside the running shell, and
+# Quickshell segfaults when a restart closes it, then relaunches. Wait for that to
+# finish so the steps that follow reach a live shell.
+wait_for_shell_after_daemon_restart() {
+  sleep "${ARCH_SETUPS_DAEMON_RESTART_SETTLE:-2}"
+  local attempt
+  for ((attempt = 0; attempt < 150; attempt++)); do
+    omarchy-shell shell ping >/dev/null 2>&1 && return 0
+    sleep 0.2
+  done
+  fail "the Omarchy shell did not come back after restarting hyprmoncfgd"
+}
+
 start_monitor_management() {
   [[ -f "$HOME/.config/hypr/monitors.lua" ]] || fail "install the managed Hyprland modules first"
   mkdir -p -- "$management_dir" "$(dirname -- "$daemon_dropin")"
@@ -131,7 +144,10 @@ start_monitor_management() {
   fi
   touch "$management_marker"
   systemctl --user enable --now hyprmoncfgd.service
-  if [[ "$settings_changed" == true ]]; then systemctl --user restart hyprmoncfgd.service; fi
+  if [[ "$settings_changed" == true ]]; then
+    systemctl --user restart hyprmoncfgd.service
+    wait_for_shell_after_daemon_restart
+  fi
   local attempt ready=false
   for ((attempt = 0; attempt < 100; attempt++)); do
     if hyprmon_command status --json 2>/dev/null | jq -e '.daemon.running == true' >/dev/null; then
@@ -189,9 +205,8 @@ stand_down_workspace_plan() {
   backup_feature_paths hyprmoncfg-workspace-plan "$hyprmoncfg_profiles" >/dev/null
   python3 "$SCRIPT_DIR/config/hyprmoncfg-workspace-plan.py" disable "$hyprmoncfg_profiles" \
     || fail "could not turn off the workspace plan"
-  # Regenerate the monitor file through the running daemon. Do not restart it:
-  # the bar plugin holds a socket to it inside the running shell, and closing
-  # that socket crashed Quickshell.
+  # Regenerate the monitor file through the running daemon rather than restarting
+  # it, which would crash the shell (see wait_for_shell_after_daemon_restart).
   local profile
   profile="$(hyprmon_command status --json 2>/dev/null | jq -r '.recommended_profile.name // empty' || true)"
   if [[ -n "$profile" ]]; then
@@ -267,4 +282,4 @@ if plugin_is_enabled && manage_bar_layout check && runtime_is_current && workspa
 fi
 
 enable_plugin
-log "Installed and activated hyprmoncfg at $plugin_tag ($plugin_commit)."
+log "Installed and activated hyprmoncfg at $plugin_commit."
