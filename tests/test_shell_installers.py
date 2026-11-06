@@ -80,7 +80,6 @@ class ShibumiSettingsTests(OmalandMenuTests):
         (self.work / 'functions.sh').write_text(src)
         (self.work / 'shibumi').mkdir()
         (self.work / 'shibumi/Bar.qml').write_text('historical copied override')
-        (self.work / 'monitor-layout.json').write_text(json.dumps({'barMain':'main','monitors':{'main':{'description':'Fixture main'}}}))
 
     def test_supported_configuration_does_not_replace_managed_payload(self):
         target = self.home / '.config/omarchy/plugins/hancore.shibumi.bar/Bar.qml'
@@ -94,7 +93,7 @@ class ShibumiSettingsTests(OmalandMenuTests):
         updated = json.loads(shell.read_text())
         self.assertEqual(updated['bar'], original['bar'])
         state = updated['plugins'][0]['shibumi']
-        self.assertEqual(state['presentation']['mainMonitorDescription'], 'Fixture main')
+        self.assertEqual(state['presentation']['mainMonitorDescription'], '')
         self.assertEqual(state['presentation']['radius'], 'small')
         self.assertTrue(state['widgets']['G15']['enabled'])
         # Interactive visibility choices are seed-only, not reset on rerun.

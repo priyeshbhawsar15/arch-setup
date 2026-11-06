@@ -90,7 +90,7 @@ class DeploymentTests(unittest.TestCase):
             layout.install(config,REPO/'monitor-layout.json',REPO)
             self.assertEqual((self.config/'monitors.lua').read_bytes(),before)
         for name,content in originals.items():self.assertEqual((core/name).read_bytes(),content)
-        plugins=json.loads(shell.read_text())['plugins'];self.assertEqual(plugins[0]['shibumi']['presentation'],{'other':'keep','mainMonitorDescription':'Microstep MAG321UP OLED'});self.assertEqual(plugins[1],{'id':'unrelated','secret':'local-only'})
+        plugins=json.loads(shell.read_text())['plugins'];self.assertEqual(plugins[0]['shibumi']['presentation'],{'other':'keep','mainMonitorDescription':''});self.assertEqual(plugins[1],{'id':'unrelated','secret':'local-only'})
         self.assertEqual(shell.stat().st_mode & 0o777,0o600)
         self.assertIn(b'hyprmoncfg-monitors.lua',before)
         for backup in self.backups():self.assertEqual(backup.stat().st_mode & 0o777,0o700)

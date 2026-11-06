@@ -18,7 +18,7 @@ def load_config(path):
     if not isinstance(config, dict):
         raise ValueError('monitor policy must be an object')
     roles = config['monitors']
-    allowed = {'monitors', 'toolkitScale', 'windowSpan', 'singleMonitorKeep', 'singleMonitorDisable', 'wallpaperSpan', 'lockMain', 'lockSides', 'barMain', 'widgetTargets'}
+    allowed = {'monitors', 'toolkitScale', 'windowSpan', 'singleMonitorKeep', 'singleMonitorDisable', 'wallpaperSpan', 'lockMain', 'lockSides', 'widgetTargets'}
     if set(config) - allowed or not isinstance(roles, dict) or not roles:
         raise ValueError('monitor policy must have roles and no unknown fields')
     identities = []
@@ -56,7 +56,7 @@ def load_config(path):
     known_widgets = {'.config/omarchy/' + name + '.json' for name in ('obsidian-tasks', 'omniroute-quota', 'system-metrics', 'weather-widget', 'immich-photo-frame', 'home-assistant')}
     if set(config['widgetTargets']) - known_widgets:
         raise ValueError('widgetTargets may only manage supported widget configuration files')
-    for role in [config['singleMonitorKeep'], config['lockMain'], config['barMain'],
+    for role in [config['singleMonitorKeep'], config['lockMain'],
                  *config['widgetTargets'].values()]:
         if role not in roles:
             raise ValueError(f'unknown monitor role: {role}')
@@ -137,8 +137,7 @@ def render(config, path):
         text = text.replace(json.dumps('@monitor:' + role + '@'), lua(selector(entry)))
         fields = dict(output=selector(entry), **{k: v for k, v in entry.items() if k not in ('description', 'connector', 'selector')})
         rules.append('hl.monitor({ ' + ', '.join(key + ' = ' + lua(value) for key, value in fields.items()) + ' })')
-    main_description = config['monitors'][config['barMain']].get('description', '')
-    return text.replace('-- @monitor-rules@', '\n'.join(rules)).replace(json.dumps('@bar-main-description@'), json.dumps(main_description))
+    return text.replace('-- @monitor-rules@', '\n'.join(rules))
 
 
 def single_monitor_lua(config, outputs):
@@ -318,7 +317,7 @@ def install(config, config_path, repo, hypr_only=False):
             for plugin in data.get('plugins', []):
                 if plugin.get('id') == 'hancore.shibumi.state':
                     presentation = plugin.setdefault('shibumi', {}).setdefault('presentation', {})
-                    presentation['mainMonitorDescription'] = config['monitors'][config['barMain']].get('description', '')
+                    presentation['mainMonitorDescription'] = ''
                 if plugin.get('id') == 'io.github.sirjul1337.lock-explorer' and main and sides is not None and span is not None:
                     power = plugin.get('phasedPower')
                     if power:
