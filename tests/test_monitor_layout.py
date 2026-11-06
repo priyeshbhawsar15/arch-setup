@@ -211,7 +211,7 @@ class MonitorPolicyTest(unittest.TestCase):
             self.assertEqual(plugins[2]['video'], 'keep')
             self.assertEqual((core / 'GroupSlot.qml').read_text(), 'old')
             self.assertEqual((core / 'BarSection.qml').read_text(), 'old')
-            self.assertEqual(plugins[1]['shibumi']['presentation'], dict(other='keep', mainMonitorDescription='Microstep MAG321UP OLED'))
+            self.assertEqual(plugins[1]['shibumi']['presentation'], dict(other='keep', mainMonitorDescription=''))
             self.assertNotIn('@monitor:', (home / '.config/hypr/monitors.lua').read_text())
 
     def test_disconnected_roles_preserve_plugin_targets(self):

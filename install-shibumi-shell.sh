@@ -108,7 +108,7 @@ backup_shibumi_data() {
 deploy_overrides() {
   # Configuration is supported by the pinned fork. Never rewrite the managed
   # payload: upstream admission verifies each plugin's exact transaction digest.
-  python3 "$SCRIPT_DIR/config/shibumi-settings.py" "$shell_config" "${ARCH_SETUPS_MONITOR_LAYOUT:-$SCRIPT_DIR/monitor-layout.json}"
+  python3 "$SCRIPT_DIR/config/shibumi-settings.py" "$shell_config"
 }
 
 disable_suite() {

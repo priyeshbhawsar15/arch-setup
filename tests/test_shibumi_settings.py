@@ -21,11 +21,9 @@ class SettingsTests(unittest.TestCase):
         environment.start()
         self.addCleanup(environment.stop)
         self.shell = Path(self.temp.name) / 'shell.json'
-        self.policy = Path(self.temp.name) / 'policy.json'
-        self.policy.write_text(json.dumps({'barMain': 'main', 'monitors': {'main': {'description': 'OLED'}}}))
         self.data = {'bar': {'id': 'hancore.shibumi.bar', 'layout': {'left': ['other']}},
                      'plugins': [{'id': 'hancore.shibumi.state', 'shibumi': {
-                         'presentation': {'shellStyle': 'shibumi'}, 'widgets': {'G9': {'enabled': False}}}}],
+                         'presentation': {'shellStyle': 'shibumi', 'mainMonitorDescription': 'OLED'}, 'widgets': {'G9': {'enabled': False}}}}],
                      'disabledPlugins': [], 'unrelated': {'keep': True}}
         self.save()
 
@@ -58,11 +56,12 @@ class SettingsTests(unittest.TestCase):
         self.assertEqual(json.loads(self.shell.read_text()), self.data)
 
     def test_normal_install_keeps_g9_hidden_and_loads_backend(self):
-        settings.main(self.shell, self.policy)
+        settings.main(self.shell)
         result = json.loads(self.shell.read_text())
         state = result['plugins'][0]['shibumi']
         self.assertFalse(state['widgets']['G9']['enabled'])
-        self.assertEqual(state['presentation']['mainMonitorDescription'], 'OLED')
+        # A cleared main display gives every monitor the same bar.
+        self.assertEqual(state['presentation']['mainMonitorDescription'], '')
         self.assertEqual(result['bar'], self.data['bar'])
         self.assertEqual(result['plugins'][-1], {'id': 'hancore.shibumi.media'})
 

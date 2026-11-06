@@ -7,7 +7,7 @@ from pathlib import Path
 import sys
 
 
-def main(shell, policy=None, media_backend_only=False):
+def main(shell, media_backend_only=False):
     path = Path(shell)
     if not path.is_file():
         raise ValueError('Shibumi requires an existing shell configuration')
@@ -23,12 +23,10 @@ def main(shell, policy=None, media_backend_only=False):
     if 'hancore.shibumi.media' in data.get('disabledPlugins', []):
         raise ValueError('the required media backend is explicitly disabled; review suite configuration first')
     if not media_backend_only:
-        if policy is None:
-            raise ValueError('a monitor policy is required unless --media-backend-only is used')
-        monitor_policy = json.loads(Path(policy).read_text())
-        description = monitor_policy['monitors'][monitor_policy['barMain']].get('description', '')
         settings = entry.setdefault('shibumi', {})
-        settings.setdefault('presentation', {})['mainMonitorDescription'] = description
+        # An empty main display turns off the fork's side-monitor filtering, so
+        # every monitor shows the same bar.
+        settings.setdefault('presentation', {})['mainMonitorDescription'] = ''
         settings.setdefault('widgets', {}).setdefault('G15', {}).setdefault('enabled', True)
         settings['widgets'].setdefault('G9', {}).setdefault('enabled', False)
     # Hiding G9's widget removes its implicit service demand. The center notch
@@ -47,10 +45,9 @@ if __name__ == '__main__':
     try:
         parser = argparse.ArgumentParser(description=__doc__)
         parser.add_argument('shell')
-        parser.add_argument('policy', nargs='?')
         parser.add_argument('--media-backend-only', action='store_true')
         args = parser.parse_args()
-        main(args.shell, args.policy, args.media_backend_only)
+        main(args.shell, args.media_backend_only)
     except (OSError, ValueError, KeyError, TypeError) as error:
         print('Shibumi settings: ' + str(error), file=sys.stderr)
         sys.exit(1)

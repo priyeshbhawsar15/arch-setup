@@ -6,7 +6,6 @@
   "wallpaperSpan": [],
   "lockMain": "main",
   "lockSides": [],
-  "barMain": "main",
   "widgetTargets": {
     ".config/omarchy/obsidian-tasks.json": "main",
     ".config/omarchy/omniroute-quota.json": "main",
