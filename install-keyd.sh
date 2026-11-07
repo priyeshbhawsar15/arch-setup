@@ -14,18 +14,23 @@ else
 fi
 
 config_changed=false
-if ! cmp -s "$SCRIPT_DIR/keyd/default.conf" /etc/keyd/default.conf; then
-  if sudo test -e /etc/keyd/default.conf || sudo test -L /etc/keyd/default.conf; then
-    backup_dir="${XDG_STATE_HOME:-$HOME/.local/state}/arch-setups/backups/keyd-$(date +%Y%m%dT%H%M%S)-$$"
-    mkdir -p "$backup_dir"
-    chmod 700 "$backup_dir"
-    sudo cp -a /etc/keyd/default.conf "$backup_dir/default.conf"
-    log "Backed up keyd configuration to $backup_dir/default.conf"
+backup_dir=""
+# default.conf: physical keyboards. sunshine.conf: Sunshine's virtual keyboard.
+for name in default.conf sunshine.conf; do
+  cmp -s "$SCRIPT_DIR/keyd/$name" "/etc/keyd/$name" && continue
+  if sudo test -e "/etc/keyd/$name" || sudo test -L "/etc/keyd/$name"; then
+    if [[ -z "$backup_dir" ]]; then
+      backup_dir="${XDG_STATE_HOME:-$HOME/.local/state}/arch-setups/backups/keyd-$(date +%Y%m%dT%H%M%S)-$$"
+      mkdir -p "$backup_dir"
+      chmod 700 "$backup_dir"
+    fi
+    sudo cp -a "/etc/keyd/$name" "$backup_dir/$name"
+    log "Backed up keyd configuration to $backup_dir/$name"
   fi
-  log "Installing keyd config..."
-  sudo install -Dm644 "$SCRIPT_DIR/keyd/default.conf" /etc/keyd/default.conf
+  log "Installing keyd config $name..."
+  sudo install -Dm644 "$SCRIPT_DIR/keyd/$name" "/etc/keyd/$name"
   config_changed=true
-fi
+done
 
 if ! systemctl is-enabled --quiet keyd || ! systemctl is-active --quiet keyd; then
   log "Enabling keyd..."

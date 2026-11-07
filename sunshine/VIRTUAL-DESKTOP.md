@@ -44,6 +44,30 @@ using both Sunshine hosts concurrently, since input and audio are shared.
 No physical monitor power, keybindings, theme or package-managed Lua files change.
 The virtual monitor uses the normal Omarchy desktop/lock theme.
 
+### Scale, position and input
+
+`hypr/monitors.lua` (deployed by `install-monitor-layout.sh`) owns two rules for
+`SUNSHINE-VIRTUAL-1080P`, re-applied on every config reload and monitor change:
+
+- **Scale 1.** The helper sets scale only at runtime. Any reload, including
+  hyprmoncfgd re-applying its profile on each monitor change, drops that, and
+  the catch-all `scale = "auto"` picks 2, so the stream looks zoomed in.
+- **A monitor at 0,0.** Sunshine sends absolute mouse positions as a fraction
+  of a desktop it measures from 0,0. Hyprland spreads them across the enabled
+  outputs only. When the left monitor is off the layout starts at x=2560, and
+  the cursor lands up to ~740 px left of where the client points. So the
+  virtual output takes 0,0 whenever no other monitor is there, and otherwise
+  sits to the right of everything. While it is at 0,0 there is a gap to the
+  physical monitors, so the local mouse cannot slide onto it.
+
+Use Moonlight's absolute ("Follow") mouse mode. Relative mode moves the shared
+cursor, which can leave the virtual monitor. Sunshine measures the desktop when
+a stream starts, so reconnect after turning a monitor on or off.
+
+Windows keeps the Win key unless a browser client's Keyboard Lock is active.
+`install-keyd.sh` therefore makes Caps Lock (and a held `` ` ``) act as Super
+for Sunshine's virtual keyboard only; physical keyboards are unaffected.
+
 ## Connect and pair
 
 In Moonlight, add the PC manually using:
