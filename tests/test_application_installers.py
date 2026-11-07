@@ -155,6 +155,23 @@ esac''')
         self.assertEqual(backups[0].read_text(), "user keyd configuration\n")
         self.assertEqual(backups[0].parent.stat().st_mode & 0o777, 0o700)
 
+    def test_keyd_sunshine_keyboard_config_is_installed_and_backed_up(self):
+        (self.etc / "sunshine.conf").write_text("old sunshine keyd configuration\n")
+        (self.home / "service-active-keyd").touch()
+        (self.home / "service-enabled-keyd").touch()
+        result = self.run_installer("install-keyd.sh")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((self.etc / "sunshine.conf").read_bytes(), (ROOT / "keyd/sunshine.conf").read_bytes())
+        self.assertEqual((self.etc / "default.conf").read_bytes(), (ROOT / "keyd/default.conf").read_bytes())
+        backups = list((self.home / "state/arch-setups/backups").glob("keyd-*/sunshine.conf"))
+        self.assertEqual(len(backups), 1)
+        self.assertEqual(backups[0].read_text(), "old sunshine keyd configuration\n")
+        # Rerunning with nothing changed installs nothing and makes no backup.
+        result = self.run_installer("install-keyd.sh")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("Installing keyd config", result.stdout + result.stderr)
+        self.assertEqual(len(list((self.home / "state/arch-setups/backups").glob("keyd-*"))), 1)
+
     def test_matching_steam_wrapper_regains_executable_mode(self):
         target = self.home / ".local/bin/steam-gamescope-hdr"
         target.parent.mkdir(parents=True)

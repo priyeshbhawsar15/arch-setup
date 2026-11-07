@@ -109,7 +109,7 @@ class DeploymentTests(unittest.TestCase):
         marker=self.home/'.local/state/arch-setups/crmne.hyprmoncfg/managed';marker.parent.mkdir(parents=True)
         harness='''local rules,generated=0,0
 local workspace=function() rules=rules+1 end
-hl={env=function() end,monitor=function(m) if m.output=='generated' then generated=generated+1 end end,workspace_rule=workspace}
+hl={env=function() end,get_monitors=function() return {} end,on=function() end,monitor=function(m) if m.output=='generated' then generated=generated+1 end end,workspace_rule=workspace}
 dofile(os.getenv('HOME')..'/.config/hypr/monitors.lua')
 assert(hl.workspace_rule==workspace)
 print(rules,generated)
