@@ -22,4 +22,10 @@ esac
 origins="$(ip -o -4 address show up 2>/dev/null | awk '{split($4, a, "/"); printf "%shttps://%s:47990", sep, a[1]; sep=","}' || true)"
 args=("bind_address=$bind_address" 'upnp=disabled' 'address_family=ipv4' 'port=47989' "origin_web_ui_allowed=$admin_access")
 [[ -z "$origins" ]] || args+=("csrf_allowed_origins=$origins")
+# Connector names change when monitors are switched or replugged, so find the
+# streamed monitor by its EDID identity; otherwise keep the configured output.
+stream_display="$HOME/.local/lib/arch-setups/sunshine-stream-display.py"
+if [[ -f "$stream_display" ]] && output="$(python3 "$stream_display" output-name --record 2>/dev/null)"; then
+  args+=("output_name=$output")
+fi
 exec /usr/bin/sunshine "${args[@]}"

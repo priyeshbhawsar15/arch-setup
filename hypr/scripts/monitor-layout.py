@@ -5,6 +5,7 @@ import fcntl
 import json
 import math
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -18,7 +19,7 @@ def load_config(path):
     if not isinstance(config, dict):
         raise ValueError('monitor policy must be an object')
     roles = config['monitors']
-    allowed = {'monitors', 'toolkitScale', 'windowSpan', 'singleMonitorKeep', 'singleMonitorDisable', 'wallpaperSpan', 'lockMain', 'lockSides', 'widgetTargets'}
+    allowed = {'monitors', 'toolkitScale', 'windowSpan', 'singleMonitorKeep', 'singleMonitorDisable', 'wallpaperSpan', 'lockMain', 'lockSides', 'widgetTargets', 'sunshineStream'}
     if set(config) - allowed or not isinstance(roles, dict) or not roles:
         raise ValueError('monitor policy must have roles and no unknown fields')
     identities = []
@@ -69,9 +70,30 @@ def load_config(path):
             raise ValueError('widget configuration paths must be relative to HOME')
     if any(roles[role].get('selector') == 'primary' for role in config['singleMonitorDisable']):
         raise ValueError('cannot disable the wildcard primary selector')
+    if 'sunshineStream' in config:
+        validate_sunshine_stream(config['sunshineStream'], roles)
     if 'toolkitScale' in config and (type(config['toolkitScale']) is not int or not 1 <= config['toolkitScale'] <= 4):
         raise ValueError('toolkitScale must be an integer from 1 to 4')
     return config
+
+
+def validate_sunshine_stream(stream, roles):
+    """Optional: displays turned landscape while the main Sunshine host streams."""
+    if not isinstance(stream, dict) or set(stream) != {'capture', 'landscape'}:
+        raise ValueError('sunshineStream needs exactly capture and landscape')
+    landscape = stream['landscape']
+    if not isinstance(landscape, list) or not landscape or len(set(landscape)) != len(landscape):
+        raise ValueError('sunshineStream.landscape must list distinct monitor roles')
+    if stream['capture'] not in landscape:
+        raise ValueError('sunshineStream.capture must be one of its landscape roles')
+    for role in landscape:
+        entry = roles.get(role)
+        # Sunshine captures by connector name, so the stream monitor is found by its
+        # EDID identity, and the landscape layout needs fixed sizes and positions.
+        if entry is None or 'description' not in entry:
+            raise ValueError(f'sunshineStream role {role} must be a monitor with a description')
+        if not re.match(r'^\d+x\d+', entry.get('mode', '')) or not re.match(r'^-?\d+x-?\d+$', entry.get('position', '')):
+            raise ValueError(f'sunshineStream role {role} needs an explicit mode and position')
 
 
 def live_monitors():

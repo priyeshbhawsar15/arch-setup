@@ -73,6 +73,43 @@ and removes its owned legacy `sunshine-tailscale` launcher and
 Omarchy; rerun the installer afterward. See `PLUGINS.md` for removal and
 [validation results](VALIDATION.md) for pending client checks.
 
+## Landscape side monitors while streaming
+
+Portrait monitors reach the stream sideways: KMS capture sends the panel's
+unrotated picture. While the main host streams, the monitors listed in
+`monitor-layout.json` under `sunshineStream.landscape` therefore turn landscape,
+side by side from the first one's position. On the desk these are both Lenovo
+side monitors; the stream shows `sunshineStream.capture`, the left one.
+
+- **Starting a stream:** Sunshine runs the helper before every app
+  (`global_prep_cmd`). It writes the Hyprland toggle
+  `~/.local/state/omarchy/toggles/hypr/sunshine-stream-landscape.lua` and
+  reloads. Toggles load after hyprmoncfg's rules, so its reloads don't undo the
+  rotation. The toggle only applies to the Hyprland session that wrote it, so a
+  new login never starts in landscape.
+- **With the OLED off** the landscape monitors start at 0,0 instead of their
+  usual position. Sunshine measures the desktop from 0,0 for the stream mouse
+  while Hyprland maps it across the monitors that exist, so otherwise the
+  cursor lands hundreds of pixels to the side.
+- **Quitting the app** in Moonlight restores portrait straight away.
+- **Just disconnecting** runs nothing in Sunshine, so
+  `arch-sunshine-stream-display.service` follows the host log and restores
+  portrait after two minutes without a client. Reconnecting sooner keeps
+  landscape. Sunshine measures the desktop for the stream mouse when a client
+  connects, so if an app still runs when the two minutes end, the service
+  restarts Sunshine: the next connection launches the app again in landscape.
+  The virtual desktop host is a separate service and keeps running.
+- **Which monitor is streamed:** connector names change when the OLED is
+  switched on or off. The launcher finds the capture monitor by its EDID serial
+  and passes its connector as `output_name`. While no client is connected the
+  service restarts Sunshine when that connector changed.
+
+The helper never fails an app launch; if Hyprland can't be reached it leaves the
+layout alone and logs why. Check it with
+`journalctl --user -u arch-sunshine-stream-display -u app-dev.lizardbyte.app.Sunshine -b`.
+Remove `sunshineStream` from the monitor policy and rerun the installer to turn
+the rotation off; the helper stays installed because Sunshine runs it.
+
 ## Mobile client certificate rejection
 
 Sunshine 2026.914.233613 can retain multiple paired-device records with the

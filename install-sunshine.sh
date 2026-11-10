@@ -5,6 +5,7 @@ source "$SCRIPT_DIR/lib.sh"
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 export DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-unix:path=$XDG_RUNTIME_DIR/bus}"
 unit=app-dev.lizardbyte.app.Sunshine.service
+stream_unit=arch-sunshine-stream-display.service
 case "${1:-}" in
   --disable)
     # The virtual host depends on Sunshine and install-all.sh skips it once this
@@ -12,10 +13,15 @@ case "${1:-}" in
     if systemctl --user cat arch-sunshine-virtual.service >/dev/null 2>&1; then
       "$SCRIPT_DIR/install-virtual-desktop.sh" --disable
     fi
+    disable_user_unit "$stream_unit"
+    [[ ! -f "$HOME/.local/lib/arch-setups/sunshine-stream-display.py" ]] || python3 "$HOME/.local/lib/arch-setups/sunshine-stream-display.py" finish
     disable_user_unit "$unit"
     remember_feature_choice "$0" false
     exit 0 ;;
-  --enable) systemctl --user enable --now "$unit"; remember_feature_choice "$0" true; exit 0 ;;
+  --enable)
+    systemctl --user enable --now "$unit"
+    if systemctl --user cat "$stream_unit" >/dev/null 2>&1; then systemctl --user enable --now "$stream_unit"; fi
+    remember_feature_choice "$0" true; exit 0 ;;
   --repair-pairing|--reset-pairing)
     # The running daemon owns this JSON; stop it before making an offline repair.
     was_active=false
@@ -50,8 +56,12 @@ changed=false
 [[ "$(sha256sum "$config_file" 2>/dev/null || true)" == "$config_before" ]] || changed=true
 bin_dir="${HOME}/.local/bin"
 drop_dir="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user/$unit.d"
-mkdir -p -- "$bin_dir" "$drop_dir"
-for item in "$bin_dir/sunshine-host" "$drop_dir/arch-setups-network.conf" "$bin_dir/sunshine-tailscale" "$drop_dir/arch-setups-tailscale.conf"; do
+lib_dir="$HOME/.local/lib/arch-setups"
+stream_helper="$lib_dir/sunshine-stream-display.py"
+stream_config="$lib_dir/sunshine-stream-display.json"
+stream_unit_path="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user/$stream_unit"
+mkdir -p -- "$bin_dir" "$drop_dir" "$lib_dir"
+for item in "$bin_dir/sunshine-host" "$drop_dir/arch-setups-network.conf" "$bin_dir/sunshine-tailscale" "$drop_dir/arch-setups-tailscale.conf" "$stream_helper" "$stream_unit_path"; do
   if [[ -e "$item" || -L "$item" ]]; then
     [[ ! -L "$item" ]] && grep -qE 'arch-setups|Resolve the local tailnet address' "$item" || {
       log "Refusing foreign managed path: $item" >&2; exit 1;
@@ -65,8 +75,27 @@ if ! cmp -s "$SCRIPT_DIR/sunshine/start.sh" "$bin_dir/sunshine-host" || ! cmp -s
   rm -f -- "$bin_dir/sunshine-tailscale" "$drop_dir/arch-setups-tailscale.conf"
   changed=true
 fi
+# Landscape side monitors while streaming. Install the helper even without a
+# policy: Sunshine runs it around every app and treats a missing one as a failure.
+stream_changed=false
+stream_policy="$(python3 "$SCRIPT_DIR/sunshine/stream-display.py" configure --layout "${ARCH_SETUPS_MONITOR_LAYOUT:-$SCRIPT_DIR/monitor-layout.json}")"
+stream_policy_old="$(cat "$stream_config" 2>/dev/null || true)"
+if ! cmp -s "$SCRIPT_DIR/sunshine/stream-display.py" "$stream_helper" || ! cmp -s "$SCRIPT_DIR/sunshine/$stream_unit" "$stream_unit_path" || [[ "$stream_policy" != "$stream_policy_old" ]]; then
+  backup_feature_paths sunshine-stream-display "$stream_helper" "$stream_config" "$stream_unit_path" >/dev/null
+  install -m 755 "$SCRIPT_DIR/sunshine/stream-display.py" "$stream_helper"
+  install -Dm 644 "$SCRIPT_DIR/sunshine/$stream_unit" "$stream_unit_path"
+  if [[ -n "$stream_policy" ]]; then
+    printf '%s\n' "$stream_policy" > "$stream_config"
+  else
+    rm -f -- "$stream_config"
+  fi
+  # Only the watcher uses these, so a live stream keeps running.
+  stream_changed=true
+fi
 systemctl --user daemon-reload
 systemctl --user enable "$unit"
+systemctl --user enable --now "$stream_unit"
+[[ "$stream_changed" == false ]] || systemctl --user restart "$stream_unit"
 # Apply changed security settings to a running host, but never drop a live
 # stream when a rerun has nothing to change.
 if [[ "$changed" == true ]]; then
