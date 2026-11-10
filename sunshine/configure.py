@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """Reconcile only the managed Sunshine network policy; preserve personal settings."""
+import json
 import os
 from pathlib import Path
 import re
 import shutil
 import tempfile
+
+
+STREAM_DISPLAY = '"$(HOME)/.local/lib/arch-setups/sunshine-stream-display.py"'
 
 
 def main():
@@ -18,6 +22,9 @@ def main():
         'upnp': 'disabled', 'address_family': 'ipv4', 'bind_address': '127.0.0.1',
         'port': '47989', 'origin_web_ui_allowed': 'lan',
         'capture': 'kms', 'csrf_allowed_origins': '', 'lan_encryption_mode': '2', 'wan_encryption_mode': '2',
+        # Around every app: landscape side monitors while streaming (stream-display.py).
+        'global_prep_cmd': json.dumps([{'do': STREAM_DISPLAY + ' prepare', 'undo': STREAM_DISPLAY + ' finish', 'elevated': False}],
+                                      separators=(',', ':')),
     }
     lines = []
     for line in old.splitlines():

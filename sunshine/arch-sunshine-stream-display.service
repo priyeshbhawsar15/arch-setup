@@ -1,0 +1,14 @@
+# Managed by arch-setups/install-sunshine.sh
+[Unit]
+Description=Sunshine stream display: restore side monitors after a disconnect
+After=graphical-session.target app-dev.lizardbyte.app.Sunshine.service
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 %h/.local/lib/arch-setups/sunshine-stream-display.py watch
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=graphical-session.target

@@ -11,6 +11,7 @@
   "wallpaperSpan": ["side_left", "side_right"],
   "lockMain": "main",
   "lockSides": ["side_left", "side_right"],
+  "sunshineStream": {"capture": "side_left", "landscape": ["side_left", "side_right"]},
   "widgetTargets": {
     ".config/omarchy/obsidian-tasks.json": "side_left",
     ".config/omarchy/omniroute-quota.json": "side_right",
