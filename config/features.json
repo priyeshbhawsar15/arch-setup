@@ -14,7 +14,6 @@
   "install-lutris.sh": {},
   "install-linuwux.sh": {},
   "install-sunshine.sh": {"pending": "Verify Sunshine credentials, Moonlight pairing, LAN/Tailscale firewall access, capture and input."},
-  "install-virtual-desktop.sh": {"requires": ["install-sunshine.sh"], "session": true, "pending": "Pair the independent virtual host; verify 1080p60 playback, monitor-off and reboot behavior."},
   "install-tailscale.sh": {"pending": "Enroll this device with tailscale up; daemon startup alone is not enrollment."},
   "install-keyd.sh": {},
   "install-zsh.sh": {},

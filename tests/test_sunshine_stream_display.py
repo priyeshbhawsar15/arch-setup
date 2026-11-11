@@ -82,7 +82,43 @@ print(table.concat(rules, ","))
 '''
 SIDES = '{ description = "%s" }, { description = "%s" }' % (LEFT, RIGHT)
 OLED = '{ description = "Microstep MAG321UP OLED", name = "DP-6" }'
-VIRTUAL = '{ description = "Headless", name = "SUNSHINE-VIRTUAL-1080P" }'
+
+# Omarchy's workspace actions, recording which monitor has focus when they run.
+BINDINGS_HARNESS = '''
+local monitors = {
+  { name = "DP-6", description = "Microstep MAG321UP OLED", focused = true },
+  { name = "DP-5", description = "%s" },
+  { name = "DP-4", description = "%s" },
+}
+local binds, calls = {}, {}
+local function focused()
+  for _, m in ipairs(monitors) do if m.focused then return m.name end end
+end
+hl = {
+  get_monitors = function() return monitors end,
+  monitor = function() end,
+  dsp = { focus = function(args) return args end },
+  dispatch = function(args)
+    for _, m in ipairs(monitors) do m.focused = m.name == args.monitor end
+    calls[#calls + 1] = "focus " .. args.monitor
+  end,
+}
+o = {
+  rebind = function(keys, description, action) binds[keys] = action end,
+  workspaces = {
+    focus = function(slot) return function() calls[#calls + 1] = "workspace " .. slot .. " on " .. focused() end end,
+    move_window = function(slot, follow)
+      return function() calls[#calls + 1] = "move " .. slot .. (follow == false and " silently" or "") .. " on " .. focused() end
+    end,
+  },
+}
+dofile(arg[1])
+for _, keys in ipairs({ KEYS }) do
+  if binds[keys] then binds[keys]() else calls[#calls + 1] = "unbound " .. keys end
+end
+print(table.concat(calls, ","))
+''' % (LEFT, RIGHT)
+KEYS = ('SUPER + code:12', 'SUPER + code:12', 'SUPER + SHIFT + code:19', 'SUPER + SHIFT + ALT + code:10')
 
 
 @unittest.skipUnless(shutil.which('lua'), 'Lua interpreter required')
@@ -104,12 +140,35 @@ class ToggleTests(unittest.TestCase):
 
     def test_starts_at_the_origin_when_no_other_monitor_is_on(self):
         # Otherwise the stream cursor drifts: Sunshine measures from 0,0.
-        for monitors in (SIDES, SIDES + ', ' + VIRTUAL):
-            self.assertEqual(self.evaluate('abc', 'abc', monitors),
-                             f'desc:{LEFT}|0x0|0,desc:{RIGHT}|1920x0|0')
+        self.assertEqual(self.evaluate('abc', 'abc', SIDES),
+                         f'desc:{LEFT}|0x0|0,desc:{RIGHT}|1920x0|0')
 
     def test_a_new_login_ignores_a_leftover_toggle(self):
         self.assertEqual(self.evaluate('abc', 'other'), '')
+
+    def bindings(self, harness=BINDINGS_HARNESS):
+        config = display.render_config(layout.load_config(REPO / 'monitor-layout.json'))
+        harness = harness.replace('KEYS', ', '.join(json.dumps(keys) for keys in KEYS))
+        with tempfile.TemporaryDirectory() as tmp:
+            toggle = Path(tmp) / 'toggle.lua'
+            toggle.write_text(display.toggle_lua(config, 'abc'))
+            out = subprocess.run(['lua', '-', str(toggle)], input=harness, capture_output=True, text=True,
+                                 env=dict(os.environ, HYPRLAND_INSTANCE_SIGNATURE='abc'))
+        self.assertEqual(out.returncode, 0, out.stderr)
+        return out.stdout.strip().split(',')
+
+    def test_workspace_keys_act_on_the_streamed_monitor(self):
+        # Focus starts on the OLED, which the client never sees.
+        self.assertEqual(self.bindings(), [
+            'focus DP-5', 'workspace 3 on DP-5',
+            'workspace 3 on DP-5',
+            'move 10 on DP-5',
+            'move 1 silently on DP-5',
+        ])
+
+    def test_without_omarchy_workspaces_the_toggle_still_loads(self):
+        self.assertEqual(self.bindings(BINDINGS_HARNESS.replace('\no = {', '\no_unused = {')),
+                         [f'unbound {keys}' for keys in KEYS])
 
 
 class ConnectorTests(unittest.TestCase):
@@ -196,7 +255,7 @@ FAKE_HYPRCTL = '''#!/bin/sh
 echo "$@" >> "$HOME/hyprctl.log"
 if [ "$1" = monitors ]; then
   t=1; [ -f "$XDG_STATE_HOME/omarchy/toggles/hypr/sunshine-stream-landscape.lua" ] && t=0
-  printf '[{"description": "%s", "transform": %s}, {"description": "%s", "transform": %s}]' "$LEFT" "$t" "$RIGHT" "$t"
+  printf '[{"name": "DP-5", "description": "%s", "transform": %s}, {"name": "DP-4", "description": "%s", "transform": %s, "focused": true}]' "$LEFT" "$t" "$RIGHT" "$t"
 fi
 '''
 
@@ -228,6 +287,8 @@ class LifecycleTests(unittest.TestCase):
         self.assertEqual(prepared.returncode, 0, prepared.stderr)
         self.assertIn('landscape applied', prepared.stderr)
         self.assertIn('"session"', self.toggle.read_text())
+        # The stream starts with focus on the streamed monitor.
+        self.assertIn('eval hl.dispatch(hl.dsp.focus({ monitor = "DP-5" }))', (self.home / 'hyprctl.log').read_text())
         finished = self.run_helper('finish')
         self.assertEqual(finished.returncode, 0, finished.stderr)
         self.assertFalse(self.toggle.exists())

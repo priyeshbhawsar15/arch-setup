@@ -164,7 +164,7 @@ Provides automatic multi-monitor profile layout switching on hotplug, lid open/c
 - **Remove:** `./install-hyprmoncfg.sh --remove` — archives configuration and state under `~/.local/state/arch-setups/backups/hyprmoncfg-remove-<timestamp>/`, then disables and removes the plugin.
 
 
-**Workspace plan:** a workspace plan saved in a profile generates numeric rules and, on Omarchy 4.5, rebinds `Super+number`, `Super+Tab` and scroll over Omarchy's keys from a file that loads last. `install-hyprmoncfg.sh` therefore sets `workspaces.enabled` to `false` in every profile (backed up under `~/.local/state/arch-setups/backups/hyprmoncfg-workspace-plan-<timestamp>/`, with the saved rules kept) and re-applies the recommended profile without restarting the daemon. Re-enabling a plan in the hyprmoncfg UI brings the conflict back; rerunning the installer repairs it.
+**Workspace plan:** a workspace plan saved in a profile generates numeric rules and, on Omarchy 4.5, rebinds `Super+number`, `Super+Tab` and scroll over Omarchy's keys from a file that loads last. `install-hyprmoncfg.sh` therefore sets `workspaces.enabled` to `false` in every profile (backed up under `~/.local/state/arch-setups/backups/hyprmoncfg-workspace-plan-<timestamp>/`, with the saved rules kept) and re-applies the recommended profile without restarting the daemon. Re-enabling a plan in the hyprmoncfg UI brings the conflict back; rerunning the installer repairs it. hyprmoncfgd 1.28 also writes that takeover block with the plan disabled, for example into the layout it restores after rejecting a profile (which happens while a Sunshine stream has the side monitors landscape). It replaced Omarchy's workspace module, so Super + 2 opened global workspace 2, which belongs to whichever monitor owns 1-10. `monitors.lua` therefore loads the generated file with `o.workspaces` hidden, so neither its rules nor its rebinding can take Omarchy's workspace keys.
 
 **Known issue, daemon restarts crash the shell:** this plugin holds a socket to `hyprmoncfgd`, and restarting the daemon segfaults Quickshell when that socket closes. It has happened on both restarts tested, with the same stack in `QObject::deleteLater` on the socket's disconnect path. The shell relaunches by itself in about five seconds and shows a crash dialog you can close. The installer restarts the daemon only when its settings file changes, and waits for the shell afterwards. A package update that restarts the daemon could trigger the same crash.
 ## Lock Screen Explorer
@@ -521,11 +521,13 @@ Run `./install-sunshine.sh`, then create the admin login on this PC at `https://
 
 If Moonlight reports “client is not verified” and the host logs “Client certificate identity is not enabled”, check for duplicate certificate identities left by repeated pairing. This Sunshine version rejects multiple records for the same certificate. `./install-sunshine.sh --repair-pairing` makes a private backup, retains the newest enabled record per identical certificate and preserves unrelated clients/credentials; disabled duplicate records require explicit review. This is an opt-in state repair, not a plugin/source modification or a certificate-verification bypass. Avoid pairing again when the phone already has a valid host entry. For an explicit fresh start, `./install-sunshine.sh --reset-pairing` archives then removes all Sunshine client trust and the host certificate/key, retaining the admin login. All clients must forget the old PC and pair once against the regenerated identity; this does not change Tailscale certificates.
 
-While the main host streams, the monitors listed in the monitor policy's `sunshineStream.landscape` (on the desk: both Lenovo side monitors) turn landscape, because portrait monitors reach the stream sideways. They return to portrait when the app is quit, or two minutes after the client disconnects; a quicker reconnect keeps landscape. If an app is still running when those two minutes end, Sunshine is restarted so the next connection starts fresh in landscape; a resumed session would keep the portrait mouse mapping. Sunshine streams the `sunshineStream.capture` monitor, found by its serial number. This needs no shortcut, is part of the Sunshine installer, and is off on hosts without `sunshineStream`. The virtual desktop host is unaffected. See [landscape while streaming](sunshine/README.md#landscape-side-monitors-while-streaming).
+While the main host streams, the monitors listed in the monitor policy's `sunshineStream.landscape` (on the desk: both Lenovo side monitors) turn landscape, because portrait monitors reach the stream sideways. They return to portrait when the app is quit, or two minutes after the client disconnects; a quicker reconnect keeps landscape. If an app is still running when those two minutes end, Sunshine is restarted so the next connection starts fresh in landscape; a resumed session would keep the portrait mouse mapping. Sunshine streams the `sunshineStream.capture` monitor, found by its serial number. While the stream runs, that monitor gets focus, and **Super + 1–0**, **Super + Shift + 1–0** and **Super + Shift + Alt + 1–0** switch or move to that monitor's workspaces whichever monitor has focus, so they never change a monitor the client cannot see; Omarchy's own bindings return when the stream ends. This needs no new shortcut, is part of the Sunshine installer, and is off on hosts without `sunshineStream`. See [landscape while streaming](sunshine/README.md#landscape-side-monitors-while-streaming).
 
 Enable with `./install-sunshine.sh --enable`; disable with `./install-sunshine.sh --disable`, which also stops the watcher and restores the layout. Updates use the normal Omarchy package workflow; rerun the installer afterward to reconcile settings. Removal: disable the service, privately back up `~/.config/sunshine`, remove only `~/.local/bin/sunshine-host`, `~/.local/lib/arch-setups/sunshine-stream-display.py` and `.json`, `~/.config/systemd/user/arch-sunshine-stream-display.service` and `~/.config/systemd/user/app-dev.lizardbyte.app.Sunshine.service.d/arch-setups-network.conf`, delete the `global_prep_cmd` line from `sunshine.conf`, run `systemctl --user daemon-reload`, and remove the Sunshine package through Omarchy if desired. Preserve credentials unless deliberately resetting pairings; Tailscale is independent and remains installed. Disable/remove the installer selection in your profile/local choices to prevent future reinstall.
 
-Requires a running Hyprland session and DRM/KMS capture, a supported hardware encoder and uinput support. Managed capture uses KMS to avoid the unavailable RemoteDesktop portal on Hyprland. Package hooks manage capture capabilities and input-device rules. Sleep, login-screen access, headless display creation and resolution changes are not configured; the only automatic monitor change is the landscape rotation while streaming. Other Sunshine autostarts must be disabled to avoid duplicate listeners.
+Requires a running Hyprland session and DRM/KMS capture, a supported hardware encoder and uinput support. Managed capture uses KMS to avoid the unavailable RemoteDesktop portal on Hyprland. Package hooks manage capture capabilities and input-device rules. Sleep, login-screen access, headless display creation and resolution changes are not configured; the only automatic monitor change is the landscape rotation while streaming.
+
+The separate Virtual Desktop 1080p host (`install-virtual-desktop.sh`, a second Sunshine instance with a headless `SUNSHINE-VIRTUAL-1080P` output on port base 48989) has been removed. To clean up a machine that still has it: stop and disable `arch-sunshine-virtual.service`, privately back up then remove `~/.config/sunshine-virtual`, `~/.local/lib/arch-setups/sunshine-virtual.py` and `~/.config/systemd/user/arch-sunshine-virtual.service`, run `systemctl --user daemon-reload`, delete its UFW rules (`sudo ufw --force delete allow from <10.0.0.0/8|172.16.0.0/12|192.168.0.0/16> to any app ArchSunshineVirtual`, `sudo ufw --force delete allow in on tailscale0 to any app ArchSunshineVirtual`) and then `/etc/ufw/applications.d/arch-sunshine-virtual`, and drop `install-virtual-desktop.sh` from `~/.local/state/arch-setups/features.json`. Forget its PC entry in Moonlight. Other Sunshine autostarts must be disabled to avoid duplicate listeners.
 
 ## SDDM automatic login with startup lock (system integration)
 
@@ -553,46 +555,6 @@ unlocking through Moonlight and next-boot behavior need a real boot/client test.
 See [configuration, updates, backups and removal](sddm/README.md). Updates are
 applied by rerunning the selected installer; disabling never changes unrelated
 plugins, idle/suspend locking, greeter theme, PAM or personal Hyprland modules.
-
-## Virtual Desktop 1080p (independent Sunshine host, not a shell plugin)
-
-`install-virtual-desktop.sh` adds a separate hostname-derived **Virtual 1080p**
-PC in Moonlight, with its own **Virtual Desktop 1080p** tile. It uses a named
-1920×1080@60 Hyprland headless output and wlr/VAAPI capture/encoding; the physical
-Desktop and Steam profile remains independent. It shares the actual Linux
-session, applications, input and audio, so avoid simultaneous local/remote or
-physical/virtual host use. This is package-managed Sunshine plus personal
-configuration/helpers, with no plugin fork, source copy or new keyboard shortcuts.
-The virtual desktop inherits native Omarchy/Aether theming.
-
-Enable/status/disable through `./install-virtual-desktop.sh --enable`, `--status`
-and `--disable`. The service creates/removes only its owned output and restores
-monitor focus after quitting the virtual app where appropriate. Profile data is
-retained on disable. Requires Sunshine, Mesa VAAPI, UWSM Hyprland and systemd user
-services; no dependency on a specific wallpaper/lock plugin or Tailscale startup.
-Opt-in in both shipped profiles and registered in `install-all.sh` after Sunshine.
-An initially empty virtual workspace needs an application launched on it; existing
-physical-monitor windows stay on their monitors. Unchanged installer runs preserve
-active streams. Disable checks inactive owned outputs too and reports cleanup
-failures rather than dropping ownership state.
-The native mobile Moonlight app has displayed this virtual desktop successfully.
-The separately hosted Moonlight Web gateway's current protocol library lacks
-encrypted-video support; its blue-screen failure affects both hosts. Mandatory
-LAN/WAN encryption remains enabled by user choice; use the native app.
-
-Network base is 48989; administrator UI is https://localhost:48990. Add
-`<LAN-IP>:48989` or `<Tailscale-IP>:48989` in Moonlight, pair once with this distinct
-host, and choose the virtual tile. Its private profile seeds only existing admin
-authentication once, then owns its certificate, UUID and client trust independently.
-Enabling is refused until the main Sunshine host has an admin login, so the virtual
-admin port is never open while unclaimed. Disabling main Sunshine also disables this host.
-UPnP stays disabled and encryption required. A dedicated UFW application profile
-permits only private-LAN sources or `tailscale0`; disable removes its exact rules.
-There is no router forwarding. Updates are applied by rerunning the feature
-installer; no plugin pin changes. See [configuration, conflicts, backups and
-removal](sunshine/VIRTUAL-DESKTOP.md). Monitor-off, reboot, remote unlock and
-client frame/latency tests remain necessary; a hardware capture probe is not an
-end-to-end stream benchmark.
 
 ## Fluentbird Thunderbird theme (application theme, not a shell plugin)
 

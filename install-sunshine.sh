@@ -8,11 +8,6 @@ unit=app-dev.lizardbyte.app.Sunshine.service
 stream_unit=arch-sunshine-stream-display.service
 case "${1:-}" in
   --disable)
-    # The virtual host depends on Sunshine and install-all.sh skips it once this
-    # is off, so stop it and close its firewall rules here.
-    if systemctl --user cat arch-sunshine-virtual.service >/dev/null 2>&1; then
-      "$SCRIPT_DIR/install-virtual-desktop.sh" --disable
-    fi
     disable_user_unit "$stream_unit"
     [[ ! -f "$HOME/.local/lib/arch-setups/sunshine-stream-display.py" ]] || python3 "$HOME/.local/lib/arch-setups/sunshine-stream-display.py" finish
     disable_user_unit "$unit"

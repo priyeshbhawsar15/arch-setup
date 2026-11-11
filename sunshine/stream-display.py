@@ -12,7 +12,9 @@ ends with an app still running, `watch` restarts the host to end that app.
 
 The rotation is a Hyprland toggle file, because toggles load after
 hyprmoncfg's rules and survive its reloads. It applies only to the Hyprland
-instance that wrote it, so a new login never starts in landscape.
+instance that wrote it, so a new login never starts in landscape. While it is
+loaded, the workspace keys act on the streamed monitor rather than whichever
+monitor happens to have focus.
 """
 import argparse
 import fcntl
@@ -95,8 +97,40 @@ def mode_size(entry):
     return int(match[1]), int(match[2])
 
 
+# Omarchy's workspace keys act on the focused monitor, which during a stream can
+# be one the client never sees: the cursor or keyboard focus may sit on another
+# monitor. While streaming they act on the streamed monitor instead, focusing it
+# first, so the active window is the one on screen. Removing the toggle and
+# reloading brings Omarchy's own bindings back.
+WORKSPACE_BINDINGS = '''\
+  if o and o.workspaces and o.rebind then
+    local capture = %s
+    local function on_capture(action)
+      return function()
+        for _, m in ipairs(hl.get_monitors()) do
+          if m.description == capture then
+            if not m.focused then hl.dispatch(hl.dsp.focus({ monitor = m.name })) end
+            break
+          end
+        end
+        action()
+      end
+    end
+    for workspace = 1, 10 do
+      local key = "code:" .. tostring(workspace + 9)
+      o.rebind("SUPER + " .. key, "Switch to workspace " .. workspace .. " on the streamed monitor",
+        on_capture(o.workspaces.focus(workspace)))
+      o.rebind("SUPER + SHIFT + " .. key, "Move window to workspace " .. workspace .. " on the streamed monitor",
+        on_capture(o.workspaces.move_window(workspace)))
+      o.rebind("SUPER + SHIFT + ALT + " .. key, "Move window silently to workspace " .. workspace .. " on the streamed monitor",
+        on_capture(o.workspaces.move_window(workspace, false)))
+    end
+  end
+'''
+
+
 def toggle_lua(config, signature):
-    """Hyprland rules for the landscape layout, bound to one compositor session.
+    """Hyprland rules for the stream layout, bound to one compositor session.
 
     Sunshine measures the desktop from 0,0 for the stream mouse, while Hyprland
     maps it across the monitors that exist. When no other monitor is on, the
@@ -114,11 +148,13 @@ def toggle_lua(config, signature):
             f'if os.getenv("HYPRLAND_INSTANCE_SIGNATURE") == {json.dumps(signature)} then\n'
             f'  local landscape, others = {names}, false\n'
             '  for _, m in ipairs(hl.get_monitors()) do\n'
-            '    if not landscape[m.description] and m.name ~= "SUNSHINE-VIRTUAL-1080P" and not m.disabled then others = true end\n'
+            '    if not landscape[m.description] and not m.disabled then others = true end\n'
             '  end\n'
             f'  local dx, dy = 0, 0\n'
             f'  if not others then dx, dy = {first["x"]}, {first["y"]} end\n'
-            + '\n'.join(rules) + '\nend\n')
+            + '\n'.join(rules) + '\n'
+            + WORKSPACE_BINDINGS % json.dumps(config['capture'])
+            + 'end\n')
 
 
 # -- Connector lookup (Sunshine captures by connector name, which can change)
@@ -196,6 +232,13 @@ def wait_for(signature, config, landscape):
     return False
 
 
+def focus_capture(signature, config):
+    """Start the stream on the streamed monitor, not wherever focus was left."""
+    capture = next((m for m in monitors(signature) if m.get('description') == config['capture']), None)
+    if capture and capture.get('name') and not capture.get('focused'):
+        hyprctl(signature, 'eval', f'hl.dispatch(hl.dsp.focus({{ monitor = {json.dumps(capture["name"])} }}))')
+
+
 def owned_toggle(path):
     try:
         return path.read_text().startswith(MARKER)
@@ -231,7 +274,8 @@ def prepare():
                 path.write_text(text)
                 hyprctl(signature, 'reload')
             log('landscape applied' if wait_for(signature, config, True) else 'landscape not confirmed')
-    except (OSError, ValueError, subprocess.SubprocessError) as error:
+            focus_capture(signature, config)
+    except (OSError, ValueError, KeyError, subprocess.SubprocessError) as error:
         log(f'could not apply landscape: {error}')
 
 
