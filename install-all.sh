@@ -24,7 +24,6 @@ installers=(
   install-linuwux.sh
   install-tailscale.sh
   install-sunshine.sh
-  install-virtual-desktop.sh
   install-keyd.sh
   install-zsh.sh
   install-hyprland.sh

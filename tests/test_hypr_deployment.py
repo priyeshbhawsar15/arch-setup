@@ -119,6 +119,33 @@ print(rules,generated)
         # Omarchy numbers each monitor's workspaces, so no numeric rule may load.
         self.assertEqual(run(),'0\t0');marker.touch();self.assertEqual(run(),'0\t1')
 
+    @unittest.skipUnless(shutil.which('lua'),'Lua interpreter required')
+    def test_generated_file_cannot_take_over_omarchy_workspace_keys(self):
+        # hyprmoncfgd 1.28 writes this takeover even when the profile's plan is disabled.
+        generated=self.config/'hyprmoncfg-monitors.lua';generated.write_text('''
+if type(o) == "table" and type(o.workspaces) == "table" and type(o.workspaces.reconcile) == "function" and type(o.rebind) == "function" then
+  o.workspaces.enabled = false
+  o.workspaces.reconcile = function() end
+  function o.workspaces.focus(workspace) return function() end end
+  o.rebind("SUPER + code:10", "Switch to workspace 1", o.workspaces.focus(1))
+end
+if type(o) == "table" then hl.env("GDK_SCALE", "1") end
+''')
+        rendered=self.config/'monitors.lua';rendered.write_text(layout.render(layout.load_config(REPO/'monitor-layout.json'),REPO/'hypr/monitors.lua'))
+        marker=self.home/'.local/state/arch-setups/crmne.hyprmoncfg/managed';marker.parent.mkdir(parents=True);marker.touch()
+        harness='''local env,rebinds={},0
+hl={env=function(k,v) env[k]=v end,get_monitors=function() return {} end,on=function() end,monitor=function() end,workspace_rule=function() end}
+local focus,reconcile=function() end,function() end
+o={workspaces={focus=focus,reconcile=reconcile},rebind=function() rebinds=rebinds+1 end}
+dofile(os.getenv('HOME')..'/.config/hypr/monitors.lua')
+assert(o.workspaces.focus==focus and o.workspaces.reconcile==reconcile and o.workspaces.enabled==nil)
+print(rebinds,env.GDK_SCALE)
+'''
+        out=subprocess.run(['lua','-'],input=harness,env=self.env,capture_output=True,text=True)
+        self.assertEqual(out.returncode,0,out.stderr)
+        # The rest of `o` stays visible to the generated file.
+        self.assertEqual(out.stdout.strip(),'0\t1')
+
     def test_workspaces_and_their_keys_are_left_to_omarchy(self):
         bindings=(REPO/'hypr/bindings.lua').read_text()
         for term in ('per-monitor-workspaces','per_monitor_workspace','o.workspaces','code:1'):

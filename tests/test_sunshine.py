@@ -59,7 +59,7 @@ class AdminAccessTests(unittest.TestCase):
         self.assertEqual(self.access('{"username": "admin", "password": "hash", "salt": "salt"}'), 'lan')
 
     def test_managed_configuration_never_allows_public_admin_access(self):
-        for name in ('sunshine/configure.py', 'sunshine/virtual-desktop.py'):
+        for name in ('sunshine/configure.py',):
             source = (ROOT / name).read_text().replace(' ', '')
             self.assertIn("'origin_web_ui_allowed':'lan'", source)
 

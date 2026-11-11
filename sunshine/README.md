@@ -98,7 +98,13 @@ side monitors; the stream shows `sunshineStream.capture`, the left one.
   landscape. Sunshine measures the desktop for the stream mouse when a client
   connects, so if an app still runs when the two minutes end, the service
   restarts Sunshine: the next connection launches the app again in landscape.
-  The virtual desktop host is a separate service and keeps running.
+- **Workspace keys follow the stream:** Omarchy's Super + 1–0 act on the
+  focused monitor, which during a stream may be one the client cannot see
+  (the cursor or keyboard focus can sit on another monitor). While the toggle
+  is loaded, Super + 1–0, Super + Shift + 1–0 and Super + Shift + Alt + 1–0
+  first focus the streamed monitor and then switch or move to its own
+  workspaces. A stream also starts with focus on the streamed monitor. The
+  toggle's removal restores Omarchy's bindings.
 - **Which monitor is streamed:** connector names change when the OLED is
   switched on or off. The launcher finds the capture monitor by its EDID serial
   and passes its connector as `output_name`. While no client is connected the
@@ -141,6 +147,3 @@ current LAN address again, start pairing once and enter that PIN in Sunshine's
 web UI. The browser may show a certificate warning again because the host
 certificate changed. Don't repeatedly enter new PINs for an already-paired PC.
 Private recovery backups live in `~/.local/state/arch-setups/backups/sunshine-reset-*`.
-
-For an independent software-only 1080p monitor and separate Moonlight PC entry,
-see [Virtual Desktop 1080p](VIRTUAL-DESKTOP.md).
