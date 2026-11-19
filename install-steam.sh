@@ -31,7 +31,7 @@ python3 "$SCRIPT_DIR/steam/configure-ui-scale.py"
 python3 "$SCRIPT_DIR/steam/configure-autostart.py"
 
 selection="$(python3 "$SCRIPT_DIR/config/setup-inputs.py" gaming)"
-hdr_selected="$(python3 -c 'import json,sys; p=json.loads(sys.argv[1]); print(p["steamHdr"] or any(g["config"].get("system",{}).get("prefix_command")=="steam-gamescope-hdr" for g in p["games"]))' "$selection")"
+hdr_selected="$(python3 -c 'import json,sys; p=json.loads(sys.argv[1]); print(p["steamHdr"] or p["lutrisHdr"] or any(g["config"].get("system",{}).get("prefix_command")=="steam-gamescope-hdr" for g in p["games"]))' "$selection")"
 if [[ "$hdr_selected" != True ]]; then
   if [[ "$steam_installed" == true ]]; then log "Steam is already installed."; else log "Steam installed."; fi
   log "Game launch options and HDR are unmanaged (opt-in); retired UI scaling is removed."
@@ -64,6 +64,31 @@ if [[ ! -f "$target_wrapper" ]] || ! cmp -s "$source_wrapper" "$target_wrapper";
 fi
 if [[ ! -x "$target_wrapper" ]]; then
   chmod +x "$target_wrapper"
+  wrapper_changed=true
+fi
+
+# `game-display` switches every wrapped game between 4K HDR and 1080p SDR.
+target_switch="$local_bin/game-display"
+if [[ -e "$target_switch" || -L "$target_switch" ]] && ! { [[ ! -L "$target_switch" && -f "$target_switch" ]] && grep -q '^# Managed by arch-setups' "$target_switch"; }; then
+  log "Preserving unknown game-display helper: $target_switch" >&2; exit 1
+fi
+if [[ ! -f "$target_switch" ]] || ! cmp -s "$SCRIPT_DIR/steam/game-display" "$target_switch" || [[ ! -x "$target_switch" ]]; then
+  [[ ! -f "$target_switch" ]] || backup_feature_paths game-display "$target_switch" >/dev/null
+  cp "$SCRIPT_DIR/steam/game-display" "$target_switch"
+  chmod +x "$target_switch"
+  wrapper_changed=true
+fi
+# 1080p mode targets the host policy's Sunshine capture monitor; the chosen mode is kept.
+stream_monitor="$(python3 -c '
+import json, sys
+policy = json.load(open(sys.argv[1]))
+role = (policy.get("sunshineStream") or {}).get("capture")
+entry = policy.get("monitors", {}).get(role) or {}
+print("desc:" + entry["description"] if entry.get("description") else entry.get("connector", ""))
+' "${ARCH_SETUPS_MONITOR_LAYOUT:-$SCRIPT_DIR/monitor-layout.json}")"
+display_settings="${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/game-display/settings.json"
+if [[ "$(jq -r '.streamMonitor // ""' "$display_settings" 2>/dev/null || true)" != "$stream_monitor" ]]; then
+  "$target_switch" set-stream-monitor "$stream_monitor"
   wrapper_changed=true
 fi
 

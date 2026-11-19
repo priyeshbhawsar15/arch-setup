@@ -22,7 +22,7 @@ fi
 
 # Package installation is independent of library import and game-file changes.
 # Only an explicit selection can request imports, profiles or experimental DLLs.
-selection="$(python3 "$SCRIPT_DIR/config/setup-inputs.py" gaming | python3 -c 'import json,sys; p=json.load(sys.stdin); print(json.dumps(dict(games=len(p["games"]), importSteam=p["importSteam"], exportSteam=p["exportSteam"], upscalers=any(g.get("upscaler") for g in p["games"]))))')"
+selection="$(python3 "$SCRIPT_DIR/config/setup-inputs.py" gaming | python3 -c 'import json,sys; p=json.load(sys.stdin); print(json.dumps(dict(games=len(p["games"]), lutrisHdr=p["lutrisHdr"], importSteam=p["importSteam"], exportSteam=p["exportSteam"], upscalers=any(g.get("upscaler") for g in p["games"]))))')"
 # Reject reverse-import loops BEFORE touching Lutris configuration.
 python3 - "$selection" <<'PY'
 import json,os,pathlib,sys
@@ -32,7 +32,17 @@ preference=json.loads(p.read_text()) if p.exists() else {}
 if selection['importSteam'] and (selection['exportSteam'] or preference.get('enabled')):
     raise SystemExit('Steam-first library is enabled: disable importSteam to avoid a reverse-sync loop.')
 PY
+# lutrisHdr routes every Lutris Windows game through the main-monitor HDR wrapper
+# (deployed by install-steam.sh); opting out restores only still-owned commands.
+configure_lutris_hdr() {
+  if [[ "$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["lutrisHdr"])' "$selection")" == True ]]; then
+    /usr/bin/python3 "$SCRIPT_DIR/steam/configure-lutris-hdr.py"
+  else
+    /usr/bin/python3 "$SCRIPT_DIR/steam/configure-lutris-hdr.py" --remove
+  fi
+}
 if [[ "$(python3 -c 'import json,sys; p=json.loads(sys.argv[1]); print(p["games"] == 0 and not p["importSteam"])' "$selection")" == True ]]; then
+  configure_lutris_hdr
   /usr/bin/python3 "$SCRIPT_DIR/steam/export-lutris-steam.py" --apply --if-enabled
   log "Lutris is installed; no reverse library import or game-file modifications selected."
   exit 0
@@ -47,6 +57,7 @@ if [[ "$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["upscalers"]
   omarchy pkg add 7zip
 fi
 /usr/bin/python3 "$SCRIPT_DIR/steam/configure-gaming-profile.py" --apply --upscalers
+configure_lutris_hdr
 /usr/bin/python3 "$SCRIPT_DIR/steam/export-lutris-steam.py" --apply --if-enabled
 
 if [[ "$lutris_installed" == false ]]; then

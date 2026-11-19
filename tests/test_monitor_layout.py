@@ -170,6 +170,12 @@ class MonitorPolicyTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'main'):
             layout.single_monitor_lua(self.config, monitors()[1:])
 
+    def test_hdr_policy_reports_hdr_to_nested_gamescope_only(self):
+        rendered = layout.render(self.config, REPO / 'hypr/monitors.lua')
+        self.assertEqual(rendered.count('hl.config({ quirks = { prefer_hdr = 2 } })'), 1)
+        laptop = json.loads((REPO / 'profiles/laptop.json').read_text())
+        self.assertNotIn('prefer_hdr', layout.render(laptop, REPO / 'hypr/monitors.lua'))
+
     def test_install_preserves_settings_and_is_idempotent(self):
         with tempfile.TemporaryDirectory() as directory:
             home = Path(directory)

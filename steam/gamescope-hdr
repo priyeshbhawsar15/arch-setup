@@ -1,27 +1,92 @@
 #!/bin/bash
-# Managed by arch-setups: explicit HDR launcher, dimensions come from the profile
-# or the focused output, never a hardcoded 4K/120Hz hardware assumption.
+# Managed by arch-setups: HDR Gamescope launcher pinned to the main gaming monitor.
+# The game monitor is the stream monitor in `game-display 1080p` mode, else
+# ARCH_SETUPS_GAME_MONITOR, else Gaming Mode's `monitor` selector, else the
+# output in Hyprland's HDR preset, else the focused output.
+# Output size and refresh are that monitor's native mode; nothing assumes 4K/120Hz.
 set -euo pipefail
 command -v gamescope >/dev/null 2>&1 || { printf 'gamescope-hdr: gamescope is not installed\n' >&2; exit 127; }
-width="${ARCH_SETUPS_GAME_WIDTH:-}"
-height="${ARCH_SETUPS_GAME_HEIGHT:-}"
-if [[ -z "$width" && -z "$height" ]] && command -v hyprctl >/dev/null && command -v jq >/dev/null; then
-  dimensions="$(hyprctl -j monitors | jq -r '((map(select(.focused)) + .)[0]) | if ((.transform // 0) % 2) == 1 then "\(.height) \(.width)" else "\(.width) \(.height)" end')"
-  read -r width height <<<"$dimensions"
+
+numeric() { [[ "$1" =~ ^[0-9]{1,5}$ ]] && (( 10#$1 >= 320 && 10#$1 <= 16384 )); }
+
+# `game-display` switches every wrapped game between 4k-hdr (default) and
+# 1080p-sdr (Sunshine stream monitor, 1920x1080, no HDR). The switch wins over
+# per-game dimensions and HDR so one command changes the whole library.
+display_settings="${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/game-display/settings.json"
+display_mode="${ARCH_SETUPS_GAME_DISPLAY:-}"
+stream_monitor=""
+if [[ -f "$display_settings" ]] && command -v jq >/dev/null; then
+  [[ -n "$display_mode" ]] || display_mode="$(jq -r '.mode // empty | strings' "$display_settings" 2>/dev/null || true)"
+  stream_monitor="$(jq -r '.streamMonitor // empty | strings' "$display_settings" 2>/dev/null || true)"
 fi
-[[ "$width" =~ ^[0-9]+$ && "$height" =~ ^[0-9]+$ ]] || {
+[[ "$display_mode" == 1080p-sdr ]] || display_mode=4k-hdr
+
+selector="${ARCH_SETUPS_GAME_MONITOR:-}"
+gaming_config="${XDG_CONFIG_HOME:-$HOME/.config}/omarchy/gaming-mode.json"
+if [[ "$display_mode" == 1080p-sdr && -n "$stream_monitor" ]]; then
+  selector="$stream_monitor"
+elif [[ -z "$selector" && -f "$gaming_config" ]] && command -v jq >/dev/null; then
+  selector="$(jq -r '.monitor // empty | strings' "$gaming_config" 2>/dev/null || true)"
+fi
+
+name="" out_width="" out_height="" refresh=""
+if command -v hyprctl >/dev/null && command -v jq >/dev/null; then
+  monitor="$(hyprctl -j monitors 2>/dev/null | jq -r --arg sel "$selector" '
+    ([.[] | select($sel != "" and (.name == $sel or ("desc:" + .description) == $sel))]
+     + [.[] | select(.colorManagementPreset == "hdr")]
+     + [.[] | select(.focused)] + .)[0] // empty
+    | if ((.transform // 0) % 2) == 1 then [.name, .height, .width] else [.name, .width, .height] end
+    + [((.refreshRate // 60) | round)] | @tsv' 2>/dev/null || true)"
+  [[ -z "$monitor" ]] || IFS=$'\t' read -r name out_width out_height refresh <<<"$monitor"
+fi
+
+# Explicit per-game dimensions set the render size; the output stays native.
+width="${ARCH_SETUPS_GAME_WIDTH:-$out_width}"
+height="${ARCH_SETUPS_GAME_HEIGHT:-$out_height}"
+if [[ "$display_mode" == 1080p-sdr ]]; then
+  width=1920 height=1080
+  # Lutris/Steam per-game HDR variables must not request HDR swapchains in SDR.
+  unset ENABLE_HDR_WSI DXVK_HDR PROTON_ENABLE_HDR
+  export ARCH_SETUPS_HDR=0
+fi
+numeric "$width" && numeric "$height" || {
   printf 'gamescope-hdr: set ARCH_SETUPS_GAME_WIDTH/HEIGHT or launch on an active Hyprland output\n' >&2; exit 1;
 }
-((${#width} <= 5 && ${#height} <= 5)) || exit 1
-width=$((10#$width)); height=$((10#$height))
-((width >= 320 && width <= 16384 && height >= 320 && height <= 16384)) || exit 1
-export ENABLE_HDR_WSI=1 DXVK_HDR=1
+numeric "${out_width:-x}" && numeric "${out_height:-x}" || { out_width="$width"; out_height="$height"; }
+refresh="${ARCH_SETUPS_GAME_REFRESH:-$refresh}"
+refresh_args=()
+if [[ "$refresh" =~ ^[0-9]{1,3}$ ]] && ((10#$refresh >= 24)); then
+  refresh_args=(-r "$((10#$refresh))")
+fi
+
+# The nested Gamescope window opens on the focused output: focus the game monitor
+# first. A failed focus must not block the game, so it is best effort.
+if [[ -n "$name" && "$name" =~ ^[A-Za-z0-9._-]+$ ]]; then
+  hyprctl eval "hl.dispatch(hl.dsp.focus({monitor=\"$name\"}))" >/dev/null 2>&1 || true
+fi
+
+# HDR is the default; ARCH_SETUPS_HDR=0 keeps the main-monitor Gamescope in SDR.
+hdr_args=()
+if [[ "${ARCH_SETUPS_HDR:-1}" != 0 ]]; then
+  export ENABLE_HDR_WSI=1 DXVK_HDR=1 PROTON_ENABLE_HDR=1
+  hdr_args=(--hdr-enabled --hdr-sdr-content-nits "${ARCH_SETUPS_HDR_SDR_NITS:-203}")
+  # Opt-in SDR->HDR inverse tone mapping (Auto-HDR); SDR stays accurate by default.
+  if [[ "${ARCH_SETUPS_HDR_ITM:-0}" == 1 ]]; then
+    hdr_args+=(--hdr-itm-enabled --hdr-itm-sdr-nits "${ARCH_SETUPS_HDR_ITM_SDR_NITS:-100}"
+      --hdr-itm-target-nits "${ARCH_SETUPS_HDR_ITM_TARGET_NITS:-1000}")
+  fi
+fi
 # Halo opts into relative capture; do not add host-side pointer confinement.
 capture_args=()
 if [[ "${HALO_GAMESCOPE_CAPTURE:-0}" == 1 ]]; then
   capture_args=(--force-grab-cursor)
 fi
-exec gamescope "${capture_args[@]}" --nested-width "$width" --nested-height "$height" \
-  --output-width "$width" --output-height "$height" \
-  --force-windows-fullscreen --fullscreen --hdr-enabled \
-  --hdr-sdr-content-nits "${ARCH_SETUPS_HDR_SDR_NITS:-203}" -- "$@"
+# Unity games opt in to render at the Gamescope size; otherwise a saved smaller
+# or different-aspect resolution is letterboxed and upscaled (e.g. on 1080p).
+game_args=()
+if [[ "${ARCH_SETUPS_UNITY_SCREEN:-0}" == 1 ]]; then
+  game_args=(-screen-width "$((10#$width))" -screen-height "$((10#$height))" -screen-fullscreen 1)
+fi
+exec gamescope "${capture_args[@]}" --nested-width "$((10#$width))" --nested-height "$((10#$height))" \
+  --output-width "$((10#$out_width))" --output-height "$((10#$out_height))" "${refresh_args[@]}" \
+  --force-windows-fullscreen --fullscreen "${hdr_args[@]}" -- "$@" "${game_args[@]}"

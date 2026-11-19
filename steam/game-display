@@ -1,0 +1,51 @@
+#!/bin/bash
+# Managed by arch-setups: one switch for how every wrapped game launches.
+#   4k-hdr     main gaming monitor, native mode, HDR (default)
+#   1080p-sdr  Sunshine stream monitor, 1920x1080 render, no HDR
+# The mode applies to the next game launch; running games keep theirs.
+set -euo pipefail
+settings="${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/game-display/settings.json"
+
+usage() {
+  printf 'Usage: game-display [status|toggle|4k|1080p|set-stream-monitor SELECTOR]\n' >&2
+  exit 2
+}
+current() {
+  local mode=""
+  [[ ! -f "$settings" ]] || mode="$(jq -r '.mode // empty | strings' "$settings" 2>/dev/null || true)"
+  [[ "$mode" == 1080p-sdr ]] && printf '1080p-sdr\n' || printf '4k-hdr\n'
+}
+update() { # jq filter, args...
+  local filter="$1" temporary
+  shift
+  mkdir -p -- "$(dirname -- "$settings")"
+  temporary="$(mktemp "$settings.XXXXXX")"
+  if [[ -f "$settings" ]] && jq -e 'type == "object"' "$settings" >/dev/null 2>&1; then
+    jq "$@" "$filter" "$settings" >"$temporary"
+  else
+    jq -n "$@" "$filter" >"$temporary"
+  fi
+  mv -f -- "$temporary" "$settings"
+}
+announce() {
+  local text
+  if [[ "$1" == 1080p-sdr ]]; then text='Next game: 1080p SDR on the stream monitor'; else text='Next game: 4K HDR on the main monitor'; fi
+  printf '%s\n' "$text"
+  command -v notify-send >/dev/null && notify-send -a 'Game display' 'Game display' "$text" >/dev/null 2>&1 || true
+}
+set_mode() { update '.mode = $mode' --arg mode "$1"; announce "$1"; }
+
+case "${1:-status}" in
+  status)
+    mode="$(current)"
+    stream=""
+    [[ ! -f "$settings" ]] || stream="$(jq -r '.streamMonitor // empty | strings' "$settings" 2>/dev/null || true)"
+    printf 'mode: %s\nstream monitor: %s\n' "$mode" "${stream:-unset (1080p uses the main monitor)}" ;;
+  toggle) [[ "$(current)" == 4k-hdr ]] && set_mode 1080p-sdr || set_mode 4k-hdr ;;
+  4k|4k-hdr) set_mode 4k-hdr ;;
+  1080p|1080p-sdr) set_mode 1080p-sdr ;;
+  set-stream-monitor)
+    (($# == 2)) || usage
+    if [[ -z "$2" ]]; then update 'del(.streamMonitor)'; else update '.streamMonitor = $monitor' --arg monitor "$2"; fi ;;
+  *) usage ;;
+esac

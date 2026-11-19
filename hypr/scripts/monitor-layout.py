@@ -159,6 +159,10 @@ def render(config, path):
         text = text.replace(json.dumps('@monitor:' + role + '@'), lua(selector(entry)))
         fields = dict(output=selector(entry), **{k: v for k, v in entry.items() if k not in ('description', 'connector', 'selector')})
         rules.append('hl.monitor({ ' + ', '.join(key + ' = ' + lua(value) for key, value in fields.items()) + ' })')
+    if any(entry.get('cm') == 'hdr' for entry in config['monitors'].values()):
+        # Nested Gamescope exposes HDR to games only when the compositor reports
+        # HDR as preferred; gamescope_only (2) leaves other windows' preference SDR.
+        rules.append('hl.config({ quirks = { prefer_hdr = 2 } })')
     return text.replace('-- @monitor-rules@', '\n'.join(rules))
 
 

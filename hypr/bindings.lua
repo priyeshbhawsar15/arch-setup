@@ -28,6 +28,10 @@ o.bind("SUPER + CTRL + SHIFT + F", "Toggle window span across portrait displays"
 hl.unbind("SUPER + SHIFT + SPACE")
 o.bind("SUPER + SHIFT + SPACE", "Cycle top bar visibility mode", "~/.config/hypr/scripts/bar-visibility-mode-toggle.sh")
 
+-- Game display switch (install-steam.sh): next game launches in 4K HDR on the
+-- main monitor or 1080p SDR on the Sunshine stream monitor.
+o.bind("SUPER + CTRL + G", "Toggle game display 4K HDR / 1080p stream", "game-display toggle")
+
 hl.bind("CTRL + SHIFT + 2", hl.dsp.global("com.t3tools.T3Code:capture-window"))
 
 -- Dictation keys from before Alt + Space and Right Alt became the defaults.

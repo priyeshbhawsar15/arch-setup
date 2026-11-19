@@ -42,6 +42,13 @@ class SelectionTests(unittest.TestCase):
             installer.apply(resolved, self.home, True)
         self.assertEqual(list(self.home.iterdir()), [])
 
+    def test_blanket_hdr_is_opt_in_and_personal_profile_selects_it(self):
+        self.assertFalse(self.resolve({'schemaVersion': 1})['lutrisHdr'])
+        with self.assertRaisesRegex(ValueError, 'lutrisHdr must be a boolean'):
+            self.resolve({'schemaVersion': 1, 'lutrisHdr': 'yes'})
+        personal = load_selection(HERE.parent / 'profiles/gaming.personal.json', self.home)
+        self.assertEqual((personal['steamHdr'], personal['lutrisHdr'], personal['games']), (True, True, []))
+
     def test_steam_export_is_opt_in_and_cannot_reverse_sync(self):
         self.assertFalse(self.resolve({'schemaVersion': 1})['exportSteam'])
         self.assertTrue(self.resolve({'schemaVersion': 1, 'exportSteam': True})['exportSteam'])
@@ -136,7 +143,10 @@ class SelectionTests(unittest.TestCase):
         fake = binary / 'gamescope'
         fake.write_text('#!/bin/sh\nprintf "%s\\n" "$@"\n')
         fake.chmod(0o755)
-        env = dict(os.environ, PATH=str(binary) + ':/usr/bin', ARCH_SETUPS_GAME_WIDTH='1920', ARCH_SETUPS_GAME_HEIGHT='1080', HALO_GAMESCOPE_CAPTURE='0')
+        hyprctl = binary / 'hyprctl'
+        hyprctl.write_text('#!/bin/sh\nexit 1\n')  # no live session: dimensions come from the profile
+        hyprctl.chmod(0o755)
+        env = dict(os.environ, PATH=str(binary) + ':/usr/bin', XDG_CONFIG_HOME=str(self.home), ARCH_SETUPS_GAME_WIDTH='1920', ARCH_SETUPS_GAME_HEIGHT='1080', HALO_GAMESCOPE_CAPTURE='0')
         result = subprocess.run(['bash', str(HERE / 'gamescope-hdr'), 'a game.exe', '--argument'], env=env, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertNotIn('3840', result.stdout)
@@ -148,6 +158,66 @@ class SelectionTests(unittest.TestCase):
         self.assertEqual(captured.returncode, 0, captured.stderr)
         self.assertEqual(captured.stdout.splitlines().count('--force-grab-cursor'), 1)
         self.assertIn('--nested-width\n1920\n', captured.stdout)
+
+    def test_hdr_wrapper_targets_main_monitor_not_focused_output(self):
+        binary = self.home / 'bin'
+        binary.mkdir()
+        (binary / 'gamescope').write_text('#!/bin/sh\nprintf "%s\\n" "$@"; env | grep -E "^(DXVK_HDR|PROTON_ENABLE_HDR)="; true\n')
+        monitors = [
+            {'name': 'DP-5', 'description': 'Side', 'width': 1920, 'height': 1080, 'refreshRate': 60.0,
+             'transform': 1, 'focused': True, 'colorManagementPreset': 'srgb'},
+            {'name': 'DP-6', 'description': 'Main OLED', 'width': 3840, 'height': 2160, 'refreshRate': 119.999,
+             'transform': 0, 'focused': False, 'colorManagementPreset': 'hdr'},
+        ]
+        log = self.home / 'hyprctl.log'
+        (binary / 'hyprctl').write_text('#!/bin/sh\nif [ "$1" = -j ]; then cat <<\'EOF\'\n' + json.dumps(monitors)
+                                        + '\nEOF\nelse printf "%s\\n" "$*" >> "' + str(log) + '"; echo ok; fi\n')
+        for tool in ('gamescope', 'hyprctl'):
+            (binary / tool).chmod(0o755)
+        env = dict(os.environ, PATH=str(binary) + ':/usr/bin', XDG_CONFIG_HOME=str(self.home))
+        for key in ('ARCH_SETUPS_GAME_WIDTH', 'ARCH_SETUPS_GAME_HEIGHT', 'ARCH_SETUPS_GAME_MONITOR', 'ARCH_SETUPS_HDR'):
+            env.pop(key, None)
+        result = subprocess.run(['bash', str(HERE / 'gamescope-hdr'), 'game.exe'], env=env, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('--nested-width\n3840\n--nested-height\n2160\n--output-width\n3840\n--output-height\n2160\n-r\n120\n', result.stdout)
+        self.assertIn('--hdr-enabled', result.stdout)
+        self.assertNotIn('--hdr-itm-enabled', result.stdout)
+        self.assertIn('PROTON_ENABLE_HDR=1', result.stdout)
+        self.assertIn('focus({monitor="DP-6"})', log.read_text())
+        # Gaming Mode's monitor selector wins over the HDR-preset heuristic.
+        (self.home / 'omarchy').mkdir()
+        (self.home / 'omarchy/gaming-mode.json').write_text('{"monitor": "desc:Side"}')
+        side = subprocess.run(['bash', str(HERE / 'gamescope-hdr'), 'game.exe'], env=dict(env, ARCH_SETUPS_HDR='0'), capture_output=True, text=True)
+        self.assertEqual(side.returncode, 0, side.stderr)
+        self.assertIn('--output-width\n1080\n--output-height\n1920\n-r\n60\n', side.stdout)
+        self.assertNotIn('--hdr-enabled', side.stdout)
+        itm = subprocess.run(['bash', str(HERE / 'gamescope-hdr'), 'game.exe'], env=dict(env, ARCH_SETUPS_GAME_MONITOR='DP-6', ARCH_SETUPS_HDR_ITM='1'), capture_output=True, text=True)
+        self.assertIn('--output-width\n3840\n', itm.stdout)
+        self.assertIn('--hdr-itm-enabled', itm.stdout)
+
+        # One switch moves every game to the stream monitor at 1080p SDR, overriding
+        # per-game 4K dimensions and HDR variables, and back again.
+        (self.home / 'omarchy/gaming-mode.json').unlink()
+        state = self.home / 'state'
+        env.update(XDG_STATE_HOME=str(state), ARCH_SETUPS_GAME_WIDTH='3840', ARCH_SETUPS_GAME_HEIGHT='2160', DXVK_HDR='1')
+        switch = lambda *args: subprocess.run(['bash', str(HERE / 'game-display'), *args], env=env, capture_output=True, text=True)
+        self.assertIn('mode: 4k-hdr', switch('status').stdout)
+        self.assertEqual(switch('set-stream-monitor', 'desc:Side').returncode, 0)
+        self.assertIn('1080p SDR', switch('toggle').stdout)
+        settings = json.loads((state / 'omarchy/game-display/settings.json').read_text())
+        self.assertEqual(settings, {'streamMonitor': 'desc:Side', 'mode': '1080p-sdr'})
+        low = subprocess.run(['bash', str(HERE / 'gamescope-hdr'), 'game.exe'], env=env, capture_output=True, text=True)
+        self.assertEqual(low.returncode, 0, low.stderr)
+        self.assertIn('--nested-width\n1920\n--nested-height\n1080\n--output-width\n1080\n--output-height\n1920\n-r\n60\n', low.stdout)
+        self.assertNotIn('--hdr-enabled', low.stdout)
+        self.assertNotIn('DXVK_HDR=', low.stdout)
+        self.assertIn('focus({monitor="DP-5"})', log.read_text().splitlines()[-1])
+        self.assertIn('4K HDR', switch('toggle').stdout)
+        high = subprocess.run(['bash', str(HERE / 'gamescope-hdr'), 'game.exe'], env=env, capture_output=True, text=True)
+        self.assertIn('--output-width\n3840\n', high.stdout)
+        self.assertIn('--hdr-enabled', high.stdout)
+        self.assertEqual(json.loads((state / 'omarchy/game-display/settings.json').read_text())['streamMonitor'], 'desc:Side')
+        self.assertEqual(switch('bogus').returncode, 2)
 
 
 if __name__ == '__main__':

@@ -92,7 +92,7 @@ def inspect(preflight=False, dotfiles=None, profile_path=None):
         return checks
     if games['games'] and 'install-lutris.sh' not in selected:
         add('gaming-feature', 'error', 'Selected direct game profiles require install-lutris.sh in the feature selection.')
-    if (games['steamHdr'] or any(game['config'].get('system', {}).get('prefix_command') == 'steam-gamescope-hdr' for game in games['games'])) and 'install-steam.sh' not in selected:
+    if (games['steamHdr'] or games.get('lutrisHdr') or any(game['config'].get('system', {}).get('prefix_command') == 'steam-gamescope-hdr' for game in games['games'])) and 'install-steam.sh' not in selected:
         add('gaming-hdr-feature', 'error', 'Selected HDR behavior requires install-steam.sh to deploy Gamescope and the managed launcher.')
     for game in games['games']:
         present = Path(game['config']['game']['exe']).is_file()
