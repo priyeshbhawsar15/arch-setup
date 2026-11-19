@@ -48,6 +48,8 @@ installers=(
 )
 
 plan_only=false
+games_explicit=false
+personal_games=""
 approve_system_update=false
 export ARCH_SETUPS_PROFILE="${ARCH_SETUPS_PROFILE:-$SCRIPT_DIR/features.json}"
 while (($#)); do
@@ -59,12 +61,15 @@ while (($#)); do
       case "$1" in
         --profile)
           case "$2" in
-            safe) ARCH_SETUPS_PROFILE="$SCRIPT_DIR/features.json" ;;
-            personal) ARCH_SETUPS_PROFILE="$SCRIPT_DIR/profiles/personal.json" ;;
-            *) ARCH_SETUPS_PROFILE="$2" ;;
+            safe) ARCH_SETUPS_PROFILE="$SCRIPT_DIR/features.json"; personal_games="" ;;
+            personal)
+              ARCH_SETUPS_PROFILE="$SCRIPT_DIR/profiles/personal.json"
+              # Personal desktop: every Steam/Lutris game in main-monitor 4K HDR unless --games overrides.
+              personal_games="$SCRIPT_DIR/profiles/gaming.personal.json" ;;
+            *) ARCH_SETUPS_PROFILE="$2"; personal_games="" ;;
           esac ;;
         --host) export ARCH_SETUPS_MONITOR_LAYOUT="$2" ;;
-        --games) export ARCH_SETUPS_GAMING_PROFILE="$2" ;;
+        --games) export ARCH_SETUPS_GAMING_PROFILE="$2"; games_explicit=true ;;
         --settings) export ARCH_SETUPS_SETTINGS="$2" ;;
         --planner-config) export T3_PLANNER_EXECUTOR_SEED_CONFIG="$2" ;;
         --dotfiles-dir) export ARCH_SETUPS_DOTFILES_DIR="$2" ;;
@@ -78,6 +83,9 @@ while (($#)); do
   esac
 done
 
+if [[ -n "$personal_games" && "$games_explicit" == false && -z "${ARCH_SETUPS_GAMING_PROFILE:-}" ]]; then
+  export ARCH_SETUPS_GAMING_PROFILE="$personal_games"
+fi
 python3 "$SCRIPT_DIR/config/feature-profile.py" plan
 selected="$(python3 "$SCRIPT_DIR/config/feature-profile.py" list)"
 # Validate external profiles even for --plan, without connecting or mutating.

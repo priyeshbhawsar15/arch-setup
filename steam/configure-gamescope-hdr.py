@@ -19,6 +19,9 @@ NON_GAME_NAMES = (
     "wallpaper engine",
 )
 VDF_STRING = r'((?:\\.|[^"\\])*)'
+# Set while Steam runs: compute pending edits without writing (Steam would
+# overwrite them on exit), so an already-configured library still passes.
+DRY_RUN = False
 
 
 def unescape_vdf(value: str) -> str:
@@ -198,6 +201,8 @@ def get_installed_games(steam_root: Path) -> dict[str, str]:
 
 
 def write_atomic(path: Path, content: bytes) -> None:
+    if DRY_RUN:
+        return
     import os
     import tempfile
     fd, temporary = tempfile.mkstemp(prefix='.steam-hdr-', dir=path.parent)
@@ -213,6 +218,8 @@ def write_atomic(path: Path, content: bytes) -> None:
 
 
 def backup_config(path: Path) -> None:
+    if DRY_RUN:
+        return
     stamp = datetime.now().strftime("%Y%m%d%H%M%S%f")
     shutil.copy2(path, path.with_name(f"{path.name}.bak-4k-{stamp}"))
 
@@ -337,8 +344,8 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    if subprocess.run(["pgrep", "-x", "steam"], capture_output=True).returncode == 0:
-        parser.error("Close Steam before editing its saved launch options (Steam can overwrite them).")
+    global DRY_RUN
+    DRY_RUN = subprocess.run(["pgrep", "-x", "steam"], capture_output=True).returncode == 0
 
     games = get_installed_games(args.steam_root)
     configured_by_game: dict[str, int] = {appid: 0 for appid in games}
@@ -358,6 +365,10 @@ def main() -> int:
         if changed_sc:
             changed_files += 1
             updated_shortcuts.extend(names)
+
+    if changed_files and DRY_RUN:
+        parser.error(f"{changed_files} Steam configuration file(s) need HDR launch options: "
+                     "close Steam and rerun (Steam overwrites saved launch options while running).")
 
     for appid, name in games.items():
         count = configured_by_game[appid]

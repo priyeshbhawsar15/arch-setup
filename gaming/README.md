@@ -129,7 +129,7 @@ backend; host Hyprland controls panel VRR. This is NOT a standalone Gamescope lo
 and doesn't remove desktop compositor overhead. Compare against unwrapped launching.
 Steam's overlay preload is removed for Gamescope; unrelated preloads are preserved.
 
-Do not stack this with `steam-gamescope-hdr` or another Gamescope wrapper. Existing games
+**Super + Ctrl + G** (`game-display toggle`) switches the next game launch between 4K HDR on the main monitor and 1080p SDR on the Sunshine stream monitor. `game-display status` shows the current mode; see `SCRIPTS.md` (install-steam.sh) for details. With `steamHdr`/`lutrisHdr`, games already use `steam-gamescope-hdr`, which applies the same main-monitor targeting (Gaming Mode's `monitor` selector), native mode/refresh and HDR. Do not stack this with `steam-gamescope-hdr` or another Gamescope wrapper. Existing games
 using that HDR helper can retain it: runtime game detection still enables desktop mode.
 For Lutris use the command prefix `gaming-mode run --` only where no other wrapper is set.
 Native Wayland game compatibility, HDR output, Steam overlay and controller/mouse capture

@@ -149,7 +149,7 @@ def main():
         if source:
             module('monitor_inputs', ROOT / 'hypr/scripts/monitor-layout.py').load_config(source)
         if args.command == 'plan':
-            print('Gaming: ' + str(len(selected['games'])) + ' selected; Steam import=' + str(selected['importSteam']) + '; blanket Steam HDR=' + str(selected['steamHdr']))
+            print('Gaming: ' + str(len(selected['games'])) + ' selected; Steam import=' + str(selected['importSteam']) + '; blanket Steam HDR=' + str(selected['steamHdr']) + '; blanket Lutris HDR=' + str(selected['lutrisHdr']))
             for game in selected['games']:
                 print('  ' + game['slug'] + ': ' + game['config']['game']['exe'] + '; upscaler=' + game.get('upscaler', 'none'))
             if source:
