@@ -11,7 +11,7 @@ feature_lifecycle "$0" "$@"
 plugin_id="bobbynicholas.omaland"
 plugin_url="https://github.com/priyeshbhawsar15/omaland.git"
 upstream_url="https://github.com/bobby-nicholas/omaland.git"
-plugin_commit="3376407e41ee10c69191bbbdf0e9f27cef661f87"
+plugin_commit="c4d6cdd3ee3ec36b5a72f9272439f58a749f496a"
 plugin_dir="$HOME/.config/omarchy/plugins/$plugin_id"
 
 menu_file="$HOME/.config/omarchy/extensions/omarchy-menu.jsonc"
@@ -99,23 +99,34 @@ remove_desktop_entry() {
   fi
 }
 
+# Omarchy 4.5 replaced the Style menu with Appearance, so the editor lives under
+# Appearance > Windows. Rows from the old style.hyprland submenu have no parent
+# there; only the ones this installer owned are removed.
+legacy_menu_keys=(style.hyprland.omaland style.hyprland.edit)
+
 menu_entries() {
   jq -cn \
     --arg edit 'omarchy-launch-config-editor "$HOME/.config/hypr/looknfeel.lua"' \
-    '{"style.hyprland": {icon:"󰸌", label:"Hyprland", aliases:["hyprland","looknfeel"]},
-      "style.hyprland.omaland": {icon:"󰸌", label:"Omaland Visual Editor", aliases:["omaland"], action:"omarchy-shell shell toggle bobbynicholas.omaland"},
-      "style.hyprland.edit": {icon:"󰏫", label:"Edit Config", action:$edit}}'
+    '{"appearance.windows.omaland": {icon:"󰸌", label:"Visual Editor", aliases:["omaland","looknfeel"], action:"omarchy-shell shell toggle bobbynicholas.omaland"},
+      "appearance.windows.looknfeel": {icon:"󰏫", label:"Edit Look and Feel", aliases:["hyprland","looknfeel"], action:$edit}}'
+}
+
+remove_legacy_menu_entries() {
+  [[ -f "$menu_file" ]] || return 0
+  python3 "$SCRIPT_DIR/config/managed-config.py" remove-menu "$menu_file" \
+    "${legacy_menu_keys[@]}" --empty-parent style.hyprland
 }
 
 install_menu_entry() {
-  python3 "$SCRIPT_DIR/config/managed-config.py" merge-menu "$menu_file" "$(menu_entries)" \
-    --keep-existing style.hyprland
+  remove_legacy_menu_entries
+  python3 "$SCRIPT_DIR/config/managed-config.py" merge-menu "$menu_file" "$(menu_entries)"
 }
 
 remove_menu_entry() {
+  remove_legacy_menu_entries
   [[ -f "$menu_file" ]] || return 0
   python3 "$SCRIPT_DIR/config/managed-config.py" remove-menu "$menu_file" \
-    style.hyprland.omaland style.hyprland.edit --empty-parent style.hyprland
+    appearance.windows.omaland appearance.windows.looknfeel
 }
 
 disable_plugin() {

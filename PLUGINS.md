@@ -269,17 +269,17 @@ Requires Hyprland Lua DPMS and Quickshell; no new package or shortcut. The exist
 - **Type:** Customized public community fork; upstream license/attribution retained.
 - **Original upstream URL:** `https://github.com/bobby-nicholas/omaland.git`
 - **Installation source:** `https://github.com/priyeshbhawsar15/omaland.git`
-- **Pinned commit:** `3376407e41ee10c69191bbbdf0e9f27cef661f87` (merges upstream `main` at `48d1c64acd78cd3a2862ccaad17c8045be3dda38` into the personal-module fork; source tests pass).
-- **Upstream maintenance:** Includes upstream shell-style refresh after appearance edits and capability-safe plugin source-path resolution. Remains public by user choice. No live desktop installation was performed during this maintenance.
-- **Modifications:** Declares and implements the personal-module contract for `hypr/looknfeel.lua`, preserving personal opacity rules rather than modifying the package entrypoint. The Hyprland installer now preserves user/Omaland appearance edits. Source tests pass with `node test/run.js`; setup CI checks the exact published manifest contract.
+- **Pinned commit:** `c4d6cdd3ee3ec36b5a72f9272439f58a749f496a` (fork `main`; merges upstream `main` at `6790543ce2227595c87fe67ad46247a90a8d8a0a` into the personal-module fork; `node test/run.js` passes).
+- **Upstream maintenance (2026-11-20):** Adds upstream's Omarchy 4.5 support and the user-approved **Keep media opaque** switch (on by default; upstream issue #11). Once an opacity slider is below 1, windows Omarchy keeps solid (video, image viewers, games, VMs, picture-in-picture) are pinned at full opacity; switching it off lets them follow the sliders. On Omarchy 4.5, Full opacity is Omarchy's own **Appearance › Window Opacity › Opaque** mode, and rows held by an active Appearance preset are shown locked with the menu item holding them. Earlier blocks are migrated once by the plugin service. Remains public by user choice. No live desktop installation was performed during this maintenance.
+- **Modifications:** Declares and implements the personal-module contract for `hypr/looknfeel.lua`: every managed rule, including the media and Full opacity window rules, lives in that block, and the package-managed `hyprland.lua` entrypoint is never written. Upstream's one-time block migration was retargeted to `looknfeel.lua` accordingly, and its test that kept window rules out of `looknfeel.lua` was replaced by the fork's contract check. The Hyprland installer preserves user/Omaland appearance edits. Setup CI checks the exact published manifest contract.
 
 ### Behavior and controls
 
 Provides a graphical panel for editing Hyprland's visual look and feel (gaps, borders, animations, blur, rounding) with live visual previews. Writes a managed block into `~/.config/hypr/looknfeel.lua`. That appearance module is seeded once and subsequent user/Omaland edits are preserved by full setup; merge deliberate repository appearance changes explicitly rather than overwriting those edits.
 
-- **Open Omaland:** Search `Omaland` in Omarchy Menu, or run `omarchy-shell shell toggle bobbynicholas.omaland` from the terminal.
+- **Open Omaland:** Omarchy Menu › **Appearance › Windows › Visual Editor** (search `Omaland`), or run `omarchy-shell shell toggle bobbynicholas.omaland`. **Appearance › Windows › Edit Look and Feel** opens `~/.config/hypr/looknfeel.lua` in the configured editor. Omarchy 4.5 removed the Style menu, so the installer removes its own former `style.hyprland.omaland`/`style.hyprland.edit` rows (and the `style.hyprland` parent only when nothing else is left under it).
 - **Install or re-enable:** `./install-omaland.sh` — validates and installs the pinned checkout and enables the plugin in Omarchy shell.
-- **Disable:** `./install-omaland.sh --disable` — disables the plugin in Omarchy shell.
+- **Disable:** `./install-omaland.sh --disable` — disables the plugin in Omarchy shell and removes its owned launcher and menu rows; unrelated menu entries are kept.
 - **Remove:** `./install-omaland.sh --remove` — archives configuration and state under `~/.local/state/arch-setups/backups/omaland-remove-<timestamp>/`, then disables and removes the plugin.
 
 ## Calendar Bar Widget

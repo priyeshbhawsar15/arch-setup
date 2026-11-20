@@ -6,7 +6,7 @@
   "install-fluentbird.sh": {"source": "https://github.com/Deathbyteacup/fluentbird.git", "pin": "aec46b35aebde03c0da5575fa54692c3eac09585"},
   "install-hyprmoncfg.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-hyprmoncfg.git", "pin": "6f9756bdc10ca594cd89effdf38b9af2b4bd190a"},
   "install-lock-explorer.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-lock-explorer.git", "pin": "6b0167d45689e45cb05f50bbb0288942984e4b79"},
-  "install-omaland.sh": {"source": "https://github.com/priyeshbhawsar15/omaland.git", "pin": "3376407e41ee10c69191bbbdf0e9f27cef661f87"},
+  "install-omaland.sh": {"source": "https://github.com/priyeshbhawsar15/omaland.git", "pin": "c4d6cdd3ee3ec36b5a72f9272439f58a749f496a"},
   "install-calendar.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-calendar.git", "pin": "d4d452d4fb801461bc517187ab0d551460c9b460"},
   "install-omniroute-quota.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-omniroute-quota.git", "pin": "aa2d521df53415b5e06d1359447d8a2f512e0f5d"},
   "install-system-metrics.sh": {"source": "https://github.com/priyeshbhawsar15/omarchy-system-metrics.git", "pin": "6e5e99225564d0432c3c0b672da80481b4797d57"},

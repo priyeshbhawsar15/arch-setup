@@ -35,24 +35,47 @@ class OmalandMenuTests(unittest.TestCase):
     def call(self, fn):
         subprocess.run(['bash', '-c', 'source "$1"; "$2"', 'test', str(self.work / 'functions.sh'), fn], env=self.env, check=True, capture_output=True)
 
+    EDITOR = '{"appearance.windows.omaland":{"icon":"󰸌","label":"Visual Editor","aliases":["omaland","looknfeel"],"action":"omarchy-shell shell toggle bobbynicholas.omaland"}}'
+
     def test_existing_jsonc_accepts_editor_and_keeps_siblings(self):
-        self.menu.write_text('{\n// custom user choice\n"style.hyprland.custom": {"action": "my-tool"},\n}\n')
+        self.menu.write_text('{\n// custom user choice\n"appearance.windows.custom": {"action": "my-tool"},\n}\n')
         self.call('install_menu_entry')
-        check = subprocess.run(['python3', str(REPO / 'config/managed-config.py'), 'check-menu', str(self.menu), '{"style.hyprland.omaland":{"icon":"󰸌","label":"Omaland Visual Editor","aliases":["omaland"],"action":"omarchy-shell shell toggle bobbynicholas.omaland"}}'], capture_output=True)
+        check = subprocess.run(['python3', str(REPO / 'config/managed-config.py'), 'check-menu', str(self.menu), self.EDITOR], capture_output=True)
         self.assertEqual(check.returncode, 0, check.stderr.decode())
         self.assertIn('// custom user choice', self.menu.read_text())
-        self.assertIn('"style.hyprland.custom": {"action": "my-tool"}', self.menu.read_text())
+        self.assertIn('"appearance.windows.custom": {"action": "my-tool"}', self.menu.read_text())
         before = self.menu.read_bytes()
         self.call('install_menu_entry')
         self.assertEqual(self.menu.read_bytes(), before)
 
+    def test_install_moves_entries_out_of_removed_style_menu(self):
+        # Omarchy 4.5 replaced Style with Appearance; style.hyprland.* rows have no parent.
+        self.menu.write_text('{\n"style.hyprland": {"label": "Hyprland"},\n"style.hyprland.omaland": {},\n"style.hyprland.edit": {},\n"style.custom": {"action": "mine"}\n}\n')
+        self.call('install_menu_entry')
+        result = self.menu.read_text()
+        for key in ('"style.hyprland"', '"style.hyprland.omaland"', '"style.hyprland.edit"'):
+            self.assertNotIn(key, result)
+        self.assertIn('"style.custom": {"action": "mine"}', result)
+        self.assertIn('"appearance.windows.looknfeel"', result)
+        check = subprocess.run(['python3', str(REPO / 'config/managed-config.py'), 'check-menu', str(self.menu), self.EDITOR], capture_output=True)
+        self.assertEqual(check.returncode, 0, check.stderr.decode())
+
+    def test_install_keeps_legacy_parent_holding_user_entries(self):
+        self.menu.write_text('{"style.hyprland":{"label":"Mine"},"style.hyprland.custom":{},"style.hyprland.omaland":{}}')
+        self.call('install_menu_entry')
+        result = json.loads(self.menu.read_text())
+        self.assertIn('style.hyprland', result)
+        self.assertIn('style.hyprland.custom', result)
+        self.assertNotIn('style.hyprland.omaland', result)
+
     def test_disable_removes_only_owned_entries(self):
-        self.menu.write_text('{\n"style.hyprland.custom": {"action": "my-tool"},\n"style.hyprland.omaland": {},\n"style.hyprland.edit": {},\n"retained": {}\n}\n')
+        self.menu.write_text('{\n"appearance.windows.custom": {"action": "my-tool"},\n"appearance.windows.omaland": {},\n"appearance.windows.looknfeel": {},\n"style.hyprland.omaland": {},\n"retained": {}\n}\n')
         self.call('remove_menu_entry')
         result = self.menu.read_text()
-        self.assertIn('"style.hyprland.custom": {"action": "my-tool"}', result)
-        self.assertNotIn('"style.hyprland.omaland"', result)
-        self.assertNotIn('"style.hyprland.edit"', result)
+        self.assertIn('"appearance.windows.custom": {"action": "my-tool"}', result)
+        self.assertIn('"retained"', result)
+        for key in ('"appearance.windows.omaland"', '"appearance.windows.looknfeel"', '"style.hyprland.omaland"'):
+            self.assertNotIn(key, result)
 
     def test_custom_desktop_entry_survives_install_and_disable(self):
         plugin = self.home / '.config/omarchy/plugins/bobbynicholas.omaland'
@@ -73,6 +96,8 @@ class ShibumiSettingsTests(OmalandMenuTests):
     test_existing_jsonc_accepts_editor_and_keeps_siblings = None
     test_disable_removes_only_owned_entries = None
     test_custom_desktop_entry_survives_install_and_disable = None
+    test_install_moves_entries_out_of_removed_style_menu = None
+    test_install_keeps_legacy_parent_holding_user_entries = None
 
     def setUp(self):
         super().setUp()
