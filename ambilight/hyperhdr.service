@@ -1,0 +1,14 @@
+# Managed by arch-setups: HyperHDR screen capture for the room ambilight (install-hyperhdr.sh).
+[Unit]
+Description=HyperHDR ambient lighting (screen -> WLED)
+PartOf=graphical-session.target
+After=graphical-session.target xdg-desktop-portal.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/hyperhdr
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target
