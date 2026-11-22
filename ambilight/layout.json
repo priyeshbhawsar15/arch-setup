@@ -1,0 +1,19 @@
+{
+  "instances": {
+    "monitor": {"index": 0, "host": "192.168.2.160", "brightness": 255, "maxCurrent": 3000},
+    "window": {"index": 1, "host": "192.168.2.161", "brightness": 190, "maxCurrent": 4000},
+    "bed": {"index": 2, "host": "192.168.2.162", "brightness": 190, "maxCurrent": 6000}
+  },
+  "monitor": {
+    "start": "bottom-left",
+    "direction": "ccw",
+    "bottom": 40,
+    "right": 24,
+    "top": 41,
+    "left": 24,
+    "under": 40,
+    "under_direction": "left-to-right"
+  },
+  "window": {"right": 70, "top": 73, "left": 70},
+  "bed": {"left": 75, "top": 59, "right": 75, "under": 205}
+}

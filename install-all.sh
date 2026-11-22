@@ -30,6 +30,7 @@ installers=(
   install-sddm-autologin.sh
   install-wallpaper-controller.sh
   install-gaming-mode.sh
+  install-hyperhdr.sh
   install-shibumi-shell.sh
   install-indicators.sh
   install-per-monitor-workspaces.sh

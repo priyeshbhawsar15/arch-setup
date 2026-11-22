@@ -34,6 +34,17 @@ o.bind("SUPER + CTRL + G", "Toggle game display 4K HDR / 1080p stream", "game-di
 
 hl.bind("CTRL + SHIFT + 2", hl.dsp.global("com.t3tools.T3Code:capture-window"))
 
+-- Room ambilight (install-hyperhdr.sh). Bound only while its helper is installed,
+-- so `install-hyperhdr.sh --remove` also retires these keys.
+do
+  local helper = io.open(os.getenv("HOME") .. "/.local/bin/ambilight", "r")
+  if helper then
+    helper:close()
+    o.bind("SUPER + ALT + A", "Ambilight: toggle spatial / screen-average mapping", "ambilight mapping toggle")
+    o.bind("SUPER + CTRL + ALT + A", "Ambilight: cycle profile auto/movie/game/work/off", "ambilight profile cycle")
+  end
+end
+
 -- Dictation keys from before Alt + Space and Right Alt became the defaults.
 -- Remove these lines to give the keys back to applications.
 if o.dictation_installed and o.dictation_installed() then

@@ -24,7 +24,7 @@ APPLICATIONS = {
     'install-steam.sh': ['steam'], 'install-lutris.sh': ['lutris'],
     'install-linuwux.sh': ['linuwux'], 'install-sunshine.sh': ['sunshine'],
     'install-tailscale.sh': ['tailscale'], 'install-keyd.sh': ['keyd'], 'install-zsh.sh': ['zsh'],
-    'install-t3-planner-executor.sh': ['t3-planner-executor'],
+    'install-t3-planner-executor.sh': ['t3-planner-executor'], 'install-hyperhdr.sh': ['hyperhdr'],
 }
 
 
@@ -259,6 +259,12 @@ def inspect(preflight=False, dotfiles=None, profile_path=None):
     if 'install-sunshine.sh' in selected:
         code, _ = command(['systemctl', '--user', 'is-active', '--quiet', 'sunshine'])
         add('readiness:sunshine', 'ok' if code == 0 else 'pending', 'Sunshine active; verify pairing and capture.' if code == 0 else 'Configure Sunshine credentials, pairing, capture and service startup.')
+    if 'install-hyperhdr.sh' in selected:
+        code, _ = command(['systemctl', '--user', 'is-active', '--quiet', 'hyperhdr.service'])
+        database = Path.home() / '.config/HyperHDR/db/hyperhdr.db'
+        token, picked = command(['sqlite3', '-readonly', str(database), 'select count(*) from auth where length(portal_token) > 0'])
+        ready = code == 0 and token == 0 and picked.strip() not in ('', '0')
+        add('readiness:hyperhdr', 'ok' if ready else 'pending', 'HyperHDR is capturing; verify strip order with ambilight test.' if ready else 'Start hyperhdr.service and pick the main monitor in the screen-share dialog.')
     if 'install-hyprland.sh' in selected:
         code, errors = command(['hyprctl', 'configerrors'])
         add('hypr-configuration', 'ok' if code == 0 and not errors.strip() else 'error', 'Live Hyprland configuration is valid.' if code == 0 and not errors.strip() else 'Hyprland reports configuration errors or cannot be queried.')
