@@ -155,5 +155,72 @@ class DatabaseReconcile(unittest.TestCase):
         self.assertEqual({l['group'] for l in rows[(1, 'leds')]}, {1})
 
 
+class CaptureCheck(unittest.TestCase):
+    """hyperhdr.service ExecStartPost: fail (so systemd restarts HyperHDR) when screen capture never starts."""
+
+    def setUp(self):
+        self.helper = load()
+        self.temp = tempfile.TemporaryDirectory()
+        self.helper.DB = Path(self.temp.name) / 'hyperhdr.db'
+        con = sqlite3.connect(self.helper.DB)
+        con.executescript(SCHEMA)
+        con.execute("insert into auth (user, portal_token) values ('Hyperhdr', 'EYsEDVx9MMAA')")
+        con.commit()
+        con.close()
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def serve(self, *infos):
+        """Successive serverinfo replies; the last one repeats."""
+        replies = list(infos)
+
+        class FakeHyper:
+            def call(_, msg):
+                assert msg['command'] == 'serverinfo'
+                return {'info': replies.pop(0) if len(replies) > 1 else replies[0]}
+        return mock.patch.object(self.helper, 'Hyper', FakeHyper)
+
+    @staticmethod
+    def info(active=None, grabber_enabled=True):
+        priorities = [] if active is None else [{'componentId': 'SYSTEMGRABBER', 'priority': 245, 'active': active}]
+        return {'priorities': priorities, 'components': [{'name': 'SYSTEMGRABBER', 'enabled': grabber_enabled}]}
+
+    def test_passes_once_the_capture_input_is_active(self):
+        with self.serve(self.info(), self.info(active=False), self.info(active=True)):
+            self.assertEqual(self.helper.capture_check(timeout=5, poll=0), 0)
+
+    def test_fails_when_the_portal_session_never_delivers_frames(self):
+        with self.serve(self.info(active=False)):
+            self.assertEqual(self.helper.capture_check(timeout=0.05, poll=0), 1)
+
+    def test_waits_for_the_api_to_come_up(self):
+        calls = iter([OSError('refused'), OSError('refused'), self.info(active=True)])
+
+        class FakeHyper:
+            def __init__(_):
+                item = next(calls)
+                if isinstance(item, Exception):
+                    raise item
+                _.item = item
+
+            def call(_, msg):
+                return {'info': _.item}
+        with mock.patch.object(self.helper, 'Hyper', FakeHyper):
+            self.assertEqual(self.helper.capture_check(timeout=5, poll=0), 0)
+
+    def test_skipped_while_no_screen_share_choice_is_saved(self):
+        con = sqlite3.connect(self.helper.DB)
+        con.execute("update auth set portal_token = ''")
+        con.commit()
+        con.close()
+        with mock.patch.object(self.helper, 'Hyper', side_effect=AssertionError('must not wait for capture')):
+            self.assertEqual(self.helper.capture_check(timeout=0.05, poll=0), 0)
+
+    def test_skipped_when_screen_capture_is_switched_off(self):
+        with self.serve(self.info(grabber_enabled=False)):
+            self.assertEqual(self.helper.capture_check(timeout=0.05, poll=0), 0)
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -14,6 +14,8 @@
   ambilight setup-db                    (HyperHDR stopped) create the instances and reconcile the settings
                                         this tool owns; other HyperHDR settings (web UI edits) are kept
   ambilight verify-db                   exit 0 when the database already matches layout.json and state
+  ambilight capture-check               (hyperhdr.service ExecStartPost) exit 1 when screen capture has not
+                                        started within 30 s, so systemd restarts HyperHDR
   ambilight wled-limits [--check]       apply each controller's maxCurrent (mA) power limit from layout.json
 
 Geometry lives in ~/.config/ambilight/layout.json; edit counts/starts there, then run
@@ -204,6 +206,43 @@ def wait_api(timeout=30):
         except OSError:
             time.sleep(0.5)
     return False
+
+
+def portal_token_saved():
+    """True once the screen-share choice is stored, so HyperHDR can capture without a dialog."""
+    try:
+        con = sqlite3.connect(f"file:{DB}?mode=ro", uri=True)
+        try:
+            return con.execute("select 1 from auth where length(portal_token) > 0").fetchone() is not None
+        finally:
+            con.close()
+    except sqlite3.Error:
+        return False
+
+
+def capture_check(timeout=30, poll=1.0):
+    """hyperhdr.service ExecStartPost. At login HyperHDR sometimes never gets the portal's CreateSession
+    reply and never retries, so no frames arrive and every zone stays dark. Exit 1 then, so systemd
+    restarts HyperHDR (Restart=on-failure, bounded by the unit's start limit)."""
+    if not portal_token_saved():
+        print("no saved screen-share choice yet; capture not checked (pick the monitor in the dialog)")
+        return 0
+    deadline = time.monotonic() + timeout
+    while True:
+        try:
+            info = Hyper().call({"command": "serverinfo"})["info"]
+            enabled = {c.get("name"): c.get("enabled") for c in info.get("components", [])}
+            if enabled.get("SYSTEMGRABBER") is False:
+                print("screen capture is switched off in HyperHDR; not checked")
+                return 0
+            if any(p.get("componentId") == "SYSTEMGRABBER" and p.get("active") for p in info.get("priorities", [])):
+                return 0
+        except (OSError, RuntimeError, ValueError, KeyError):
+            pass  # API not up yet
+        if time.monotonic() >= deadline:
+            print(f"screen capture delivered no frames within {timeout} s; restarting HyperHDR", file=sys.stderr)
+            return 1
+        time.sleep(poll)
 
 
 def push_mapping(mapping):
@@ -530,6 +569,8 @@ def main():
         test(a[1])
     elif a[0] == "setup-db":
         setup_db()
+    elif a[0] == "capture-check":
+        sys.exit(capture_check())
     elif a[0] == "verify-db":
         sys.exit(verify_db())
     elif a[0] == "wled-limits":
