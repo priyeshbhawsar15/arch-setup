@@ -3,10 +3,15 @@
 Description=HyperHDR ambient lighting (screen -> WLED)
 PartOf=graphical-session.target
 After=graphical-session.target xdg-desktop-portal.service
+# capture-check restarts HyperHDR when screen capture never starts; give up after 5 tries.
+StartLimitIntervalSec=600
+StartLimitBurst=5
 
 [Service]
 Type=simple
 ExecStart=/usr/bin/hyperhdr
+# At login HyperHDR can miss the portal's reply and never capture; fail so Restart= retries.
+ExecStartPost=%h/.local/bin/ambilight capture-check
 Restart=on-failure
 RestartSec=5
 

@@ -34,7 +34,7 @@ Profiles are applied live:
   Steam/Gamescope/`.exe` window is fullscreen on the OLED, **movie** for any other fullscreen app
   there, and **work** otherwise.
 
-Other commands: `ambilight status`, `ambilight test monitor|window|bed` (LED 0 green, first LED of
+Other commands: `ambilight status`, `ambilight capture-check`, `ambilight test monitor|window|bed` (LED 0 green, first LED of
 each side blue, last LED red, first under-monitor LED yellow; Enter resumes), `ambilight
 wled-limits [--check]`, `ambilight verify-db`.
 
@@ -47,6 +47,12 @@ wled-limits [--check]`, `ambilight verify-db`.
   512 px width, using about 18% of one CPU core. Hyprland's screencopy already delivers SDR-mapped
   frames with `cm = "hdr"`, so HyperHDR's HDR tone mapping stays off. The screen-share choice is
   stored as a restore token in HyperHDR's database (`xdph` has `allow_token_by_default`).
+- **Capture watchdog**: at login HyperHDR sometimes never receives the screen-cast portal's
+  `CreateSession` reply and never retries, so no frames arrive and every zone switches off
+  (`No source left`). `ambilight capture-check` runs as `ExecStartPost` and fails the start when the
+  capture input is not active within 30 s, so systemd restarts HyperHDR (at most 5 tries in 10 min).
+  It is skipped while no screen-share choice is saved, so the first-run picker is never interrupted,
+  and while screen capture is switched off in the web UI.
 - **Database ownership**: HyperHDR's admin API needs the web-UI password, so layout changes are
   written to `~/.config/HyperHDR/db/hyperhdr.db` with HyperHDR stopped. `setup-db` only reconciles
   the settings it owns: instances, `device`, `leds`, `smoothing`, `systemControl`, `videoControl`
